@@ -1,0 +1,21 @@
+{
+  "corpus": "Synthetic digital PDF, 40 words per page; no OCR or complex layout",
+  "pages": 10000,
+  "chunks": 10000,
+  "mode": "hybrid",
+  "ingestion_seconds": 143.64,
+  "pages_per_second": 69.62,
+  "peak_process_rss_mb": 516.8,
+  "retrieval_ms": [
+    96,
+    83,
+    84,
+    86,
+    81
+  ],
+  "exact_record_recall_at_8": 1.0,
+  "python": "3.11.9",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "logical_cpus": 12,
+  "machine_ram_gb": 15.8
+}
