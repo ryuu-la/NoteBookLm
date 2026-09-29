@@ -18,6 +18,7 @@ What works
 - LlamaIndex sentence chunking and a typed retrieval workflow; local BGE embeddings, LanceDB vectors, SQLite FTS5/BM25, reciprocal rank fusion, and a MiniLM cross-encoder reranker.
 - Streaming Gemini chat, selected-source filtering, clickable evidence locations, stop generation, and saved conversations. Without a model connection, the app explains how to configure .env; it never substitutes excerpts for an answer.
 - Structured, validated mind maps and quizzes; quiz scoring with explanations; source-grounded reports.
+- Agent-callable Studio tools: Data Analytics, Spreadsheet, and Deep Research, with inline charts/tables, Excel/CSV downloads, and saved results.
 - Autosaved Markdown notes, answer-to-note capture, and PDF/Markdown/JSON downloads with retained source references where available.
 - `gemini-3.8-flash` and `gemini-3.5-flash-lite`, plus an OpenAI-compatible adapter for local or remote endpoints.
 - Project `.env` configuration, local data ownership, bounded ingestion batches, duplicate detection, and restart checkpoints.
@@ -41,7 +42,22 @@ Use the sun/moon button in the header to switch between dark and white themes; t
 
 Choose **Agent** beside the answer model, or ask to search online in **Auto** mode. The agent retrieves selected notebook documents, chooses web searches, reads promising pages, follows links, and refines document or web queries when evidence is missing. Comparisons with “our text” use document and website evidence together, with labeled citations for each. Context space is reserved for both, and a citation check retries comparisons that omit one side. Unselected documents remain excluded. Search uses DuckDuckGo with multi-engine fallbacks. **Web pages are read in memory, never imported or indexed by the agent.** Explicit Add sources → Website imports remain available separately.
 
-The expandable Agent activity shows document retrieval, web searches and reads; Stop cancels the run. A run allows up to three document searches, four web searches, eight page reads, ten decisions, and three minutes of research. It cannot read every website, private pages, or sites that block access. Missing evidence is disclosed rather than presented as a completed comparison. **Sources** mode uses only selected notebook sources; **Auto** chooses the agent for online requests and referential follow-ups to web answers. Comparison tables preserve readable label widths and scroll horizontally on narrow screens.
+The expandable Agent activity shows document retrieval, web searches and reads; Stop cancels the run. Quick search uses up to two searches, four page reads, six decisions, and 75 seconds per research task. It cannot read every website, private pages, or sites that block access. Missing evidence is disclosed rather than presented as a completed comparison. **Sources** mode uses only selected notebook sources; **Auto** chooses the agent for online requests and referential follow-ups to web answers. Comparison tables preserve readable label widths and scroll horizontally on narrow screens.
+
+Agentic Studio
+--------------
+
+Every Studio tool dialog has a minimize button in its top-right corner. Minimized jobs continue while you use the notebook, with status entries in Studio to restore or cancel them. Completed jobs stay minimized until you open them; their outputs are saved normally. Keep the notebook page open while jobs run (these are page-session tasks, not durable jobs across reloads or server restarts).
+
+Open **Studio → Data Analytics, Spreadsheet, or Deep Research**, or ask in chat: “Quick search Avatar cast and production details, chart its box-office revenue, and create a spreadsheet.” A small model-driven planner selects tools and splits independent research questions. Up to two quick research tasks (three for deep research) run concurrently. Data tools share one prepared dataset, so charts and spreadsheets use the same values. Fast/Main selects the answer model, not research depth.
+
+- **Data Analytics:** tables, bar/line/pie charts, grouped sum/mean/count/min/max, and calculated summaries. CSV/TSV/XLSX calculations read the original selected tables rather than sampled retrieval passages. The first row is treated as headers; blank numeric cells are excluded from numerical aggregates. XLSX formulas use saved cached values. Other documents and websites use quoted, cited extracted rows, clearly marked as incomplete datasets.
+- **Spreadsheet:** formatted Excel with Data, Summary, and Sources sheets, plus supporting quotes when extracted from evidence; CSV download is also available. Raw data strings cannot become spreadsheet formulas. The first version selects one table per request; it does not implement joins, arbitrary Python, pivot tables, or unrestricted transformations.
+- **Deep Research:** explicitly requested multi-query search, website reading, linked-page exploration, and a detailed cited report. Each task is bounded to 10 searches, 24 page reads, 26 decisions, and seven minutes; the report uses the available context and discloses gaps. It requires web access and does not run in Sources-only mode.
+
+Results appear below the chat answer and are saved in Studio. Chat charts and downloads persist after reload; deleting a Studio artifact does not remove its saved chat snapshot. Stop cancels in-flight async tasks. A failed research branch does not discard successful branches. Source tables are limited to 50,000 rows / 500,000 cells, and charts to 200 points; oversized inputs are rejected rather than silently producing partial totals. Downloads contain all result rows; the UI previews up to 500.
+
+Run `python -m pytest tests/test_agent_tools.py -q` for tool checks and `python scripts/agent_ui_check.py` for the isolated Windows/Edge UI smoke test. The latter uses deterministic model/search fixtures and does not verify live provider or website availability.
 
 Fresh installation
 ------------------

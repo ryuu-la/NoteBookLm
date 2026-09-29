@@ -34,3 +34,11 @@
 .mindmap-dialog .artifact-downloads { gap:4px; }
 .mindmap-dialog .artifact-downloads .q-btn { font-size:12px; padding:4px 10px; min-height:32px; }
 @media(max-width:600px) { .q-dialog__inner > .mindmap-dialog { padding:6px; } .mindmap-dialog .artifact-title { font-size:14px; } .map-toolbar { gap:5px; } .map-toolbar button { padding:5px 7px; } .map-count { width:100%; font-size:11px; } .map-detail { right:10px; bottom:10px; max-width:calc(100% - 20px); } }
+.mindmap-preview-card { padding:14px 16px; border:1px solid #343c49; border-radius:14px; background:#141922; cursor:pointer; transition:background .15s,border-color .15s,transform .15s; }
+.mindmap-preview-card:hover,.mindmap-preview-card:focus-visible { background:#1b2230; border-color:#5b7fc9; transform:translateY(-1px); }
+.mindmap-preview-card:focus-visible { outline:2px solid #6c9fe8; outline-offset:2px; }
+.mindmap-preview-icon { font-size:26px; color:#6c9fe8; margin-right:14px; flex-shrink:0; }
+.mindmap-preview-text { min-width:0; gap:2px; }
+.mindmap-preview-title { font-size:15px; font-weight:600; color:#f1f3f9; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mindmap-preview-sub { font-size:12px; color:#8996a8; }
+.mindmap-preview-expand { font-size:19px; color:#8996a8; flex-shrink:0; margin-left:10px; }

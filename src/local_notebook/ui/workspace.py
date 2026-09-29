@@ -5,7 +5,7 @@ import re
 
 from nicegui import ui
 
-from .. import chat, providers, research, storage as db
+from .. import agent, chat, providers, research, storage as db
 from ..retrieval.workflow import ResearchWorkflow
 from .artifacts import note_editor
 from .common import error_message, error_text, header, notebook_dialog, theme, theme_toggle
@@ -164,7 +164,8 @@ def chat_panel(book: dict):
             count = sum(source["selected"] for source in sources if source["status"] == "ready")
             source_count.set_text(f"{count} source{'s' if count != 1 else ''}")
             web_request = research.use_web(question.value or '', research_mode.value, db.messages(notebook_id))
-            send_button.set_enabled(bool((count or web_request) and (question.value or "").strip() and not state["busy"]))
+            tool_request = agent.requested_tools(question.value or '')
+            send_button.set_enabled(bool((count or web_request or tool_request) and (question.value or "").strip() and not state["busy"]))
             signature = [(row["id"], row["status"]) for row in sources]
             if signature != state["welcome_sig"]:
                 state["welcome_sig"] = signature
@@ -224,7 +225,8 @@ def chat_panel(book: dict):
             if not question_text or state["busy"]:
                 return
             web_request = research.use_web(question_text, research_mode.value, db.messages(notebook_id))
-            if not web_request and not any(row["selected"] and row["status"] == "ready" for row in db.sources(notebook_id)):
+            tool_request = agent.requested_tools(question_text)
+            if not web_request and not tool_request and not any(row["selected"] and row["status"] == "ready" for row in db.sources(notebook_id)):
                 ui.notify("Add or select a ready source to start a conversation.", position="top")
                 return
             state["busy"], state["task"] = True, asyncio.current_task()
@@ -239,7 +241,7 @@ def chat_panel(book: dict):
             stop_button.visible = True
             send_button.visible = False
             question.set_value("")
-            answer, evidence = "", None
+            answer, evidence, tool_run = "", None, None
             is_revision = user_id is not None
             try:
                 if user_id is None:
@@ -252,7 +254,7 @@ def chat_panel(book: dict):
                         with ui.row().classes("thinking-label"):
                             ui.icon("auto_awesome", size="18px")
                             pending = ui.label("Searching your sources…").props('role=status')
-                    if web_request:
+                    if web_request or tool_request:
                         with ui.expansion('Agent activity', icon='travel_explore', value=True).classes('research-activity w-full'):
                             activity = ui.column().classes('gap-1 w-full')
                     with ui.column().classes("assistant-message streaming-answer w-full"):
@@ -268,8 +270,12 @@ def chat_panel(book: dict):
                         ui.label(text).classes('text-xs muted')
                     scroll_end()
 
-                if web_request:
-                    evidence = await research.research(notebook_id, question_text, history[:-1], research_progress)
+                if tool_request:
+                    tool_run = await agent.run(notebook_id, question_text, history[:-1], web=web_request,
+                                               on_status=research_progress)
+                    evidence = tool_run.evidence
+                elif web_request:
+                    evidence = await research.research(notebook_id, question_text, history[:-1], research_progress, depth='quick')
                 else:
                     evidence = await ResearchWorkflow(timeout=180).run(
                         notebook_id=notebook_id, query=question_text, history=history[:-1])
@@ -281,18 +287,21 @@ def chat_panel(book: dict):
                 if evidence.warning:
                     logging.getLogger(__name__).info("RAG evidence scope: %s", evidence.warning)
                 pending.set_text("Preparing your answer…")
-                if not evidence.passages:
+                if not evidence.passages and not (tool_run and tool_run.outputs):
                     answer = "I couldn’t find evidence for that in the selected sources. Try a more specific question or add a source that covers it."
                     markdown.set_content(answer)
                 elif not providers.configured():
                     raise ValueError("Set GEMINI_API_KEY in the project .env and restart the server to get a source-grounded answer.")
                 else:
-                    async for token in providers.stream(chat.SYSTEM, chat.prompt(notebook_id, question_text, evidence, history=history), fast=mode.value == "fast", on_status=pending.set_text):
+                    extra = tool_run.answer_instruction() if tool_run else ''
+                    async for token in providers.stream(chat.SYSTEM, chat.prompt(notebook_id, question_text, evidence, history=history) + extra,
+                                                        fast=mode.value == "fast", on_status=pending.set_text,
+                                                        **({'max_output_tokens': 12000} if tool_run and tool_run.deep else {})):
                         answer += token
                         if not first_token:
                             first_token = True
                             skeleton.visible = False
-                        markdown.set_content(answer)
+                        markdown.set_content(re.sub(r'\[\[tool:[a-z_]+\]\]', '', answer))
                         scroll_end()
                         await asyncio.sleep(0)
                 answer = chat.validate_citations(answer, evidence)
@@ -312,7 +321,10 @@ def chat_panel(book: dict):
                 if not answer.strip():
                     raise ValueError("The model returned no answer. Try again or choose another model.")
                 citations = chat.cited_passages(answer, evidence)
-                if is_revision:
+                if tool_run:
+                    agent.commit_answer(notebook_id, tool_run, answer, citations,
+                                        user_id=user_id if is_revision else None, question=question_text)
+                elif is_revision:
                     db.replace_turn(notebook_id, user_id, question_text, answer, citations)
                 else:
                     db.add_message(notebook_id, "assistant", answer, citations)
@@ -405,7 +417,8 @@ def message_view(item, notebook_id, *, on_edit, on_retry, busy=False, can_retry=
         if any(citation.get('kind') == 'web' for citation in citations):
             mixed = any(citation.get('kind') != 'web' for citation in citations)
             ui.label('Agent research · documents + web' if mixed else 'Agent research · website citations').classes('text-xs muted')
-        answer_content(text)
+        from .data_artifacts import message_results
+        message_results(item['id'], text, answer_content)
         if citations:
             with ui.row().classes("citation-chips w-full"):
                 for citation in citations:

@@ -35,6 +35,25 @@ class MindNode(BaseModel):
     citations: list[int] = Field(default_factory=list)
     children: list["MindNode"] = Field(default_factory=list, max_length=10)
 
+    @model_validator(mode='before')
+    @classmethod
+    def normalize_node(cls, value):
+        # Some models abbreviate leaves as "Topic [4]". Preserve those explicit
+        # references, then run the same structural and evidence checks as usual.
+        if isinstance(value, str):
+            value = {'name': value}
+        if isinstance(value, dict) and isinstance(value.get('name'), str):
+            value = dict(value)
+            label = value['name']
+            refs = [int(n) for group in re.findall(r'\[(\d+(?:\s*,\s*\d+)*)\]', label)
+                    for n in group.split(',')]
+            if refs:
+                value['name'] = re.sub(r'\[\d+(?:\s*,\s*\d+)*\]', '', label).strip()
+                existing = value.get('citations', [])
+                if isinstance(existing, list):
+                    value['citations'] = list(dict.fromkeys([*existing, *refs]))
+        return value
+
 
 class MindMap(BaseModel):
     title: str
@@ -58,7 +77,7 @@ def validate_map(node: MindNode, maximum: int, depth=0) -> None:
         validate_map(child, maximum, depth + 1)
 
 
-async def generate(notebook_id: str, kind: str, evidence: Evidence, instruction: str, *, on_progress=None) -> str:
+async def generate(notebook_id: str, kind: str, evidence: Evidence, instruction: str, *, on_progress=None, persist=True):
     if not evidence.passages:
         raise ValueError("Select at least one indexed source first.")
     if not providers.configured():
@@ -108,7 +127,8 @@ async def generate(notebook_id: str, kind: str, evidence: Evidence, instruction:
                    'Put a useful one-sentence explanation in description (at most 280 characters). Cite every leaf. '
                    'Return ONLY JSON: {"title":"Map title","root":{"name":"Central topic","description":"Explanation",'
                    '"citations":[],"children":[{"name":"Branch","description":"Explanation","citations":[1],"children":[]}]}}. '
-                   'Children recursively use the same node structure.')
+                   'Children recursively use the same node structure. Every child MUST be an object, never a string. '
+                   'Put reference numbers in citations arrays, not in names.')
         result = MindMap.model_validate(parse_json(await providers.complete(SYSTEM, request + "\n" + base, json_mode=True, fast=fast, on_chunk=chunk, max_output_tokens=8192)))
         validate_map(result.root, len(evidence.passages))
         def count_nodes(node):
@@ -124,6 +144,8 @@ async def generate(notebook_id: str, kind: str, evidence: Evidence, instruction:
     if evidence.warning and kind == "report":
         content = f"> {evidence.warning}\n\n" + content
     citations = [{**passage, "number": number} for number, passage in enumerate(evidence.passages, 1)]
+    if not persist:
+        return {**json.loads(content), 'citations': citations} if kind in {'mindmap', 'quiz'} else {'title': title, 'content': content, 'citations': citations}
     identifier = db.save_artifact(notebook_id, kind, title, content, citations)
     if on_progress:
         on_progress({"stage": "complete", "first_token_s": first, "elapsed_s": time.perf_counter() - started,

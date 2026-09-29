@@ -7,14 +7,17 @@ from ..chat import citation_target
 from ..exports import artifact_markdown, export_pdf
 from .common import error_message
 from .mindmap import MindMapCanvas
+from .studio_tasks import StudioWindow
 
 
 def note_editor(notebook_id: str, artifact=None, initial="", citations=()):
     citations = json.loads(artifact["citations"]) if artifact else list(citations)
     with ui.dialog() as dialog, ui.card().classes("modal-card artifact-dialog"):
+        window = StudioWindow(dialog, 'Notes')
         with ui.row().classes("items-center w-full"):
             ui.label("Your notes, your words").classes("text-xl")
             ui.space()
+            window.button()
             ui.button(icon="close", on_click=dialog.close).props('flat round aria-label="Close dialog"')
         title = ui.input("Title", value=artifact["title"] if artifact else "Untitled note").props("outlined").classes("w-full")
         text = ui.textarea("Markdown notes", value=artifact["content"] if artifact else initial).props("outlined rows=12").classes("w-full")
@@ -57,6 +60,16 @@ def note_editor(notebook_id: str, artifact=None, initial="", citations=()):
 def artifact_view(artifact: dict):
     if artifact["kind"] == "note":
         return note_editor(artifact["notebook_id"], artifact)
+    if artifact['kind'] in {'analytics', 'spreadsheet'}:
+        from .data_artifacts import data_view
+        with ui.dialog() as dialog, ui.card().classes('modal-card artifact-dialog'):
+            window = StudioWindow(dialog, artifact['title'])
+            with ui.row().classes('w-full justify-end'):
+                window.button()
+                ui.button(icon='close', on_click=dialog.close).props('flat round aria-label="Close dialog"')
+            data_view(json.loads(artifact['content']), artifact['kind'])
+        dialog.open()
+        return
 
     async def pdf():
         try:
@@ -66,9 +79,11 @@ def artifact_view(artifact: dict):
             error_message(exc)
 
     with ui.dialog() as dialog, ui.card().classes("modal-card artifact-dialog" + (" mindmap-dialog" if artifact["kind"] == "mindmap" else "")):
+        window = StudioWindow(dialog, artifact['title'])
         with ui.row().classes("w-full items-center no-wrap artifact-heading"):
             ui.label(artifact["title"]).classes("text-xl artifact-title")
             ui.space()
+            window.button()
             if artifact["kind"] == "mindmap":
                 coverage = json.loads(artifact["content"]).get("coverage")
                 if coverage:

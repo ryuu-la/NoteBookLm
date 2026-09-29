@@ -89,6 +89,8 @@ def cited_passages(text: str, evidence: Evidence) -> list[dict]:
 
 
 def citation_target(citation: dict) -> str:
+    if citation.get('kind') == 'user':
+        return '#'
     if citation.get('kind') == 'web':
         url = citation.get('url', '')
         parsed = urlparse(url)

@@ -44,11 +44,13 @@ def wants_web(question: str) -> bool:
     if re.search(r"\b(?:don't|do not|never|without|no)\b.{0,35}\b(?:web|online|internet|search)\b", question, re.I):
         return False
     return bool(re.search(
-        r"\b(?:online|internet|web|browse|crawl)\b|https?://|\b(?:search|look up|find)\b.{0,45}\b(?:sources|articles|papers|latest|news)\b",
+        r"\b(?:online|internet|web|browse|crawl|search|look up|deep research)\b|https?://|\bfind\b.{0,45}\b(?:sources|articles|papers|latest|news)\b",
         question, re.I))
 
 
 def use_web(question: str, mode='auto', history=()) -> bool:
+    if re.search(r"\b(?:don't|do not|never|without|no)\b.{0,35}\b(?:web|online|internet|search)\b", question, re.I):
+        return False
     if mode != 'auto':
         return mode == 'web'
     if wants_web(question):
@@ -114,9 +116,13 @@ async def search_web(query: str, on_status) -> tuple[list[dict], list[str]]:
     return [], errors
 
 
-async def research(notebook_id: str, question: str, history: list[dict], on_status=lambda text: None) -> Evidence:
+async def research(notebook_id: str, question: str, history: list[dict], on_status=lambda text: None,
+                   *, depth: str = 'standard') -> Evidence:
     """Let the model choose searches and reads, then return transient cited evidence."""
     started = time.monotonic()
+    max_searches, max_pages, max_steps, time_budget = {
+        'quick': (2, 4, 6, 75), 'deep': (10, 24, 26, 420),
+    }.get(depth, (MAX_SEARCHES, MAX_PAGES, MAX_STEPS, TIME_BUDGET))
     book = db.one('SELECT title FROM notebooks WHERE id=?', (notebook_id,))
     topic = contextual_query(question, history)
     fallback_query = ' '.join(term for term in query_terms(topic) if term not in FILLER)[:220]
@@ -162,13 +168,17 @@ async def research(notebook_id: str, question: str, history: list[dict], on_stat
     add_candidates([{'url': url.rstrip('.,;'), 'title': 'URL supplied by user'}
                     for url in re.findall(r'https?://[^\s<>]+', question)])
     try:
-        async with asyncio.timeout(TIME_BUDGET):
+        async with asyncio.timeout(time_budget):
             if inventory:
                 await get_documents(fallback_query)
-            for step in range(MAX_STEPS):
+            for step in range(max_steps):
                 available = [item for item in candidates if item['url'] not in visited]
                 report(f'Planning research step {step + 1} · {len(pages)} pages read')
                 state = {
+                    'depth': depth,
+                    'research_goal': ('Investigate distinct subtopics, follow relevant links, compare independent sources, '
+                                      'and refine searches to resolve gaps before finishing.' if depth == 'deep' else
+                                      'Find sufficient evidence promptly. Stop once the requested facts are supported.'),
                     'question': question, 'notebook': book['title'] if book else '',
                     'conversation': [{'role': item['role'], 'text': item['text'][:1800]} for item in history[-4:]],
                     'searches': searches, 'candidates': available[:40],
@@ -180,8 +190,8 @@ async def research(notebook_id: str, question: str, history: list[dict], on_stat
                     'read_pages': [{'title': page['title'], 'url': page['url'],
                                     'text': excerpt(page['text'], topic, 4200)} for page in pages],
                     'tool_errors': errors[-8:],
-                    'remaining_searches': MAX_SEARCHES - len(searches),
-                    'remaining_reads': MAX_PAGES - attempts,
+                    'remaining_searches': max_searches - len(searches),
+                    'remaining_reads': max_pages - attempts,
                 }
                 try:
                     action = await decide(state)
@@ -196,7 +206,7 @@ async def research(notebook_id: str, question: str, history: list[dict], on_stat
                     elif needs_documents and inventory and not documents and len(document_queries) < MAX_DOCUMENT_SEARCHES:
                         errors.append('Cannot finish this comparison yet: retrieve relevant notebook passages using a corrected, focused query.')
                         continue
-                    elif pages or documents or len(searches) >= MAX_SEARCHES:
+                    elif pages or documents or len(searches) >= max_searches:
                         coverage = str(action.get('coverage', ''))[:400]
                         break
                     else:
@@ -211,7 +221,7 @@ async def research(notebook_id: str, question: str, history: list[dict], on_stat
                     continue
                 if action['action'] == 'search':
                     query = str(action.get('query', '')).strip()[:250]
-                    if not query or query.casefold() in {q.casefold() for q in searches} or len(searches) >= MAX_SEARCHES:
+                    if not query or query.casefold() in {q.casefold() for q in searches} or len(searches) >= max_searches:
                         errors.append('Search rejected: repeated query or search budget exhausted. Read existing candidates or finish.')
                         continue
                     searches.append(query)
@@ -224,7 +234,7 @@ async def research(notebook_id: str, question: str, history: list[dict], on_stat
                 ids = action.get('ids', [])
                 if not isinstance(ids, list):
                     ids = []
-                selected = [item for item in available if item['id'] in ids][:min(3, MAX_PAGES - attempts)]
+                selected = [item for item in available if item['id'] in ids][:max(0, min(3, max_pages - attempts))]
                 if not selected:
                     errors.append('Read rejected: choose unread candidate IDs from the provided list.')
                     continue

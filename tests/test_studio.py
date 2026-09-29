@@ -20,6 +20,19 @@ def test_map_requires_grounded_leaves():
         validate_map(MindNode(name="Unsupported"), 1)
 
 
+def test_map_normalizes_string_leaves_without_weakening_citations():
+    node = MindNode.model_validate({'name': 'Philosophy', 'children': [
+        {'name': 'Week 1', 'children': ['Calculus and Binary System [4]', 'Other topic [1, 2]']} ]})
+    validate_map(node, 4)
+    leaf = node.children[0].children[0]
+    assert leaf.name == 'Calculus and Binary System' and leaf.citations == [4]
+    assert node.children[0].children[1].citations == [1, 2]
+    with pytest.raises(ValueError, match='invalid source reference'):
+        validate_map(MindNode.model_validate('Invalid [99]'), 4)
+    with pytest.raises(ValueError, match='supporting evidence'):
+        validate_map(MindNode.model_validate('Unsupported'), 4)
+
+
 def test_generation_saves_validated_quiz(indexed, monkeypatch):
     async def complete(*args, **kwargs):
         return json.dumps({"title": "Biology quiz", "questions": [{"question": "What captures light?",

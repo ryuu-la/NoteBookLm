@@ -64,6 +64,9 @@ def initialize() -> None:
             id TEXT PRIMARY KEY, notebook_id TEXT NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
             kind TEXT NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL,
             citations TEXT DEFAULT '[]', created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS message_blocks (
+            message_id TEXT PRIMARY KEY REFERENCES messages(id) ON DELETE CASCADE,
+            content TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
         PRAGMA user_version=2;
         """)
@@ -126,7 +129,7 @@ def add_message(notebook_id: str, role: str, text: str, citations=()) -> str:
     return identifier
 
 
-def replace_turn(notebook_id: str, user_id: str, question: str, answer: str, citations=()) -> None:
+def replace_turn(notebook_id: str, user_id: str, question: str, answer: str, citations=()) -> str:
     """Commit an edited/retried branch only after an answer is available."""
     with connect() as connection:
         history = connection.execute(
@@ -139,9 +142,11 @@ def replace_turn(notebook_id: str, user_id: str, question: str, answer: str, cit
                                [(row["id"], notebook_id) for row in history[index + 1:]])
         connection.execute("UPDATE messages SET text=? WHERE id=? AND notebook_id=?", (question, user_id, notebook_id))
         timestamp = now()
+        identifier = uid()
         connection.execute("INSERT INTO messages VALUES (?,?,?,?,?,?)",
-                           (uid(), notebook_id, "assistant", answer, json.dumps(list(citations)), timestamp))
+                           (identifier, notebook_id, "assistant", answer, json.dumps(list(citations)), timestamp))
         connection.execute("UPDATE notebooks SET updated_at=? WHERE id=?", (timestamp, notebook_id))
+        return identifier
 
 
 def save_artifact(notebook_id: str, kind: str, title: str, content: str, citations=()) -> str:

@@ -9,11 +9,15 @@ from ..retrieval.search import coverage, retrieve
 from ..studio import generate
 from .artifacts import artifact_view, note_editor
 from .common import error_message
+from .studio_tasks import StudioWindow, task_dock
 
 KINDS = {"mindmap": ("account_tree", "Mind map", "See the connections", "pink"),
          "quiz": ("quiz", "Quiz", "Put yourself to the test", "blue"),
          "report": ("description", "Reports", "Go a little deeper", "yellow"),
-         "note": ("edit_note", "Notes", "Make it your own", "green")}
+         "note": ("edit_note", "Notes", "Make it your own", "green"),
+         "analytics": ("bar_chart", "Data Analytics", "Find insights and chart data", "blue"),
+         "spreadsheet": ("table_view", "Spreadsheet", "Organize and export data", "green"),
+         "deep_research": ("travel_explore", "Deep Research", "Explore websites in depth", "pink")}
 
 
 def studio_panel(notebook_id: str, on_collapse=None):
@@ -26,9 +30,12 @@ def studio_panel(notebook_id: str, on_collapse=None):
         with ui.column().classes("studio-content w-full"):
             ui.label("Make something meaningful.").classes("studio-title")
             ui.label("Study, connect, and keep the ideas that matter.").classes("studio-subtitle")
+            task_dock()
             with ui.element("div").classes("studio-grid"):
                 for kind, (icon, label, caption, color) in KINDS.items():
                     def action(k=kind):
+                        if k in {'analytics', 'spreadsheet', 'deep_research'}:
+                            return agent_dialog(notebook_id, k)
                         if k != "note" and not any(row["selected"] and row["status"] == "ready" for row in db.sources(notebook_id)):
                             ui.notify("Select a ready source to create study material.", position="top")
                             return
@@ -77,7 +84,11 @@ def studio_panel(notebook_id: str, on_collapse=None):
 def generate_dialog(notebook_id, kind):
     state = {"task": None, "started": 0, "stage": "", "retrieval_s": 0, "first_token_s": None}
     with ui.dialog() as dialog, ui.card().classes("modal-card"):
-        ui.label(f"Create a {KINDS[kind][1].lower()}").classes("text-xl")
+        window = StudioWindow(dialog, KINDS[kind][1], lambda: state['task'].cancel() if state['task'] else None)
+        with ui.row().classes('w-full items-center'):
+            ui.label(f"Create a {KINDS[kind][1].lower()}").classes("text-xl")
+            ui.space()
+            window.button()
         ui.label("Grounded in the sources you’ve selected.").classes("muted")
         topic = ui.input("Focus on a topic (optional)", placeholder="Leave blank for a source overview").props("outlined").classes("w-full")
         defaults = {"quiz": "Create 5 medium-difficulty multiple choice questions.",
@@ -113,13 +124,14 @@ def generate_dialog(notebook_id, kind):
         def tick():
             if state["task"]:
                 status.set_text(f"{state['stage']} · {time.perf_counter() - state['started']:.0f}s")
+                window.update(status.text)
         ui.timer(1, tick)
 
         def cancel():
+            window.stop()
             if state["task"]:
                 state["task"].cancel()
             dialog.close()
-        dialog.on("hide", lambda: state["task"].cancel() if state["task"] else None)
 
         async def create():
             if state["task"]:
@@ -144,13 +156,14 @@ def generate_dialog(notebook_id, kind):
                 preference = (f"Focus topic: {topic.value.strip()}\n" if topic.value.strip() else "") + instructions.value
                 identifier = await generate(notebook_id, kind, evidence, preference, on_progress=on_progress)
                 state["task"] = None
-                dialog.close()
-                artifact_view(db.one("SELECT * FROM artifacts WHERE id=?", (identifier,)))
+                window.finish(lambda: artifact_view(db.one("SELECT * FROM artifacts WHERE id=?", (identifier,))))
             except asyncio.CancelledError:
                 status.set_text("Generation cancelled")
+                window.update('Cancelled')
             except Exception as exc:
                 error_message(exc)
                 status.set_text("Could not generate. Check your model connection and try again.")
+                window.update('Failed · reopen to retry')
             finally:
                 state["task"] = None
                 button.enable()
@@ -161,6 +174,73 @@ def generate_dialog(notebook_id, kind):
         with ui.row().classes("w-full justify-end"):
             ui.button("Cancel", on_click=cancel).props("flat")
             button = ui.button("Generate", icon="auto_awesome", on_click=create).classes("primary-btn")
+    dialog.open()
+
+
+def agent_dialog(notebook_id, kind):
+    from .. import agent, chat, providers
+    state = {'task': None}
+    with ui.dialog() as dialog, ui.card().classes('modal-card'):
+        window = StudioWindow(dialog, KINDS[kind][1], lambda: state['task'].cancel() if state['task'] else None)
+        with ui.row().classes('w-full items-center'):
+            ui.label(KINDS[kind][1]).classes('text-xl')
+            ui.space()
+            window.button()
+        ui.label('Use selected sources, research the web, and create saved results.').classes('text-sm muted')
+        request = ui.textarea('What should the agent do?', placeholder='Describe the topic, data, and result you need').props('outlined rows=4').classes('w-full')
+        online = ui.checkbox('Search the web', value=kind == 'deep_research')
+        if kind == 'deep_research':
+            online.disable()
+        status = ui.label('').props('role=status aria-live=polite').classes('text-sm muted')
+        progress = ui.linear_progress().props('indeterminate')
+        progress.visible = False
+
+        def cancel():
+            window.stop()
+            if state['task']:
+                state['task'].cancel()
+            dialog.close()
+
+        async def create():
+            if state['task'] or not (request.value or '').strip():
+                return
+            state['task'] = asyncio.current_task()
+            button.disable()
+            request.disable()
+            progress.visible = True
+            def update_status(text):
+                status.set_text(text)
+                window.update(text)
+            try:
+                result = await agent.run(notebook_id, request.value, web=online.value, forced=[kind], on_status=update_status)
+                answer = ''
+                if result.deep:
+                    update_status('Writing your detailed report…')
+                    answer = await providers.complete(chat.SYSTEM, chat.prompt(notebook_id, request.value, result.evidence)
+                                                      + result.answer_instruction(), fast=False, max_output_tokens=12000)
+                    answer = chat.validate_citations(answer, result.evidence)
+                identifiers = agent.save_outputs(notebook_id, result, answer)
+                if not identifiers:
+                    raise ValueError('; '.join(result.errors) or 'No usable data was found. Select a data source or enable web search.')
+                state['task'] = None
+                window.finish(lambda: artifact_view(db.one('SELECT * FROM artifacts WHERE id=?', (identifiers[0],))))
+                if result.errors:
+                    ui.notify('Some tools could not finish: ' + '; '.join(result.errors), type='warning')
+            except asyncio.CancelledError:
+                status.set_text('Cancelled')
+                window.update('Cancelled')
+            except Exception as exc:
+                error_message(exc)
+                status.set_text(str(exc))
+                window.update('Failed · reopen to retry')
+            finally:
+                state['task'] = None
+                button.enable()
+                request.enable()
+                progress.visible = False
+        with ui.row().classes('w-full justify-end'):
+            ui.button('Cancel', on_click=cancel).props('flat')
+            button = ui.button('Run agent', icon='auto_awesome', on_click=create).classes('primary-btn')
     dialog.open()
 
 
