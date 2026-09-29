@@ -13,7 +13,7 @@ def discovery_dialog(notebook_id: str):
         with ui.row().classes("w-full items-center"):
             ui.label("Follow your curiosity").classes("text-xl")
             ui.space()
-            ui.button(icon="close", on_click=dialog.close).props("flat round")
+            ui.button(icon="close", on_click=dialog.close).props('flat round aria-label="Close dialog"')
         query = ui.input("What would you like to explore?").props("outlined").classes("w-full")
         engine = ui.select(["Browser search", "Wikipedia", "Gemini web search"], value="Browser search", label="Search with").props("outlined").classes("w-full")
         ui.label("Browser search opens public results in a new tab. Copy a useful URL and add it with Add sources → Website. Integrated search depends on provider availability and quota.").classes("text-xs muted")
@@ -21,6 +21,7 @@ def discovery_dialog(notebook_id: str):
 
         async def add(item, button):
             button.disable()
+            button.props("loading")
             try:
                 name, data, url = await run.io_bound(fetch, item["url"])
                 await run.io_bound(add_file, notebook_id, name, data, url)
@@ -29,6 +30,8 @@ def discovery_dialog(notebook_id: str):
             except Exception as exc:
                 button.enable()
                 error_message(exc)
+            finally:
+                button.props(remove="loading")
 
         async def search():
             if not query.value.strip():
@@ -42,6 +45,7 @@ def discovery_dialog(notebook_id: str):
                     ui.label("Copy a result’s URL, then add it from the Website tab. You choose exactly what enters your library.").classes("text-xs muted")
                 return
             search_button.disable()
+            search_button.props("loading")
             results.clear()
             try:
                 found = await discover(query.value, engine.value)
@@ -58,6 +62,7 @@ def discovery_dialog(notebook_id: str):
                 error_message(exc)
             finally:
                 search_button.enable()
+                search_button.props(remove="loading")
         search_button = ui.button("Find sources", icon="search", on_click=search).classes("primary-btn")
         query.on("keydown.enter", search)
     dialog.open()

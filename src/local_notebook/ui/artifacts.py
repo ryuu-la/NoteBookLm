@@ -3,8 +3,10 @@ import json
 from nicegui import run, ui
 
 from .. import storage as db
+from ..chat import citation_target
 from ..exports import artifact_markdown, export_pdf
 from .common import error_message
+from .mindmap import MindMapCanvas
 
 
 def note_editor(notebook_id: str, artifact=None, initial="", citations=()):
@@ -13,7 +15,7 @@ def note_editor(notebook_id: str, artifact=None, initial="", citations=()):
         with ui.row().classes("items-center w-full"):
             ui.label("Your notes, your words").classes("text-xl")
             ui.space()
-            ui.button(icon="close", on_click=dialog.close).props("flat round")
+            ui.button(icon="close", on_click=dialog.close).props('flat round aria-label="Close dialog"')
         title = ui.input("Title", value=artifact["title"] if artifact else "Untitled note").props("outlined").classes("w-full")
         text = ui.textarea("Markdown notes", value=artifact["content"] if artifact else initial).props("outlined rows=12").classes("w-full")
         state = {"id": artifact["id"] if artifact else None, "last": None}
@@ -39,10 +41,11 @@ def note_editor(notebook_id: str, artifact=None, initial="", citations=()):
             save()
             dialog.close()
 
-        def pdf():
+        async def pdf():
             try:
                 content = artifact_markdown({"kind": "note", "content": text.value, "citations": json.dumps(citations)})
-                ui.download.content(export_pdf(title.value, content), "notes.pdf", "application/pdf")
+                data = await run.io_bound(export_pdf, title.value, content)
+                ui.download.content(data, "notes.pdf", "application/pdf")
             except Exception as exc:
                 error_message(exc)
         with ui.row().classes("w-full justify-between"):
@@ -54,12 +57,30 @@ def note_editor(notebook_id: str, artifact=None, initial="", citations=()):
 def artifact_view(artifact: dict):
     if artifact["kind"] == "note":
         return note_editor(artifact["notebook_id"], artifact)
-    with ui.dialog() as dialog, ui.card().classes("modal-card artifact-dialog"):
-        with ui.row().classes("w-full items-center no-wrap"):
-            ui.label(artifact["title"]).classes("text-xl")
+
+    async def pdf():
+        try:
+            data = await run.io_bound(export_pdf, artifact["title"], artifact_markdown(artifact))
+            ui.download.content(data, "study-material.pdf", "application/pdf")
+        except Exception as exc:
+            error_message(exc)
+
+    with ui.dialog() as dialog, ui.card().classes("modal-card artifact-dialog" + (" mindmap-dialog" if artifact["kind"] == "mindmap" else "")):
+        with ui.row().classes("w-full items-center no-wrap artifact-heading"):
+            ui.label(artifact["title"]).classes("text-xl artifact-title")
             ui.space()
-            ui.button(icon="close", on_click=dialog.close).props("flat round")
-        if artifact["kind"] in {"quiz", "mindmap"}:
+            if artifact["kind"] == "mindmap":
+                coverage = json.loads(artifact["content"]).get("coverage")
+                if coverage:
+                    with ui.button(icon="info_outline").props('flat round aria-label="Map coverage"'):
+                        ui.tooltip(coverage)
+                with ui.button(icon="download").props('flat round aria-label="Export mind map"'):
+                    with ui.menu():
+                        ui.menu_item("Export PDF", on_click=pdf).props('role=menuitem')
+                        ui.menu_item("Markdown", on_click=lambda: ui.download.content(artifact_markdown(artifact), "study-material.md")).props('role=menuitem')
+                        ui.menu_item("JSON", on_click=lambda: ui.download.content(artifact["content"], "study-material.json")).props('role=menuitem')
+            ui.button(icon="close", on_click=dialog.close).props('flat round aria-label="Close dialog"')
+        if artifact["kind"] == "quiz":
             coverage = json.loads(artifact["content"]).get("coverage")
             if coverage:
                 ui.label(coverage).classes("text-xs muted")
@@ -71,25 +92,20 @@ def artifact_view(artifact: dict):
             with ui.scroll_area().classes("w-full h-96"):
                 ui.markdown(artifact["content"]).classes("markdown w-full")
 
-        async def pdf():
-            try:
-                data = await run.io_bound(export_pdf, artifact["title"], artifact_markdown(artifact))
-                ui.download.content(data, "study-material.pdf", "application/pdf")
-            except Exception as exc:
-                error_message(exc)
-        with ui.row().classes("w-full items-center"):
-            ui.button("Export PDF", icon="download", on_click=pdf).props("flat")
-            ui.button("Markdown", on_click=lambda: ui.download.content(artifact_markdown(artifact), "study-material.md")).props("flat")
-            if artifact["kind"] in {"quiz", "mindmap"}:
-                ui.button("JSON", on_click=lambda: ui.download.content(artifact["content"], "study-material.json")).props("flat")
-            if artifact["kind"] == "report":
-                ui.button("Edit as note", icon="edit_note", on_click=lambda: note_editor(artifact["notebook_id"], initial=artifact["content"], citations=json.loads(artifact["citations"]))).props("flat")
+        if artifact["kind"] != "mindmap":
+            with ui.row().classes("w-full items-center artifact-downloads"):
+                ui.button("Export PDF", icon="download", on_click=pdf).props("flat")
+                ui.button("Markdown", on_click=lambda: ui.download.content(artifact_markdown(artifact), "study-material.md")).props("flat")
+                if artifact["kind"] in {"quiz", "mindmap"}:
+                    ui.button("JSON", on_click=lambda: ui.download.content(artifact["content"], "study-material.json")).props("flat")
+                if artifact["kind"] == "report":
+                    ui.button("Edit as note", icon="edit_note", on_click=lambda: note_editor(artifact["notebook_id"], initial=artifact["content"], citations=json.loads(artifact["citations"]))).props("flat")
         citations = json.loads(artifact["citations"])
-        if citations:
+        if citations and artifact["kind"] != "mindmap":
             with ui.expansion("Source evidence", icon="fact_check").classes("w-full"):
                 for citation in citations:
                     ui.link(f"[{citation.get('number', '')}] {citation['name']} · {citation['locator']}",
-                            f"/evidence/{citation['id']}", new_tab=True).classes("block text-xs mb-2")
+                            citation_target(citation), new_tab=True).classes("block text-xs mb-2")
     dialog.open()
 
 
@@ -133,16 +149,4 @@ def quiz_view(quiz: dict):
 
 
 def mindmap_view(mindmap: dict, citations: list[dict]):
-    hint = ui.label("Scroll to zoom · drag to explore · click a branch to expand it").classes("text-xs muted")
-    ui.echart({"backgroundColor": "transparent", "animation": False,
-               "tooltip": {"trigger": "item", "triggerOn": "mousemove"},
-               "series": [{"type": "tree", "data": [mindmap["root"]], "top": "8%", "left": "15%",
-                           "bottom": "8%", "right": "26%", "symbolSize": 10, "roam": True,
-                           "initialTreeDepth": 3, "expandAndCollapse": True,
-                           "itemStyle": {"color": "#b5c8ff"}, "lineStyle": {"color": "#64708c", "width": 1.5},
-                           "label": {"position": "left", "color": "#dddff1", "fontSize": 12, "width": 130, "overflow": "break"},
-                           "leaves": {"label": {"position": "right"}}}]},
-              on_point_click=lambda event: hint.set_text(
-                  "Evidence: " + ", ".join(f"[{n}]" for n in event.data.get("citations", []))
-                  if isinstance(event.data, dict) else "Select a node to inspect its sources")
-              ).classes("w-full h-96")
+    MindMapCanvas(mindmap["root"], citations)

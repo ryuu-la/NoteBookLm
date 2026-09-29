@@ -49,3 +49,26 @@
 @media(min-width:1500px) { .home-main { padding-top:65px; } .card-art { height:190px; } }
 @media(max-width:1050px) { .home-main { width:calc(100% - 50px); } .hero-title { font-size:35px; } .notebook-grid { grid-template-columns:repeat(2,1fr); } .feature-strip { gap:16px; } }
 @media(max-width:700px) { .home-main { width:calc(100% - 36px); padding-top:35px; } .hero-title { font-size:32px; } .welcome-row { gap:25px; margin-bottom:35px; } .notebook-grid { grid-template-columns:1fr; } .notebook-search { width:100%; order:5; } .feature-strip { grid-template-columns:1fr; } .home-footer { padding:20px; } .home-bottom { gap:10px; } }
+/* Library follows the same restrained palette as the notebook workspace. */
+.home-main { width:min(1180px,calc(100% - 80px)); padding-top:48px; animation:arrive .4s var(--ease); }
+.welcome-row { margin-bottom:44px; }
+.hero-title { font-size:clamp(34px,3.8vw,52px); letter-spacing:-1.8px; line-height:1.16; }
+.hero-subtitle { color:#aeb6c1; line-height:1.7; }
+.library-toolbar { border-color:var(--line); }
+.notebook-grid { gap:20px; }
+.notebook-card { background:var(--panel); border-color:#30343b; border-radius:22px; transition:transform .22s var(--ease),border-color .22s,box-shadow .22s; }
+.notebook-card:hover { transform:translateY(-4px); border-color:#6e87aa; box-shadow:0 12px 28px #0003; }
+.card-art { height:140px; }
+.art-blue { background:radial-gradient(ellipse at 50% 30%,#344b68,transparent 85%),#243142; }
+.art-purple { background:radial-gradient(ellipse at 50% 30%,#4c4266,transparent 85%),#30293e; }
+.art-green { background:radial-gradient(ellipse at 50% 30%,#395347,transparent 85%),#26372f; }
+.card-title { font-size:19px; line-height:1.4; }
+.card-description { color:#aab2be; }
+.card-meta { color:#a8b2c0; font-size:11px; border-color:var(--line); }
+.new-notebook-card { border-radius:22px; border-color:#414956; background:#181b20; transition:background .2s,border-color .2s; }
+.new-notebook-card:hover { background:#202a39; border-color:#7e9bc3; }
+.notebook-search .q-field__control { height:40px; }
+.home-footer { color:#959eac; font-size:10px; letter-spacing:1px; }
+.home-bottom { border-color:var(--line); }
+.list-layout .card-art { height:170px; }
+@media(max-width:700px) { .home-main { width:calc(100% - 36px); padding-top:30px; } .hero-title { font-size:36px; letter-spacing:-1.2px; } .library-toolbar .section-title { flex:1; } .card-art { height:132px; } .list-layout .card-art { width:90px; height:auto; } .list-layout .card-body { padding:16px; min-width:0; } .list-layout .card-title { font-size:16px; } .home-footer { gap:12px; flex-wrap:wrap; } }

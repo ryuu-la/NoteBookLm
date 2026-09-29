@@ -9,7 +9,7 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 from urllib.parse import urlsplit
 
-from . import storage as db
+from . import providers, storage as db
 from .config import DATA
 from .ingestion import jobs
 from .seed import seed
@@ -49,6 +49,7 @@ def configure():
     app.add_middleware(LocalOnlyMiddleware)
     app.on_startup(jobs.start)
     app.on_shutdown(jobs.stop)
+    app.on_shutdown(providers.close_clients)
 
     @app.get("/health")
     def health():

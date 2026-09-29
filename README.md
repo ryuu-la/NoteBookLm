@@ -11,15 +11,16 @@ What works
 ----------
 
 - Notebook creation, search, grid/list views, renaming, deletion, and restart persistence.
-- A dark Sources → Chat → Studio workspace with responsive layouts.
+- A charcoal Sources → Chat → Studio workspace with collapsible sidebars, remembered layouts, mobile panel tabs, source search, and reduced-motion support.
+- Stage-based indexing progress with passage counts, elapsed time, cancellation, and animated generation feedback.
 - PDF, DOCX, PPTX, XLSX, CSV, TSV, TXT, Markdown, HTML, JSON, and image ingestion. OCR is available for scans; legacy Office files use an optional LibreOffice conversion adapter.
 - Public website/PDF imports, pasted text, browser-based discovery, and optional integrated Wikipedia/Gemini search.
 - LlamaIndex sentence chunking and a typed retrieval workflow; local BGE embeddings, LanceDB vectors, SQLite FTS5/BM25, reciprocal rank fusion, and a MiniLM cross-encoder reranker.
-- Streaming Gemini chat, selected-source filtering, clickable evidence locations, stop generation, and saved conversations. Without a model connection, matching source excerpts are explicitly labeled.
+- Streaming Gemini chat, selected-source filtering, clickable evidence locations, stop generation, and saved conversations. Without a model connection, the app explains how to configure .env; it never substitutes excerpts for an answer.
 - Structured, validated mind maps and quizzes; quiz scoring with explanations; source-grounded reports.
 - Autosaved Markdown notes, answer-to-note capture, and PDF/Markdown/JSON downloads with retained source references where available.
-- Gemini 3.5 Flash and Flash-Lite, plus an OpenAI-compatible adapter for local or remote endpoints.
-- OS credential-store support, local data ownership, bounded ingestion batches, duplicate detection, and restart checkpoints.
+- `gemini-3.8-flash` and `gemini-3.5-flash-lite`, plus an OpenAI-compatible adapter for local or remote endpoints.
+- Project `.env` configuration, local data ownership, bounded ingestion batches, duplicate detection, and restart checkpoints.
 - Fast/Main chat switch, visible streaming status, reusable local embedding cache, and a retrieval benchmark dashboard with downloadable judgments.
 
 ![Folio workspace](docs/images/workspace.png)
@@ -35,6 +36,12 @@ cd E:\NoteBookLM
 ```
 
 Open **http://127.0.0.1:8080**. If it is already running, open that address directly instead of starting a second server. Stop a foreground server with Ctrl+C.
+
+Use the sun/moon button in the header to switch between dark and white themes; the choice is saved locally. Notebook cards have a trash button with a confirmation before deletion.
+
+Choose **Agent** beside the answer model, or ask to search online in **Auto** mode. The agent retrieves selected notebook documents, chooses web searches, reads promising pages, follows links, and refines document or web queries when evidence is missing. Comparisons with “our text” use document and website evidence together, with labeled citations for each. Context space is reserved for both, and a citation check retries comparisons that omit one side. Unselected documents remain excluded. Search uses DuckDuckGo with multi-engine fallbacks. **Web pages are read in memory, never imported or indexed by the agent.** Explicit Add sources → Website imports remain available separately.
+
+The expandable Agent activity shows document retrieval, web searches and reads; Stop cancels the run. A run allows up to three document searches, four web searches, eight page reads, ten decisions, and three minutes of research. It cannot read every website, private pages, or sites that block access. Missing evidence is disclosed rather than presented as a completed comparison. **Sources** mode uses only selected notebook sources; **Auto** chooses the agent for online requests and referential follow-ups to web answers. Comparison tables preserve readable label widths and scroll horizontally on narrow screens.
 
 Fresh installation
 ------------------
@@ -55,14 +62,22 @@ First model setup downloads approximately 100–200 MB of embedding/reranker ass
 Connect a model
 ---------------
 
-1. Open **Settings**.
-2. Choose **Gemini**, enter your API key, and keep `gemini-3.5-flash` / `gemini-3.5-flash-lite` or enter other accessible model IDs.
-3. Choose whether to remember the key in the operating-system credential store. Otherwise the key remains in this server process until exit.
-4. Test the connection and save. The app also recognizes `GEMINI_API_KEY`.
+1. Open the project [`.env`](.env). On a fresh checkout, copy `.env.example` to `.env` first.
+2. Fill in `GEMINI_API_KEY` with your own key:
+
+   ```dotenv
+   GEMINI_API_KEY=your_key_here
+   GEMINI_FAST_MODEL=gemini-3.5-flash-lite
+   GEMINI_MAIN_MODEL=gemini-3.8-flash
+   ```
+
+3. Restart the server, then open **Settings → Test connection**.
+
+The project `.env` is loaded at startup, regardless of the working directory. Values in the project file take precedence over inherited process variables, including a blank key. This prevents a previous environment key from silently taking over your new setup. Only the two Gemini model IDs above are allowed. Gemini settings in the database cannot override them. A transient failure can retry the selected model once before any text arrives; it never switches models automatically. There is no key-entry dialog or credential-store fallback. `.env` is ignored by Git; `.env.example` contains no secret.
 
 Gemini chat defaults to **Fast** (your Flash-Lite model); switch to **Main** in the composer when you want Flash. Studio also defaults to the fast model. Settings exposes Gemini thinking effort and a 16- or 40-candidate reranking shortlist. Higher effort and broader reranking take longer. Model service load can still delay the first token.
 
-For a local OpenAI-compatible server, select **Local / compatible**, set its base URL (for example `http://localhost:11434/v1`), and enter a model installed on that server. A remote endpoint must use HTTPS. Compatibility depends on the endpoint's streaming and JSON-output support; the adapter has been checked against a local SSE contract fixture, not every model vendor.
+For a local OpenAI-compatible server, select **Local / compatible**, set its base URL (for example `http://localhost:11434/v1`), and enter a model installed on that server. If authentication is required, set `NOTEBOOK_API_KEY` in `.env` and restart. A remote endpoint must use HTTPS. Compatibility depends on the endpoint's streaming and JSON-output support; the adapter has been checked against a local SSE contract fixture, not every model vendor.
 
 The application is free. Cloud API usage, search quotas, and provider account requirements are controlled by the provider. Cloud generation sends your question and retrieved evidence to that provider. Local storage does not make a cloud model offline.
 
@@ -78,10 +93,14 @@ Try a three-minute demo
 Verification
 ------------
 
-- **40 automated tests** passed locally, covering parsing/OCR, isolation, citations, recovery, embedding reuse, candidate budgets, source overviews, PDF export, SSE parsing, and local origin checks.
+The chat RAG workflow now has a separate [conversation and answer evaluation suite](docs/RAG_EVALUATION.md), including follow-ups, topic switches, full-index lookup, source isolation, unanswerable questions, and live citation/claim checks. Open `/benchmarks` for per-case results. Missing model access no longer substitutes pasted source excerpts for an answer.
+
+The September UI/indexing refresh reduced the isolated 1,000-page ingestion fixture from **14.57 s to 8.68 s**. See the [UI changes, benchmark comparison, and validation scope](docs/UI_REFRESH.md).
+
+- **47 automated tests** passed locally, covering parsing/OCR, isolation, citations, recovery, embedding reuse, candidate budgets, source overviews, PDF export, SSE parsing, and local origin checks.
 - An isolated headless Edge run passed **17 browser checks with a real Gemini connection**. Fast chat became visible in **2.40 s**; a small mind map took **3.48 s**, a two-question quiz **2.42 s**, and a short report **2.92 s**. These are single-run observations, not service guarantees.
 - Four deterministic browser checks verified a visible waiting state, partial streaming before completion, stopping chat, and cancelling Studio without saving an artifact.
-- A **10,000-page synthetic digital PDF** produced 10,000 indexed passages in **126.67 seconds**, with **557.4 MB** peak process RSS across ingestion and reindexing. Cached reindexing took **22.16 s**. Five exact-record retrieval probes measured **27–41 ms** with the reranker off.
+- A **10,000-page synthetic digital PDF** exercises ingestion and cached reindexing, followed by five exact-record probes with the reranker off. See the [generated measurement table and raw results](docs/VERIFICATION.md#10000-page-benchmark) for the current timings, memory, and probe outcomes.
 - Live Flash and Flash-Lite connections and a public URL import were verified.
 
 These are scoped measurements, not broad accuracy or production-readiness claims. The synthetic benchmark uses short, simple pages and excludes OCR and complex layouts. See [verification details](docs/VERIFICATION.md).
@@ -91,26 +110,35 @@ These are scoped measurements, not broad accuracy or production-readiness claims
 .\.venv\Scripts\ruff.exe check src tests scripts benchmarks
 .\.venv\Scripts\python.exe scripts\browser_check.py
 .\.venv\Scripts\python.exe scripts\streaming_check.py
+.\.venv\Scripts\python.exe scripts\ux_check.py
 .\.venv\Scripts\python.exe benchmarks\scale.py --pages 10000 --semantic
 .\.venv\Scripts\python.exe benchmarks\retrieval.py
+.\.venv\Scripts\python.exe benchmarks\rag.py
 .\.venv\Scripts\python.exe benchmarks\plot.py
 ```
 
 `scripts/browser_check.py --live` runs generation against a configured real provider and consumes its quota. Browser checks use an isolated library and Edge profile. The browser test script currently targets an installed Microsoft Edge browser.
 
+System design
+-------------
+
+See the [architecture diagrams and runtime flows](docs/ARCHITECTURE.md) and [updated implementation plan](PROJECT_PLAN.md). They distinguish the current implementation from planned improvements.
+
 Retrieval quality and speed
 ---------------------------
 
-Open **Retrieval benchmarks** in the top bar, or visit `/benchmarks`. The chart compares keyword, hybrid, and two reranking budgets on **54 labeled questions over 40 original study passages**. The fast reranker measured **100% Recall@8**, **1.000 MRR@8**, and **0.9977 nDCG@8**, at **208 ms median / 227 ms p95**. Reranking 40 candidates achieved the same scores at **473 ms median**.
+Open **Retrieval benchmarks** in the top bar, or visit `/benchmarks`. Compare keyword, hybrid, and two reranking budgets on **54 labeled questions over 40 authored passages**. The [measured results table](docs/RETRIEVAL_BENCHMARK.md) and chart are generated from the same saved JSON. Current runs use three repetitions with randomized configuration and question order; this remains a small development fixture.
 
 ![Retrieval benchmark](docs/images/retrieval-benchmark.png)
+
+The separate live answer report currently **fails its evaluation gates** and needs judge review. It is not a validated answer-accuracy score.
 
 This small developer-authored fixture measures finding labeled evidence, **not perfect generated-answer accuracy**. It is not an independent held-out evaluation. The committed [query-level results](src/local_notebook/assets/retrieval-benchmark.json) expose every ranking and timing. See [methodology and limits](docs/RETRIEVAL_BENCHMARK.md).
 
 Data and configuration
 ----------------------
 
-Runtime data lives under `.data/`, which is excluded from Git. It contains SQLite metadata, originals, search indexes, model caches, and logs. `NOTEBOOK_DATA_DIR`, `NOTEBOOK_MODEL_DIR`, and `NOTEBOOK_PORT` override the defaults. `NOTEBOOK_NO_SAMPLE=1` disables first-run samples. `NOTEBOOK_OFFLINE=1` forces extractive chat for testing; it does not turn a cloud generation endpoint into a local model.
+Runtime data lives under `.data/`, which is excluded from Git. It contains SQLite metadata, originals, search indexes, model caches, and logs. `NOTEBOOK_DATA_DIR`, `NOTEBOOK_MODEL_DIR`, and `NOTEBOOK_PORT` override the defaults. `NOTEBOOK_EMBED_THREADS` controls local embedding CPU threads (1–8; defaults to at most 4). `NOTEBOOK_NO_SAMPLE=1` disables first-run samples. `NOTEBOOK_OFFLINE=1` disables model generation for testing; chat asks for a model connection rather than returning raw excerpts.
 
 To back up, stop the app and copy the whole data directory. Restore it while the app is stopped. Credential-store keys are outside that directory. The server binds only to loopback and checks HTTP and WebSocket host/origin boundaries. This is a single-user local app, not a shared hosted service.
 

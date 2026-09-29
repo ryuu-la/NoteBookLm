@@ -23,7 +23,9 @@ def artifact_markdown(artifact: dict) -> str:
             parts.append("> " + mindmap["coverage"])
 
         def visit(node, depth=0):
-            parts.append("  " * depth + "- " + node["name"])
+            references = " ".join(f"[{number}]" for number in node.get("citations", []))
+            description = f" — {node['description']}" if node.get("description") else ""
+            parts.append("  " * depth + "- " + node["name"] + description + (" " + references if references else ""))
             for child in node.get("children", []):
                 visit(child, depth + 1)
         visit(mindmap["root"])
@@ -33,7 +35,7 @@ def artifact_markdown(artifact: dict) -> str:
     citations = json.loads(artifact.get("citations", "[]"))
     if citations:
         text += "\n\n## Sources\n\n" + "\n".join(
-            f"[{item.get('number', index)}] {item['name']} — {item['locator']}"
+            f"[{item.get('number', index)}] {item['name']} — {item.get('url') or item['locator']}"
             for index, item in enumerate(citations, 1))
     return text
 

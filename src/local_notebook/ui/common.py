@@ -7,10 +7,22 @@ from ..config import STYLES
 
 
 def theme():
-    ui.dark_mode().enable()
-    ui.colors(primary="#b5c8ff", secondary="#a7a2ff", accent="#c8b8f5", dark="#202125", positive="#a7d5ba")
-    for filename in ("base.css", "home.css", "workspace.css"):
+    ui.context.client.folio_dark = ui.dark_mode(db.settings().get('theme', 'dark') != 'light')
+    ui.colors(primary="#a8c7fa", secondary="#c2b5ea", accent="#c2b5ea", dark="#1b1d20", positive="#a8d5ba", negative="#f2aaa5")
+    for filename in ("base.css", "home.css", "workspace.css", "mindmap.css", "light.css"):
         ui.add_css((STYLES / filename).read_text(encoding="utf-8"))
+
+
+def theme_toggle():
+    dark = ui.context.client.folio_dark
+
+    def toggle():
+        dark.toggle()
+        db.save_settings({'theme': 'dark' if dark.value else 'light'})
+        button.props(f'icon={"light_mode" if dark.value else "dark_mode"}')
+
+    button = ui.button(icon='light_mode' if dark.value else 'dark_mode', on_click=toggle).props(
+        'flat round dense aria-label="Toggle light theme"').classes('quiet-btn').tooltip('Switch light / dark theme')
 
 
 def brand():
@@ -32,9 +44,12 @@ def header(title=None):
         brand()
         if title:
             ui.element("div").classes("header-divider")
-            ui.label(title).classes("header-title")
+            ui.label(title).classes("header-title").tooltip(title)
         ui.space()
+        theme_toggle()
         local_badge()
+        if title:
+            ui.button("New notebook", icon="add", on_click=notebook_dialog).props('flat aria-label="Create notebook"').classes("header-create")
         ui.button(icon="bar_chart", on_click=lambda: ui.navigate.to("/benchmarks")).props('flat round aria-label="Retrieval benchmarks"').classes("quiet-btn").tooltip("Retrieval benchmarks")
         ui.button(icon="settings", on_click=settings_dialog).props('flat round aria-label="Settings"').classes("quiet-btn").tooltip("Settings")
 
@@ -46,7 +61,7 @@ def empty(icon: str, title: str, subtitle: str):
         ui.label(subtitle).classes("muted text-sm leading-relaxed")
 
 
-def error_message(exc: Exception):
+def error_text(exc: Exception) -> str:
     message = str(exc)
     code = getattr(exc, "code", None)
     if code == 429:
@@ -54,12 +69,20 @@ def error_message(exc: Exception):
     elif code in {500, 502, 503, 504}:
         message = "The model provider is temporarily busy. Try Fast mode or retry shortly. Your question is saved."
     elif code in {401, 403}:
-        message = "The provider rejected access. Check the API key and this model’s permissions in Settings."
+        message = "The provider rejected access. Check GEMINI_API_KEY in .env and this model’s permissions."
     elif code == 404:
-        message = "This model is unavailable for your API key. Check its identifier in Settings."
+        message = "This model is unavailable for your API key. Check its identifier in .env."
+    elif isinstance(exc, TimeoutError):
+        message = str(exc) or "The model timed out. Try another model or retry your question."
+    elif code == 400:
+        message = "The model rejected this request. Check its model name and thinking settings, or try the other model."
     elif not isinstance(exc, ValueError):
         message = "The operation could not finish. Check your connection and model settings, then try again."
-    ui.notify(message[:400], type="negative", position="top", timeout=7000)
+    return message[:400]
+
+
+def error_message(exc: Exception):
+    ui.notify(error_text(exc), type="negative", position="top", timeout=7000)
 
 
 def notebook_dialog():
@@ -73,8 +96,11 @@ def notebook_dialog():
             if not title.value.strip():
                 title.error = "Enter a notebook name"
                 return
-            identifier = db.create_notebook(title.value.strip()[:120], description.value.strip()[:500])
-            ui.navigate.to(f"/notebook/{identifier}")
+            try:
+                identifier = db.create_notebook(title.value.strip()[:120], description.value.strip()[:500])
+                ui.navigate.to(f"/notebook/{identifier}")
+            except Exception as exc:
+                error_message(exc)
 
         title.on("keydown.enter", create)
         with ui.row().classes("w-full justify-end gap-2"):

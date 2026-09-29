@@ -59,7 +59,7 @@ def test_overview_routes_across_source_sections(indexed):
 
     evidence = asyncio.run(run())
     assert evidence.mode == "Source overview"
-    assert len(evidence.passages) == 12 and evidence.warning
+    assert len(evidence.passages) == 80 and evidence.warning
     assert evidence.passages[-1]["ordinal"] > 90
 
 
@@ -69,3 +69,17 @@ def test_context_budget_drops_unseen_citations():
     evidence = fit_evidence(Evidence(passages, "Test", 1), max_chars=100)
     assert evidence.passages == passages[:1]
     assert "context budget" in evidence.warning
+
+
+def test_length_grouping_keeps_embeddings_attached_to_their_original_text(tmp_path):
+    class Model:
+        received = []
+        def embed(self, texts, **kwargs):
+            self.received = texts
+            return [np.array([len(text), int(text.split()[0])], dtype=np.float32) for text in texts]
+    texts = [f"{i} " + "evidence " * (33 - i) for i in range(32)]
+    model = Model()
+    output = embed_cached(tmp_path, texts, model)
+    assert list(map(len, model.received)) == sorted(map(len, texts))
+    assert [int(vector[1]) for vector in output] == list(range(32))
+    assert [int(vector[0]) for vector in output] == list(map(len, texts))

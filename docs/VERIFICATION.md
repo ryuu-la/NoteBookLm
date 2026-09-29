@@ -3,6 +3,22 @@ Verification record
 
 Verified locally on 2026-09-16 using Python 3.11.9 on Windows, with 12 logical CPUs and approximately 15.8 GB RAM. This record describes measured behavior, not every aspiration in the initial project plan.
 
+Benchmark audit update · 2026-09-29
+----------------------------------
+
+The current benchmark changes passed **108 automated tests**, Ruff, `pip check`, and
+`python benchmarks/publish.py --check`. Two existing test-client deprecation warnings remain.
+The retrieval benchmark was rerun with three repetitions per configuration; the 10,000-page
+scale run and both API-free RAG modes also completed successfully. A one-page scale run
+verified that probe counts stay unique and within the generated page range.
+
+An isolated, offline headless Edge check verified the benchmark page's failed-evaluation
+status, raw judge verdicts, fixed-refusal disclosure, expandable judgments, current JSON
+download, and mobile width, with no page errors. No live provider evaluation was rerun.
+The failed historical live report and earlier retrieval/scale measurements remain available
+in `docs/benchmark-history`. The sections below retain older broader verification records;
+the generated benchmark tables show the current measured values.
+
 Automated checks
 ----------------
 
@@ -49,27 +65,38 @@ An additional optional key-free search-endpoint probe was not executed because a
 
 Command: `python benchmarks/scale.py --pages 10000 --semantic`
 
+<!-- scale-results:start -->
+Measured 2026-09-29 · single run · hybrid · reranker disabled.
+
 | Measurement | Observed |
 | --- | ---: |
 | Synthetic PDF pages | 10,000 |
 | Indexed passages | 10,000 |
-| Ingestion including local embeddings | 126.67 s |
-| Average ingestion throughput | 78.95 pages/s |
-| Cached reindexing | 22.16 s |
-| Peak benchmark process RSS, including reindexing | 557.4 MB |
-| Retrieval latency, five queries | 41, 28, 27, 28, 28 ms |
+| Ingestion including local embeddings | 76 s |
+| Average ingestion throughput | 131.59 pages/s |
+| Cached reindexing | 10.24 s |
+| Peak process RSS across ingestion, reindex and probes | 479.7 MB |
+| Retrieval latency | 122, 116, 138, 128, 131 ms |
 | Requested page found in top eight | 5 / 5 |
 
-The fixture has approximately 40 words per page, a unique record identifier, and simple text layout. It exercises parsing, chunking, local embedding, vector writes, lexical indexing, filtering, and fused retrieval over a large page count. The reranker was disabled for this timing. Model files were already cached. PDF fixture generation was outside the timed ingestion interval.
+Generated from [raw scale measurements](benchmark-result.json).
+<!-- scale-results:end -->
+
+The fixture has approximately 40 words per page, a unique record identifier, and simple text layout. It exercises parsing, chunking, local embedding, vector writes, lexical indexing, filtering, and fused retrieval over a large page count. The reranker was disabled for this timing. The embedding model was loaded before timing. PDF fixture generation and model loading were outside the timed ingestion interval. Process RSS was sampled every 200 ms across ingestion, reindexing and probes, so very brief peaks can be missed.
 
 This is not a 10,000-page scan, dense textbook, or mixed-format collection. Five exact-record probes are a smoke test, not a semantic relevance benchmark. They do not establish 100% general retrieval accuracy. End-to-end model generation time and cloud costs are outside these retrieval timings. Peak memory refers to the benchmark process, not total operating-system usage.
 
-The committed current raw result is [benchmark-result.json](benchmark-result.json). The earlier run is retained as [benchmark-baseline.json](benchmark-baseline.json): 143.64 s initial ingestion and 516.8 MB peak RSS. These are single-run observations with different memory measurement intervals; they are not a controlled confidence interval. Rerunning creates a fresh isolated library under `test-results`; it does not add the synthetic corpus to the user's notebooks.
+The current run checks ingestion completeness and refuses degraded retrieval. Earlier runs lacked the fallback guard. The committed current raw result is [benchmark-result.json](benchmark-result.json). The earlier run is retained as [benchmark-baseline.json](benchmark-baseline.json): 143.64 s initial ingestion and 516.8 MB peak RSS. These are single-run observations with different memory measurement intervals; they are not a controlled confidence interval. Rerunning creates a fresh isolated library under `test-results`; it does not add the synthetic corpus to the user's notebooks.
 
 Labeled retrieval evaluation
 ----------------------------
 
-The new 54-question, 40-passage development fixture measures retrieval quality separately from page-count scaling. The default 16-candidate reranker achieved 1.0000 Recall@8, 1.0000 MRR@8, 0.9977 nDCG@8, and 208 ms median / 227 ms p95 retrieval. The 40-candidate ablation achieved the same quality with 473 ms median. Full methodology and important scope limits are in [RETRIEVAL_BENCHMARK.md](RETRIEVAL_BENCHMARK.md); query judgments and rankings are committed with the app.
+The 54-question, 40-passage development fixture measures retrieval quality separately from page-count scaling. Current measured scores and timings are generated from the raw report in [RETRIEVAL_BENCHMARK.md](RETRIEVAL_BENCHMARK.md). The chart and table are checked against that report; earlier single-pass values are retained in benchmark history. This fixture bypasses document parsing and chunking.
+
+The preceding 10,000-page result (126.67 s ingestion, 557.4 MB RSS) is retained in
+[benchmark history](benchmark-history/scale-10000-previous.json). Differences from the
+current run are observations across project versions and machine conditions, not an
+isolated causal measurement of these benchmark-audit changes.
 
 Remaining evaluation work
 -------------------------

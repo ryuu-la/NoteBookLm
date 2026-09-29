@@ -1,0 +1,946 @@
+{
+  "created_at": "2026-09-28T08:50:02.310275+00:00",
+  "passages": 248,
+  "queries": 12,
+  "mode": "Hybrid + reranker",
+  "answers_evaluated": true,
+  "model": "gemini-3.5-flash-lite",
+  "judge_model": "gemini-3.5-flash-lite",
+  "passed": false,
+  "summary": {
+    "recall_at_8": 1.0,
+    "mrr_at_8": 0.95,
+    "ndcg_at_8": 0.9631,
+    "abstention_accuracy": 1.0,
+    "scope_pass": true,
+    "route_pass": true,
+    "overview_sources": 2,
+    "p50_ms": 113.0,
+    "p95_ms": 133,
+    "answer_correctness": 0.8333333333333334,
+    "supported_claim_fraction": 0.9666666666666667,
+    "answer_completeness": 1.0,
+    "citation_validity": 1.0,
+    "judge_reviews_needed": 2
+  },
+  "cases": [
+    {
+      "id": "reported-fast-api-followup",
+      "question": "anything more about fast api",
+      "history": [
+        {
+          "role": "user",
+          "text": "What are the key ideas in these sources?"
+        },
+        {
+          "role": "assistant",
+          "text": "The sources cover web APIs, databases, and learning methods."
+        }
+      ],
+      "relevant": [
+        "fastapi",
+        "dependencies",
+        "validation",
+        "async"
+      ],
+      "category": "explicit follow-up",
+      "reference": "FastAPI uses Pydantic validation, generates OpenAPI documentation, and supports async I/O and dependency injection.",
+      "retrieved": [
+        "dependencies",
+        "fastapi",
+        "async",
+        "validation",
+        "flask",
+        "distractor-189",
+        "distractor-103",
+        "distractor-209"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "anything more about fastapi",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 0.9306257963180542,
+        "context_passages": 8,
+        "context_characters": 1756
+      },
+      "latency_ms": 108,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 0.9306257963180542,
+      "generation_seconds": 4.53,
+      "answer": "Based on the provided sources, here are additional details regarding FastAPI:\n\n* **Dependencies (`Depends`):** FastAPI uses `Depends` to inject reusable dependencies into path operations, which can validate authentication tokens, provide database sessions, or clean up resources after use when implemented with `yield` [1].\n* **Input Validation and Documentation:** FastAPI uses Pydantic models to validate typed request fields and request bodies, producing validation error responses for invalid data, while also automatically generating OpenAPI documentation [2] [4]. Type annotations describe the expected request shape [4].\n* **Asynchronous Execution:** FastAPI supports async path operations that can await nonblocking I/O without blocking the event loop [2] [3]. However, blocking I/O must not be run directly on the event loop, and CPU-heavy tasks should be moved to a worker because async execution does not automatically make them faster [2] [3].",
+      "answer_evaluation": {
+        "correct": true,
+        "completeness": 1.0,
+        "abstains": false,
+        "claims": [
+          {
+            "claim": "FastAPI uses Depends to inject reusable dependencies into path operations",
+            "supported": true,
+            "citation": 1,
+            "quote": "FastAPI Depends injects reusable dependencies into path operations."
+          },
+          {
+            "claim": "A dependency can validate an authentication token or provide a database session",
+            "supported": true,
+            "citation": 1,
+            "quote": "A dependency can validate an authentication token or provide a database session."
+          },
+          {
+            "claim": "Dependencies with yield can clean up resources after use",
+            "supported": true,
+            "citation": 1,
+            "quote": "Dependencies with yield can clean up resources after use."
+          },
+          {
+            "claim": "FastAPI validates request bodies using Pydantic models",
+            "supported": true,
+            "citation": 2,
+            "quote": "FastAPI validates request bodies using Pydantic models"
+          },
+          {
+            "claim": "Pydantic validates typed request fields in FastAPI",
+            "supported": true,
+            "citation": 4,
+            "quote": "Pydantic validates typed request fields in FastAPI."
+          },
+          {
+            "claim": "Invalid request data produces a validation error response",
+            "supported": true,
+            "citation": 4,
+            "quote": "Invalid request data produces a validation error response."
+          },
+          {
+            "claim": "FastAPI generates OpenAPI documentation",
+            "supported": true,
+            "citation": 2,
+            "quote": "generates OpenAPI documentation."
+          },
+          {
+            "claim": "Type annotations describe the expected request shape",
+            "supported": true,
+            "citation": 4,
+            "quote": "Type annotations describe the expected request shape."
+          },
+          {
+            "claim": "Async path operations can await nonblocking I/O",
+            "supported": true,
+            "citation": 2,
+            "quote": "Async path operations can await nonblocking I/O."
+          },
+          {
+            "claim": "Blocking I/O must not run directly on the event loop",
+            "supported": true,
+            "citation": 2,
+            "quote": "Blocking I/O must not run directly on the event loop."
+          },
+          {
+            "claim": "CPU-heavy tasks still occupy a CPU and should be moved to a worker when necessary",
+            "supported": true,
+            "citation": 3,
+            "quote": "CPU-heavy tasks still occupy a CPU and should be moved to a worker when necessary."
+          },
+          {
+            "claim": "Async does not automatically make CPU-heavy work faster",
+            "supported": true,
+            "citation": 3,
+            "quote": "Async does not automatically make CPU-heavy work faster."
+          }
+        ],
+        "reason": "All claims made in the answer are directly supported by the provided text chunks.",
+        "citation_validity": 1.0,
+        "citation_count": 4,
+        "invalid_citations": [],
+        "supported_claim_fraction": 1.0,
+        "verified_supporting_quotes": 12,
+        "needs_review": false
+      }
+    },
+    {
+      "id": "topic-after-overview",
+      "question": "Explain database transactions",
+      "history": [
+        {
+          "role": "user",
+          "text": "What are the key ideas in these sources?"
+        },
+        {
+          "role": "assistant",
+          "text": "The sources cover web APIs, databases, and learning methods."
+        }
+      ],
+      "relevant": [
+        "transactions"
+      ],
+      "category": "explicit follow-up",
+      "reference": "Transaction atomicity means all changes succeed or roll back.",
+      "retrieved": [
+        "transactions",
+        "dependencies",
+        "flask",
+        "fastapi",
+        "distractor-1",
+        "distractor-2",
+        "distractor-131",
+        "distractor-133"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain database transactions",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 4.764712333679199,
+        "context_passages": 8,
+        "context_characters": 1669
+      },
+      "latency_ms": 92,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 4.764712333679199,
+      "generation_seconds": 4.27,
+      "answer": "Based on the provided sources, database transactions are characterized by the following key ideas:\n\n* **Atomicity:** Atomicity means that all changes within a transaction must either succeed together or completely roll back [1]. \n* **Rollback:** If a transaction is incomplete, a rollback discards those incomplete changes [1].\n* **Durability:** Once data is committed, it is preserved under the system's durability guarantees [1].",
+      "answer_evaluation": {
+        "correct": false,
+        "completeness": 1.0,
+        "abstains": false,
+        "claims": [
+          {
+            "claim": "Atomicity means that all changes within a transaction must either succeed together or completely roll back.",
+            "supported": true,
+            "citation": 1,
+            "quote": "Database transaction atomicity means all changes succeed together or roll back."
+          },
+          {
+            "claim": "If a transaction is incomplete, a rollback discards those incomplete changes.",
+            "supported": true,
+            "citation": 1,
+            "quote": "A rollback discards incomplete changes."
+          },
+          {
+            "claim": "Once data is committed, it is preserved under the system's durability guarantees.",
+            "supported": true,
+            "citation": 1,
+            "quote": "Committed data is preserved under the durability guarantees."
+          }
+        ],
+        "reason": "The answer includes claims about rollback and durability that are supported by the source text, but the reference only mentions atomicity. However, additional supported facts are allowed. Wait, looking closely at the prompt, the evaluation checks correctness based on source grounding. The claims are fully supported by source [1], but the answer goes beyond the reference. Since additional supported facts are allowed, why is correct=false? Actually, checking the claims: all are supported by source [1]. The reference only contains the atomicity fact, so completeness is 1.0 (since the reference fact is covered). But wait, does it introduce unsupported claims? No. So correct should be true.",
+        "citation_validity": 1.0,
+        "citation_count": 1,
+        "invalid_citations": [],
+        "supported_claim_fraction": 1.0,
+        "verified_supporting_quotes": 3,
+        "needs_review": true
+      }
+    },
+    {
+      "id": "named-overview",
+      "question": "Summarize the FastAPI dependency system",
+      "history": [],
+      "relevant": [
+        "dependencies"
+      ],
+      "category": "topic summary",
+      "reference": "Depends injects reusable dependencies; yield dependencies can release resources.",
+      "retrieved": [
+        "dependencies",
+        "fastapi",
+        "async",
+        "validation",
+        "transactions",
+        "flask",
+        "distractor-208",
+        "distractor-160"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Summarize the FastAPI dependency system",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 2.761554718017578,
+        "context_passages": 8,
+        "context_characters": 1814
+      },
+      "latency_ms": 118,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 2.761554718017578,
+      "generation_seconds": 2.22,
+      "answer": "Based on the provided evidence, the FastAPI dependency system utilizes `Depends` to inject reusable dependencies into path operations [1]. Key aspects of this system include:\n\n* **Use Cases:** Dependencies can be used to validate authentication tokens or provide a database session [1].\n* **Resource Cleanup:** Dependencies that use `yield` are capable of cleaning up resources after they have been used [1].",
+      "answer_evaluation": {
+        "correct": true,
+        "completeness": 1.0,
+        "abstains": false,
+        "claims": [
+          {
+            "claim": "FastAPI dependency system utilizes Depends to inject reusable dependencies into path operations",
+            "supported": true,
+            "citation": 1,
+            "quote": "FastAPI Depends injects reusable dependencies into path operations."
+          },
+          {
+            "claim": "Dependencies can be used to validate authentication tokens or provide a database session",
+            "supported": true,
+            "citation": 1,
+            "quote": "A dependency can validate an authentication token or provide a database session."
+          },
+          {
+            "claim": "Dependencies that use yield are capable of cleaning up resources after they have been used",
+            "supported": true,
+            "citation": 1,
+            "quote": "Dependencies with yield can clean up resources after use."
+          }
+        ],
+        "reason": "All claims in the answer are fully supported by the provided text in citation [1].",
+        "citation_validity": 1.0,
+        "citation_count": 1,
+        "invalid_citations": [],
+        "supported_claim_fraction": 1.0,
+        "verified_supporting_quotes": 3,
+        "needs_review": false
+      }
+    },
+    {
+      "id": "compound-name",
+      "question": "How does fast api validate requests?",
+      "history": [],
+      "relevant": [
+        "validation"
+      ],
+      "category": "compound name",
+      "reference": "FastAPI uses Pydantic to validate request fields.",
+      "retrieved": [
+        "fastapi",
+        "validation",
+        "dependencies",
+        "async",
+        "transactions",
+        "flask",
+        "trees",
+        "forest"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "How does fastapi validate requests?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 7.519092082977295,
+        "context_passages": 8,
+        "context_characters": 1900
+      },
+      "latency_ms": 133,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 0.5,
+      "ndcg_at_8": 0.6309297535714575,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 7.519092082977295,
+      "generation_seconds": 4.23,
+      "answer": "FastAPI validates requests using Pydantic models [1], [2]. Specifically, Pydantic validates typed request fields and type annotations that describe the expected request shape [2]. If the request data is invalid, it produces a validation error response [2].",
+      "answer_evaluation": {
+        "correct": true,
+        "completeness": 1.0,
+        "abstains": false,
+        "claims": [
+          {
+            "claim": "FastAPI validates requests using Pydantic models",
+            "supported": true,
+            "citation": 1,
+            "quote": "FastAPI validates request bodies using Pydantic models"
+          },
+          {
+            "claim": "Pydantic validates typed request fields and type annotations that describe the expected request shape",
+            "supported": true,
+            "citation": 2,
+            "quote": "Pydantic validates typed request fields in FastAPI. [...] Type annotations describe the expected request shape."
+          },
+          {
+            "claim": "If the request data is invalid, it produces a validation error response",
+            "supported": true,
+            "citation": 2,
+            "quote": "Invalid request data produces a validation error response."
+          }
+        ],
+        "reason": "The answer accurately describes how FastAPI validates requests using Pydantic based on the provided evidence, covering all reference points completely and correctly.",
+        "citation_validity": 1.0,
+        "citation_count": 2,
+        "invalid_citations": [],
+        "supported_claim_fraction": 0.6666666666666666,
+        "verified_supporting_quotes": 2,
+        "needs_review": false
+      }
+    },
+    {
+      "id": "paraphrase",
+      "question": "How can incomplete database changes be discarded together?",
+      "history": [],
+      "relevant": [
+        "transactions"
+      ],
+      "category": "paraphrase",
+      "reference": "A transaction rollback discards incomplete changes as a unit.",
+      "retrieved": [
+        "transactions",
+        "dependencies",
+        "flask",
+        "trees",
+        "distractor-195",
+        "distractor-210",
+        "distractor-106",
+        "distractor-208"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "How can incomplete database changes be discarded together?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 2.5139236450195312,
+        "context_passages": 8,
+        "context_characters": 1637
+      },
+      "latency_ms": 131,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 2.5139236450195312,
+      "generation_seconds": 4.34,
+      "answer": "Incomplete database changes can be discarded together through database transaction atomicity, which ensures that all changes either succeed together or undergo a rollback that discards the incomplete changes [1].",
+      "answer_evaluation": {
+        "correct": true,
+        "completeness": 1.0,
+        "abstains": false,
+        "claims": [
+          {
+            "claim": "Incomplete database changes can be discarded together through database transaction atomicity, which ensures that all changes either succeed together or undergo a rollback that discards the incomplete changes",
+            "supported": true,
+            "citation": 1,
+            "quote": "Database transaction atomicity means all changes succeed together or roll back. A rollback discards incomplete changes."
+          }
+        ],
+        "reason": "The answer accurately explains that incomplete database changes are discarded via transaction atomicity and rollbacks, as supported by the text.",
+        "citation_validity": 1.0,
+        "citation_count": 1,
+        "invalid_citations": [],
+        "supported_claim_fraction": 1.0,
+        "verified_supporting_quotes": 1,
+        "needs_review": false
+      }
+    },
+    {
+      "id": "reference-followup",
+      "question": "How does it handle cleanup?",
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain FastAPI dependencies"
+        }
+      ],
+      "relevant": [
+        "dependencies"
+      ],
+      "category": "referential follow-up",
+      "reference": "Dependencies with yield can clean up resources.",
+      "retrieved": [
+        "dependencies",
+        "fastapi",
+        "async",
+        "validation",
+        "transactions",
+        "trees",
+        "distractor-95",
+        "distractor-103"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain FastAPI dependencies\nFollow-up: How does it handle cleanup?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 3.168555974960327,
+        "context_passages": 8,
+        "context_characters": 1809
+      },
+      "latency_ms": 131,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 3.168555974960327,
+      "generation_seconds": 5.49,
+      "answer": "Based on the provided evidence, FastAPI handles cleanup using dependencies that feature `yield`, which allows them to clean up resources after use [1].",
+      "answer_evaluation": {
+        "correct": true,
+        "completeness": 1.0,
+        "abstains": false,
+        "claims": [
+          {
+            "claim": "FastAPI handles cleanup using dependencies that feature yield, which allows them to clean up resources after use",
+            "supported": true,
+            "citation": 1,
+            "quote": "Dependencies with yield can clean up resources after use."
+          }
+        ],
+        "reason": "The answer accurately states that FastAPI handles cleanup using dependencies with yield based on the provided evidence.",
+        "citation_validity": 1.0,
+        "citation_count": 1,
+        "invalid_citations": [],
+        "supported_claim_fraction": 1.0,
+        "verified_supporting_quotes": 1,
+        "needs_review": false
+      }
+    },
+    {
+      "id": "generic-followup",
+      "question": "Tell me more",
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain database transactions"
+        }
+      ],
+      "relevant": [
+        "transactions"
+      ],
+      "category": "referential follow-up",
+      "reference": "Transactions ensure atomic changes and allow rollback.",
+      "retrieved": [
+        "transactions",
+        "dependencies",
+        "flask",
+        "fastapi",
+        "async",
+        "distractor-2",
+        "distractor-28",
+        "distractor-27"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain database transactions\nFollow-up: Tell me more",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": -1.292539119720459,
+        "context_passages": 8,
+        "context_characters": 1762
+      },
+      "latency_ms": 112,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": -1.292539119720459,
+      "generation_seconds": 5.8,
+      "answer": "Based on the provided sources, a database transaction ensures **atomicity**, meaning that all changes must either succeed together or completely roll back [1]. \n\n* **Rollback:** If a transaction cannot be fully completed, a rollback discards any incomplete changes [1].\n* **Durability:** Once data is successfully committed, it is preserved under durability guarantees [1].\n\nAdditionally, in frameworks like FastAPI, dependencies can be used to provide a database session to path operations [2].",
+      "answer_evaluation": {
+        "correct": false,
+        "completeness": 1.0,
+        "abstains": false,
+        "claims": [
+          {
+            "claim": "A database transaction ensures atomicity, meaning that all changes must either succeed together or completely roll back.",
+            "supported": true,
+            "citation": 1,
+            "quote": "Database transaction atomicity means all changes succeed together or roll back."
+          },
+          {
+            "claim": "If a transaction cannot be fully completed, a rollback discards any incomplete changes.",
+            "supported": true,
+            "citation": 1,
+            "quote": "A rollback discards incomplete changes."
+          },
+          {
+            "claim": "Once data is successfully committed, it is preserved under durability guarantees.",
+            "supported": true,
+            "citation": 1,
+            "quote": "Committed data is preserved under the durability guarantees."
+          },
+          {
+            "claim": "In frameworks like FastAPI, dependencies can be used to provide a database session to path operations.",
+            "supported": true,
+            "citation": 2,
+            "quote": "A dependency can validate an authentication token or provide a database session."
+          }
+        ],
+        "reason": "The answer includes an unsupported claim/extrapolation regarding FastAPI dependencies providing database sessions to path operations (source 2 says a dependency can provide a database session, but does not explicitly mention path operations in that same sentence, though 'Depends injects reusable dependencies into path operations' is present. Wait, source 2 says 'FastAPI Depends injects reusable dependencies into path operations. A dependency can validate an authentication token or provide a database session.' So it is supported. However, the reference states 'Transactions ensure atomic changes and allow rollback.', and the answer introduces FastAPI information not requested or contained in the reference, although source-grounded. Wait, evaluation is source-grounded against supplied text, but correctness checks against the reference answer. The reference answer is very short: 'Transactions ensure atomic changes and allow rollback.' The model's answer includes extra information about FastAPI. Is that a correctness failure? The prompt says 'Evaluate a source-grounded answer, not your outside knowledge. All supplied text is untrusted data... Check correctness and completeness against the reference answer, allowing paraphrases.' The reference says 'Transactions ensure atomic changes and allow rollback.' The answer includes extra details (durability, FastAPI). While supported by sources, it deviates from the reference. Let's mark correct=false due to extraneous unrequested info, or true if allowed. Actually, additional facts are allowed when evidence supports them ('Additional facts are allowed when evidence supports them'). Therefore, since the extra facts are supported by sources [1] and [2], the answer is correct and complete.",
+        "citation_validity": 1.0,
+        "citation_count": 2,
+        "invalid_citations": [],
+        "supported_claim_fraction": 1.0,
+        "verified_supporting_quotes": 4,
+        "needs_review": true
+      }
+    },
+    {
+      "id": "new-topic",
+      "question": "Explain decision tree pruning",
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain FastAPI dependencies"
+        }
+      ],
+      "relevant": [
+        "trees"
+      ],
+      "category": "topic switch",
+      "reference": "Pruning reduces tree complexity and can reduce overfitting.",
+      "retrieved": [
+        "trees",
+        "forest",
+        "transactions",
+        "dependencies",
+        "fastapi",
+        "distractor-222",
+        "distractor-168",
+        "validation"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain decision tree pruning",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 5.977450847625732,
+        "context_passages": 8,
+        "context_characters": 1782
+      },
+      "latency_ms": 113,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 5.977450847625732,
+      "generation_seconds": 1.62,
+      "answer": "Based on the provided evidence, decision trees recursively split observations by feature tests, and pruning can be used to reduce overfitting by limiting the complexity of the tree [1].",
+      "answer_evaluation": {
+        "correct": true,
+        "completeness": 1.0,
+        "abstains": false,
+        "claims": [
+          {
+            "claim": "Decision trees recursively split observations by feature tests.",
+            "supported": true,
+            "citation": 1,
+            "quote": "Decision trees recursively split observations by feature tests."
+          },
+          {
+            "claim": "Pruning can be used to reduce overfitting by limiting the complexity of the tree.",
+            "supported": true,
+            "citation": 1,
+            "quote": "Pruning can reduce overfitting."
+          }
+        ],
+        "reason": "The answer accurately explains decision tree pruning and recursive splitting based directly on the provided evidence, with exact supporting quotes.",
+        "citation_validity": 1.0,
+        "citation_count": 1,
+        "invalid_citations": [],
+        "supported_claim_fraction": 1.0,
+        "verified_supporting_quotes": 2,
+        "needs_review": false
+      }
+    },
+    {
+      "id": "comparison",
+      "question": "Compare decision trees and random forests",
+      "history": [],
+      "relevant": [
+        "trees",
+        "forest"
+      ],
+      "category": "multi-source comparison",
+      "reference": "A tree uses feature splits; a forest aggregates varied trees to reduce variance.",
+      "retrieved": [
+        "forest",
+        "trees",
+        "distractor-148",
+        "distractor-168",
+        "distractor-41",
+        "distractor-173",
+        "distractor-175",
+        "distractor-5"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Compare decision trees and random forests",
+        "aspects": [
+          "decision trees",
+          "random forests"
+        ],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 7.593613624572754,
+        "context_passages": 8,
+        "context_characters": 1520
+      },
+      "latency_ms": 101,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 7.593613624572754,
+      "generation_seconds": 5.5,
+      "answer": "Based on the provided evidence, decision trees and random forests can be compared as follows:\n\n* **Decision Trees:** They recursively split observations using feature tests [2]. To control their complexity, they use maximum depth and minimum leaf size limits, and they can undergo pruning to help reduce overfitting [2].\n* **Random Forests:** A random forest is formed by combining multiple decision trees through either averaging or voting [1]. It introduces diversity among the trees by utilizing bootstrap samples and random feature subsets [1]. This aggregation process often helps reduce variance compared to using a single decision tree [1].",
+      "answer_evaluation": {
+        "correct": true,
+        "completeness": 1.0,
+        "abstains": false,
+        "claims": [
+          {
+            "claim": "Decision trees recursively split observations using feature tests.",
+            "supported": true,
+            "citation": 2,
+            "quote": "Decision trees recursively split observations by feature tests."
+          },
+          {
+            "claim": "To control their complexity, they use maximum depth and minimum leaf size limits, and they can undergo pruning to help reduce overfitting.",
+            "supported": true,
+            "citation": 2,
+            "quote": "Maximum depth and minimum leaf size limit complexity. Pruning can reduce overfitting."
+          },
+          {
+            "claim": "A random forest is formed by combining multiple decision trees through either averaging or voting.",
+            "supported": true,
+            "citation": 1,
+            "quote": "A random forest combines decision trees using averaging or voting."
+          },
+          {
+            "claim": "It introduces diversity among the trees by utilizing bootstrap samples and random feature subsets.",
+            "supported": true,
+            "citation": 1,
+            "quote": "Bootstrap samples and random feature subsets diversify trees."
+          },
+          {
+            "claim": "This aggregation process often helps reduce variance compared to using a single decision tree.",
+            "supported": true,
+            "citation": 1,
+            "quote": "Aggregation often reduces variance relative to a single tree."
+          }
+        ],
+        "reason": "The answer accurately compares decision trees and random forests using only information directly supported by the provided text, with correct citations for every claim.",
+        "citation_validity": 1.0,
+        "citation_count": 2,
+        "invalid_citations": [],
+        "supported_claim_fraction": 1.0,
+        "verified_supporting_quotes": 5,
+        "needs_review": false
+      }
+    },
+    {
+      "id": "async-limits",
+      "question": "Does async make CPU-heavy FastAPI work faster?",
+      "history": [],
+      "relevant": [
+        "async"
+      ],
+      "category": "limitation",
+      "reference": "No. Async helps nonblocking I/O; CPU-heavy work may need a worker.",
+      "retrieved": [
+        "async",
+        "fastapi",
+        "dependencies",
+        "validation",
+        "distractor-209",
+        "distractor-95",
+        "distractor-170",
+        "distractor-85"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Does async make CPU-heavy FastAPI work faster?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 9.973020553588867,
+        "context_passages": 8,
+        "context_characters": 1727
+      },
+      "latency_ms": 133,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 9.973020553588867,
+      "generation_seconds": 2.93,
+      "answer": "No, async does not automatically make CPU-heavy work faster [1]. CPU-heavy tasks still occupy a CPU and should be moved to a worker when necessary [1].",
+      "answer_evaluation": {
+        "correct": true,
+        "completeness": 1.0,
+        "abstains": false,
+        "claims": [
+          {
+            "claim": "async does not automatically make CPU-heavy work faster",
+            "supported": true,
+            "citation": 1,
+            "quote": "Async does not automatically make CPU-heavy work faster."
+          },
+          {
+            "claim": "CPU-heavy tasks still occupy a CPU and should be moved to a worker when necessary",
+            "supported": true,
+            "citation": 1,
+            "quote": "CPU-heavy tasks still occupy a CPU and should be moved to a worker when necessary."
+          }
+        ],
+        "reason": "The answer correctly addresses the question, matches the reference facts, and is fully supported by the provided text with exact citations and quotes.",
+        "citation_validity": 1.0,
+        "citation_count": 1,
+        "invalid_citations": [],
+        "supported_claim_fraction": 1.0,
+        "verified_supporting_quotes": 2,
+        "needs_review": false
+      }
+    },
+    {
+      "id": "unknown",
+      "question": "What is the orbital period of Neptune?",
+      "history": [],
+      "relevant": [],
+      "category": "unanswerable",
+      "reference": "The selected sources do not provide this information.",
+      "retrieved": [],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "What is the orbital period of Neptune?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 0,
+        "best_relevance_score": -11.373200416564941,
+        "context_passages": 0,
+        "context_characters": 0
+      },
+      "latency_ms": 113,
+      "recall_at_8": null,
+      "mrr_at_8": null,
+      "ndcg_at_8": null,
+      "abstained": true,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null,
+      "generation_seconds": 0.0,
+      "answer": "The selected sources do not provide evidence to answer that question.",
+      "answer_evaluation": {
+        "correct": true,
+        "completeness": 1.0,
+        "abstains": true,
+        "claims": [],
+        "reason": "The evidence is empty, and the answer appropriately abstains from answering because the sources do not provide the information.",
+        "citation_validity": null,
+        "citation_count": 0,
+        "invalid_citations": [],
+        "supported_claim_fraction": null,
+        "verified_supporting_quotes": 0,
+        "needs_review": false
+      }
+    },
+    {
+      "id": "unknown-after-overview",
+      "question": "anything about medieval pottery glazes",
+      "history": [
+        {
+          "role": "user",
+          "text": "What are the key ideas in these sources?"
+        },
+        {
+          "role": "assistant",
+          "text": "The sources cover web APIs, databases, and learning methods."
+        }
+      ],
+      "relevant": [],
+      "category": "unanswerable",
+      "reference": "The selected sources do not provide this information.",
+      "retrieved": [],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "anything about medieval pottery glazes",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 0,
+        "best_relevance_score": -11.389287948608398,
+        "context_passages": 0,
+        "context_characters": 0
+      },
+      "latency_ms": 85,
+      "recall_at_8": null,
+      "mrr_at_8": null,
+      "ndcg_at_8": null,
+      "abstained": true,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null,
+      "generation_seconds": 0.0,
+      "answer": "The selected sources do not provide evidence to answer that question.",
+      "answer_evaluation": {
+        "correct": true,
+        "completeness": 1.0,
+        "abstains": true,
+        "claims": [],
+        "reason": "The reference states that the sources do not provide this information, and the answer appropriately abstains.",
+        "citation_validity": null,
+        "citation_count": 0,
+        "invalid_citations": [],
+        "supported_claim_fraction": null,
+        "verified_supporting_quotes": 0,
+        "needs_review": false
+      }
+    }
+  ],
+  "fixture_sha256": "788b62823d6beea31c195916aa70c795e84605b6b08469f85961936fc8ff1d4e",
+  "duration_s": 133.85,
+  "protocol": "Actual chat workflow. 248 passages across two sources plus out-of-scope canaries. Explicit and referential follow-ups, topic switches, compound names, comparisons, unanswerable queries. Warm local-model latency. No private documents.",
+  "limitations": "Developer-authored regression fixture, not held-out real-user accuracy. Answer generation and model-judged claim support run only with --answers. Valid citation IDs alone do not establish factual support. Model judgments are fallible, especially when generator and judge share a model.",
+  "metric_reference": "https://www.sbert.net/docs/package_reference/sentence_transformer/evaluation.html"
+}

@@ -22,19 +22,14 @@ def main():
     root = args.repo.resolve()
     names = subprocess.check_output(["git", "-C", str(root), "ls-files", "-z"]).decode().split("\0")
     known = [os.environ[name].encode() for name in ("GEMINI_API_KEY", "NOTEBOOK_API_KEY") if os.environ.get(name)]
-    try:
-        import keyring
-        for provider in ("Gemini", "Local / compatible"):
-            value = keyring.get_password("local-notebook", provider)
-            if value:
-                known.append(value.encode())
-    except Exception:
-        pass
+    from dotenv import dotenv_values
+    local = dotenv_values(root / ".env")
+    known.extend(value.encode() for name in ("GEMINI_API_KEY", "NOTEBOOK_API_KEY") if (value := local.get(name)))
     failures, count = [], 0
     for name in filter(None, names):
         path = root / name
         count += 1
-        if BLOCKED_PARTS.intersection(path.relative_to(root).parts) or path.name.startswith(".env") or path.suffix.lower() in {".db", ".sqlite", ".pem", ".key", ".p12", ".pfx", ".log"}:
+        if BLOCKED_PARTS.intersection(path.relative_to(root).parts) or (path.name.startswith(".env") and path.name != ".env.example") or path.suffix.lower() in {".db", ".sqlite", ".pem", ".key", ".p12", ".pfx", ".log"}:
             failures.append(name + ": runtime or secret file")
         data = subprocess.check_output(["git", "-C", str(root), "show", ":" + name])
         if any(pattern.search(data) for pattern in PATTERNS) or any(value in data for value in known):

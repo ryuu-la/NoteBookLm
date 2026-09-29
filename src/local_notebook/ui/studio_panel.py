@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 
 from nicegui import ui
@@ -15,22 +16,25 @@ KINDS = {"mindmap": ("account_tree", "Mind map", "See the connections", "pink"),
          "note": ("edit_note", "Notes", "Make it your own", "green")}
 
 
-def studio_panel(notebook_id: str):
+def studio_panel(notebook_id: str, on_collapse=None):
     with ui.column().classes("studio-panel panel"):
         with ui.row().classes("panel-heading w-full items-center"):
             ui.icon("auto_awesome", size="18px")
             ui.label("Studio")
             ui.space()
-            ui.icon("dashboard_customize", size="17px").classes("muted")
+            ui.button(icon="last_page", on_click=on_collapse).props('flat dense round size=sm aria-label="Collapse studio"').classes("sidebar-collapse").tooltip("Collapse Studio")
         with ui.column().classes("studio-content w-full"):
-            ui.label("A new way to know more.").classes("studio-title")
-            ui.label("Turn your sources into something that sticks.").classes("studio-subtitle")
+            ui.label("Make something meaningful.").classes("studio-title")
+            ui.label("Study, connect, and keep the ideas that matter.").classes("studio-subtitle")
             with ui.element("div").classes("studio-grid"):
                 for kind, (icon, label, caption, color) in KINDS.items():
                     def action(k=kind):
+                        if k != "note" and not any(row["selected"] and row["status"] == "ready" for row in db.sources(notebook_id)):
+                            ui.notify("Select a ready source to create study material.", position="top")
+                            return
                         return note_editor(notebook_id) if k == "note" else generate_dialog(notebook_id, k)
                     with ui.card().classes(f"studio-tile tile-{color}").props(f'role=button tabindex=0 aria-label="{label}"').on(
-                        "click", action).on("keydown.enter", action):
+                        "click", action).on("keydown.enter", action).on("keydown.space.prevent", action):
                         with ui.row().classes("items-center w-full"):
                             ui.icon(icon, size="22px")
                             ui.space()
@@ -54,7 +58,7 @@ def studio_panel(notebook_id: str):
                     with ui.row().classes("artifact-row w-full items-center no-wrap"):
                         ui.icon(KINDS.get(item["kind"], KINDS["note"])[0], size="20px")
                         with ui.column().classes("gap-0 flex-1 min-w-0"):
-                            ui.button(item["title"], on_click=lambda a=item: artifact_view(a)).props("flat dense align=left").classes("artifact-title")
+                            ui.button(item["title"], on_click=lambda a=item: artifact_view(a)).props("flat dense align=left").classes("artifact-title").tooltip(item["title"])
                             ui.label(item["kind"].capitalize()).classes("text-xs muted")
                         ui.button(icon="delete_outline", on_click=lambda a=item: delete_artifact(a)).props("flat round dense size=sm").classes("muted").tooltip("Delete saved item")
             artifacts()
@@ -71,18 +75,41 @@ def studio_panel(notebook_id: str):
 
 
 def generate_dialog(notebook_id, kind):
-    state = {"task": None, "started": 0, "stage": ""}
+    state = {"task": None, "started": 0, "stage": "", "retrieval_s": 0, "first_token_s": None}
     with ui.dialog() as dialog, ui.card().classes("modal-card"):
         ui.label(f"Create a {KINDS[kind][1].lower()}").classes("text-xl")
         ui.label("Grounded in the sources you’ve selected.").classes("muted")
         topic = ui.input("Focus on a topic (optional)", placeholder="Leave blank for a source overview").props("outlined").classes("w-full")
         defaults = {"quiz": "Create 5 medium-difficulty multiple choice questions.",
-                    "mindmap": "Connect the key concepts in a clear topic hierarchy.",
+                    "mindmap": "Explore the topic in depth: key concepts, subtopics, how they connect, practical examples, and limitations. Use concise labels and source-backed explanations.",
                     "report": "Create a study guide with key concepts, practical examples, and a concise summary."}
         instructions = ui.textarea("Instructions", value=defaults[kind]).props("outlined rows=3").classes("w-full")
-        status = ui.label("Large-library overviews use sampled sections; focus on a topic for deeper coverage.").classes("text-xs muted")
+        status = ui.label("Large-library overviews use sampled sections; focus on a topic for deeper coverage.").classes("text-xs muted").props('role=status aria-live=polite')
         progress = ui.linear_progress(show_value=False).props("indeterminate")
         progress.visible = False
+        with ui.column().classes("studio-preview w-full") as preview:
+            ui.label("Taking shape").classes("eyebrow")
+            preview_text = ui.label("").classes("studio-preview-text whitespace-pre-line")
+        preview.visible = False
+        timing = ui.label("").classes("text-xs muted")
+
+        def on_progress(event):
+            if event["stage"] == "complete":
+                logging.getLogger(__name__).info(
+                    "Studio timing kind=%s retrieval_s=%.3f first_token_s=%s generation_s=%.3f prompt_chars=%d output_chars=%d",
+                    kind, state["retrieval_s"], event["first_token_s"], event["elapsed_s"],
+                    event["prompt_characters"], event["characters"])
+                return
+            state["first_token_s"] = event["first_token_s"]
+            items = event["items"]
+            label = ("question" if kind == "quiz" else "topic") + ("s" if len(items) != 1 else "")
+            state["stage"] = f"Building your {KINDS[kind][1].lower()}" + (f" · {len(items)} {label} received" if items else " · receiving content")
+            content = "\n".join(f"• {item}" for item in items[-8:]) if items else event["preview"]
+            if content:
+                preview_text.set_text(content)
+                preview.visible = True
+            timing.set_text(f"Sources ready in {state['retrieval_s']:.1f}s · First response in {event['first_token_s']:.1f}s")
+            tick()
         def tick():
             if state["task"]:
                 status.set_text(f"{state['stage']} · {time.perf_counter() - state['started']:.0f}s")
@@ -99,15 +126,23 @@ def generate_dialog(notebook_id, kind):
                 return
             state.update(task=asyncio.current_task(), started=time.perf_counter(), stage="Reading selected sources")
             button.disable()
+            button.props("loading")
+            topic.disable()
+            instructions.disable()
             progress.visible = True
+            preview.visible = False
+            timing.set_text("")
             status.set_text("Reading your sources and creating your study material…")
             try:
                 evidence = await asyncio.to_thread(retrieve, notebook_id, topic.value, 12) if topic.value.strip() else await asyncio.to_thread(coverage, notebook_id, 12)
+                state["retrieval_s"] = time.perf_counter() - state["started"]
                 settings = db.settings()
                 model = settings["fast_model"] if settings["studio_fast"] else settings["model"]
                 state["stage"] = f"Creating with {model}"
                 tick()
-                identifier = await generate(notebook_id, kind, evidence, instructions.value)
+                # The topic scopes both retrieval and the actual model request.
+                preference = (f"Focus topic: {topic.value.strip()}\n" if topic.value.strip() else "") + instructions.value
+                identifier = await generate(notebook_id, kind, evidence, preference, on_progress=on_progress)
                 state["task"] = None
                 dialog.close()
                 artifact_view(db.one("SELECT * FROM artifacts WHERE id=?", (identifier,)))
@@ -119,6 +154,9 @@ def generate_dialog(notebook_id, kind):
             finally:
                 state["task"] = None
                 button.enable()
+                button.props(remove="loading")
+                topic.enable()
+                instructions.enable()
                 progress.visible = False
         with ui.row().classes("w-full justify-end"):
             ui.button("Cancel", on_click=cancel).props("flat")

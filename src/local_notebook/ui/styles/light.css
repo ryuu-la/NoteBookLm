@@ -1,0 +1,44 @@
+.notebook-card-wrap { position:relative; min-width:0; }
+.notebook-card-wrap .notebook-link { display:block; height:100%; }
+.notebook-delete { position:absolute; right:12px; top:10px; z-index:2; color:#fff!important; background:#16263bba; }
+.notebook-delete:hover { background:#903b40!important; }
+.notebook-card-wrap .card-arrow { display:none; }
+body.body--light { color-scheme:light; --page:#fff; --panel:#f7f8fa; --inset:#f1f3f6; --line:#d9dfe7; --text:#202631; --muted:#596576; --blue:#245ca8; --hover:#e9eef5; --q-primary:#245ca8; --q-negative:#b3261e; background:var(--page); color:var(--text); }
+.body--light .text-primary { color:#245ca8!important; }
+.body--light .bg-primary { background:#dce9fc!important; }
+.body--light .nicegui-content:has(> .workspace) { background:var(--page); color:var(--text); }
+.body--light .q-dialog__inner > .q-card,.body--light .q-menu { background:#fff; border-color:var(--line); }
+.body--light :is(.quiet-btn,.eyebrow,.hero-subtitle,.card-description,.card-meta,.home-bottom,.home-footer,.count-badge,.settings-hint,.empty-title,.welcome-meta,.welcome-description,.welcome-footnote,.source-status,.source-footer,.studio-title,.studio-subtitle,.studio-empty,.studio-preview-text,.source-count,.composer-caption,.retrieval-status,.thinking-label,.code-toolbar,.citation-chip,.model-select .q-field__native,.model-select .q-field__append) { color:var(--muted); }
+.body--light :is(.notebook-create,.panel-toggle,.source-name,.artifact-title,.discovery-btn,.message-actions .q-btn,.studio-footer .q-btn) { color:var(--blue)!important; }
+.body--light :is(.notebook-header,.composer-add,.message-actions,.code-toolbar) .q-btn__content { color:var(--muted)!important; }
+.body--light :is(.new-notebook-card,.suggestion,.composer,.welcome-symbol,.view-toggle,.answer-code,.studio-preview,.source-upload,.source-search .q-field__control) { background:var(--inset); border-color:var(--line); color:var(--text)!important; }
+.body--light .new-notebook-card { background:#f1f3f6!important; }
+.body--light .quiet-btn,.body--light .quiet-btn .q-btn__content { color:#596576!important; }
+.body--light .brand-symbol { background:#dce9fc; color:#245ca8; }
+.body--light .primary-btn { background:#dce9fc!important; box-shadow:none; }
+.body--light :is(.notebook-card,.panel,.citation-chip,.card-meta,.count-badge) { border-color:var(--line); }
+.body--light :is(.new-circle,.add-sources-btn,.panel-toggle[aria-expanded=true],.mobile-tabs .active-tab,.view-toggle .active-view) { background:#dfeafa!important; color:#245ca8!important; }
+.body--light .primary-btn { background:#dce9fc!important; }
+.body--light .composer-wrap::before { background:linear-gradient(transparent,#fff); }
+.body--light .question-input textarea::placeholder { color:#677386; }
+.body--light .user-bubble { background:#eaf0f8; color:var(--text); }
+.body--light .assistant-message .markdown { color:var(--text); }
+.body--light .markdown blockquote { color:var(--muted); }
+.body--light .markdown pre,.body--light .assistant-message .markdown :not(pre) > code { background:#f0f3f7; border-color:var(--line); color:#202631; }
+.body--light .send-btn { background:#245ca8!important; }
+.body--light .send-btn .q-btn__content { color:#fff!important; }
+.body--light .send-btn.disabled { background:#d9dfe7!important; }
+.body--light .send-btn.disabled .q-btn__content { color:#677386!important; }
+.body--light .tile-pink { background:#eee4f6; color:#633a7f; }
+.body--light .tile-blue { background:#e0ebfb; color:#24518a; }
+.body--light .tile-yellow { background:#f8eed6; color:#715717; }
+.body--light .tile-green { background:#e0efe6; color:#2a6347; }
+.body--light .art-blue { background:radial-gradient(ellipse at 50% 30%,#dceafb,transparent 85%),#cadcef; color:#355775; }
+.body--light .art-purple { background:radial-gradient(ellipse at 50% 30%,#efe5fa,transparent 85%),#ddd0ec; color:#60477a; }
+.body--light .art-green { background:radial-gradient(ellipse at 50% 30%,#e1f2e9,transparent 85%),#cce2d7; color:#3b6653; }
+.body--light .map-viewport { background-color:#f7f9fc; background-image:radial-gradient(#33445522 1px,transparent 1px); }
+.body--light .map-node { background:#fff; }
+.body--light .map-node-label { color:#202631; }
+.body--light .map-toolbar button { background:#eef2f8; color:#202631; border-color:var(--line); }
+.body--light .quiz-correct { color:#24663b; }
+.body--light :is(.quiz-incorrect,.source-error) { color:#b3261e; }

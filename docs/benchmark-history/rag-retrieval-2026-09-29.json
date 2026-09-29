@@ -1,0 +1,544 @@
+{
+  "created_at": "2026-09-29T14:50:47.981164+00:00",
+  "passages": 248,
+  "queries": 12,
+  "mode": "Hybrid + reranker",
+  "answers_evaluated": false,
+  "model": null,
+  "judge_model": null,
+  "self_judged": false,
+  "model_abstention_evaluated": false,
+  "fixture_composition": {
+    "topic_passages": 8,
+    "repetitive_archive_distractors": 240,
+    "ingestion_evaluated": false
+  },
+  "passed": true,
+  "summary": {
+    "recall_at_8": 1.0,
+    "mrr_at_8": 0.95,
+    "ndcg_at_8": 0.9631,
+    "abstention_accuracy": 1.0,
+    "unanswerable_queries": 2,
+    "rejected_unanswerable_queries": 2,
+    "scope_pass": true,
+    "route_pass": true,
+    "overview_sources": 2,
+    "p50_ms": 115.0,
+    "p95_ms": 134
+  },
+  "cases": [
+    {
+      "id": "reported-fast-api-followup",
+      "question": "anything more about fast api",
+      "history": [
+        {
+          "role": "user",
+          "text": "What are the key ideas in these sources?"
+        },
+        {
+          "role": "assistant",
+          "text": "The sources cover web APIs, databases, and learning methods."
+        }
+      ],
+      "relevant": [
+        "fastapi",
+        "dependencies",
+        "validation",
+        "async"
+      ],
+      "category": "explicit follow-up",
+      "reference": "FastAPI uses Pydantic validation, generates OpenAPI documentation, and supports async I/O and dependency injection.",
+      "retrieved": [
+        "dependencies",
+        "fastapi",
+        "async",
+        "validation",
+        "flask",
+        "distractor-189",
+        "distractor-103",
+        "distractor-209"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "anything more about fastapi",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 0.9306257963180542,
+        "context_passages": 8,
+        "context_characters": 1756
+      },
+      "latency_ms": 116,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 0.9306257963180542
+    },
+    {
+      "id": "topic-after-overview",
+      "question": "Explain database transactions",
+      "history": [
+        {
+          "role": "user",
+          "text": "What are the key ideas in these sources?"
+        },
+        {
+          "role": "assistant",
+          "text": "The sources cover web APIs, databases, and learning methods."
+        }
+      ],
+      "relevant": [
+        "transactions"
+      ],
+      "category": "explicit follow-up",
+      "reference": "Transaction atomicity means all changes succeed or roll back.",
+      "retrieved": [
+        "transactions",
+        "dependencies",
+        "flask",
+        "fastapi",
+        "distractor-1",
+        "distractor-2",
+        "distractor-131",
+        "distractor-133"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain database transactions",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 4.764712333679199,
+        "context_passages": 8,
+        "context_characters": 1669
+      },
+      "latency_ms": 98,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 4.764712333679199
+    },
+    {
+      "id": "named-overview",
+      "question": "Summarize the FastAPI dependency system",
+      "history": [],
+      "relevant": [
+        "dependencies"
+      ],
+      "category": "topic summary",
+      "reference": "Depends injects reusable dependencies; yield dependencies can release resources.",
+      "retrieved": [
+        "dependencies",
+        "fastapi",
+        "async",
+        "validation",
+        "transactions",
+        "flask",
+        "distractor-208",
+        "distractor-160"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Summarize the FastAPI dependency system",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 2.761554718017578,
+        "context_passages": 8,
+        "context_characters": 1814
+      },
+      "latency_ms": 115,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 2.761554718017578
+    },
+    {
+      "id": "compound-name",
+      "question": "How does fast api validate requests?",
+      "history": [],
+      "relevant": [
+        "validation"
+      ],
+      "category": "compound name",
+      "reference": "FastAPI uses Pydantic to validate request fields.",
+      "retrieved": [
+        "fastapi",
+        "validation",
+        "dependencies",
+        "async",
+        "transactions",
+        "flask",
+        "trees",
+        "forest"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "How does fastapi validate requests?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 7.519092082977295,
+        "context_passages": 8,
+        "context_characters": 1900
+      },
+      "latency_ms": 126,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 0.5,
+      "ndcg_at_8": 0.6309297535714575,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 7.519092082977295
+    },
+    {
+      "id": "paraphrase",
+      "question": "How can incomplete database changes be discarded together?",
+      "history": [],
+      "relevant": [
+        "transactions"
+      ],
+      "category": "paraphrase",
+      "reference": "A transaction rollback discards incomplete changes as a unit.",
+      "retrieved": [
+        "transactions",
+        "dependencies",
+        "flask",
+        "trees",
+        "distractor-195",
+        "distractor-210",
+        "distractor-106",
+        "distractor-208"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "How can incomplete database changes be discarded together?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 2.5139236450195312,
+        "context_passages": 8,
+        "context_characters": 1637
+      },
+      "latency_ms": 121,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 2.5139236450195312
+    },
+    {
+      "id": "reference-followup",
+      "question": "How does it handle cleanup?",
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain FastAPI dependencies"
+        }
+      ],
+      "relevant": [
+        "dependencies"
+      ],
+      "category": "referential follow-up",
+      "reference": "Dependencies with yield can clean up resources.",
+      "retrieved": [
+        "dependencies",
+        "fastapi",
+        "async",
+        "validation",
+        "transactions",
+        "trees",
+        "distractor-95",
+        "distractor-103"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain FastAPI dependencies\nFollow-up: How does it handle cleanup?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 3.168555974960327,
+        "context_passages": 8,
+        "context_characters": 1809
+      },
+      "latency_ms": 129,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 3.168555974960327
+    },
+    {
+      "id": "generic-followup",
+      "question": "Tell me more",
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain database transactions"
+        }
+      ],
+      "relevant": [
+        "transactions"
+      ],
+      "category": "referential follow-up",
+      "reference": "Transactions ensure atomic changes and allow rollback.",
+      "retrieved": [
+        "transactions",
+        "dependencies",
+        "flask",
+        "fastapi",
+        "async",
+        "distractor-2",
+        "distractor-28",
+        "distractor-27"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain database transactions\nFollow-up: Tell me more",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": -1.292539119720459,
+        "context_passages": 8,
+        "context_characters": 1762
+      },
+      "latency_ms": 114,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": -1.292539119720459
+    },
+    {
+      "id": "new-topic",
+      "question": "Explain decision tree pruning",
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain FastAPI dependencies"
+        }
+      ],
+      "relevant": [
+        "trees"
+      ],
+      "category": "topic switch",
+      "reference": "Pruning reduces tree complexity and can reduce overfitting.",
+      "retrieved": [
+        "trees",
+        "forest",
+        "transactions",
+        "dependencies",
+        "fastapi",
+        "distractor-222",
+        "distractor-168",
+        "validation"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain decision tree pruning",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 5.977450847625732,
+        "context_passages": 8,
+        "context_characters": 1782
+      },
+      "latency_ms": 100,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 5.977450847625732
+    },
+    {
+      "id": "comparison",
+      "question": "Compare decision trees and random forests",
+      "history": [],
+      "relevant": [
+        "trees",
+        "forest"
+      ],
+      "category": "multi-source comparison",
+      "reference": "A tree uses feature splits; a forest aggregates varied trees to reduce variance.",
+      "retrieved": [
+        "forest",
+        "trees",
+        "distractor-148",
+        "distractor-168",
+        "distractor-41",
+        "distractor-173",
+        "distractor-175",
+        "distractor-5"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Compare decision trees and random forests",
+        "aspects": [
+          "decision trees",
+          "random forests"
+        ],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 7.593613624572754,
+        "context_passages": 8,
+        "context_characters": 1520
+      },
+      "latency_ms": 105,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 7.593613624572754
+    },
+    {
+      "id": "async-limits",
+      "question": "Does async make CPU-heavy FastAPI work faster?",
+      "history": [],
+      "relevant": [
+        "async"
+      ],
+      "category": "limitation",
+      "reference": "No. Async helps nonblocking I/O; CPU-heavy work may need a worker.",
+      "retrieved": [
+        "async",
+        "fastapi",
+        "dependencies",
+        "validation",
+        "distractor-209",
+        "distractor-95",
+        "distractor-170",
+        "distractor-85"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Does async make CPU-heavy FastAPI work faster?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 8,
+        "best_relevance_score": 9.973020553588867,
+        "context_passages": 8,
+        "context_characters": 1727
+      },
+      "latency_ms": 134,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": 9.973020553588867
+    },
+    {
+      "id": "unknown",
+      "question": "What is the orbital period of Neptune?",
+      "history": [],
+      "relevant": [],
+      "category": "unanswerable",
+      "reference": "The selected sources do not provide this information.",
+      "retrieved": [],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "What is the orbital period of Neptune?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 0,
+        "best_relevance_score": -11.373200416564941,
+        "context_passages": 0,
+        "context_characters": 0
+      },
+      "latency_ms": 115,
+      "recall_at_8": null,
+      "mrr_at_8": null,
+      "ndcg_at_8": null,
+      "abstained": true,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "unknown-after-overview",
+      "question": "anything about medieval pottery glazes",
+      "history": [
+        {
+          "role": "user",
+          "text": "What are the key ideas in these sources?"
+        },
+        {
+          "role": "assistant",
+          "text": "The sources cover web APIs, databases, and learning methods."
+        }
+      ],
+      "relevant": [],
+      "category": "unanswerable",
+      "reference": "The selected sources do not provide this information.",
+      "retrieved": [],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "anything about medieval pottery glazes",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 16,
+        "retrieved_passages": 0,
+        "best_relevance_score": -11.389287948608398,
+        "context_passages": 0,
+        "context_characters": 0
+      },
+      "latency_ms": 89,
+      "recall_at_8": null,
+      "mrr_at_8": null,
+      "ndcg_at_8": null,
+      "abstained": true,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    }
+  ],
+  "fixture_sha256": "788b62823d6beea31c195916aa70c795e84605b6b08469f85961936fc8ff1d4e",
+  "duration_s": 4.4,
+  "protocol": "Chat retrieval workflow over 8 topic passages and 240 repetitive archive distractors across two sources, plus out-of-scope canaries. Prepared chunks bypass parsing and chunking. Warm retrieval-only latency, one pass. With --answers, the generator is called even with empty evidence; refusals are model-generated. No private documents.",
+  "limitations": "Developer-authored regression fixture, not held-out real-user or diverse long-document accuracy. No ingestion evaluation. Retrieval rejection and model abstention are separate metrics. Claim support is a macro-average over answers with judged claims, not the fraction of all factual claims. Quote verification cannot prove entailment or that the judge enumerated every claim. Single-pass latency is not a stable performance estimate. Self-judging is not independent validation.",
+  "metric_reference": "https://www.sbert.net/docs/package_reference/sentence_transformer/evaluation.html"
+}

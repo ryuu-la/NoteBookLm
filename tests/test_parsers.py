@@ -75,3 +75,30 @@ def test_filename_cannot_escape_storage(library):
     from local_notebook import storage as db
     source = add_file(library, "../../secret.txt", b"A harmless test")
     assert db.one("SELECT name FROM sources WHERE id=?", (source,))["name"] == "secret.txt"
+
+
+def test_pdf_fallback_retains_text_and_progress(tmp_path, monkeypatch):
+    import sys
+    from fpdf import FPDF
+    document = FPDF()
+    document.set_font("Helvetica", size=12)
+    for number in range(2):
+        document.add_page()
+        document.cell(0, 10, f"Readable evidence on page {number + 1}.")
+    path = tmp_path / "fallback.pdf"
+    document.output(path)
+    monkeypatch.setitem(sys.modules, "pypdfium2", None)
+    blocks = list(parse(path))
+    assert [block.progress for block in blocks] == [.5, 1.0]
+    assert "Readable evidence on page 2" in blocks[-1].text
+
+
+def test_encrypted_pdf_has_an_actionable_error(tmp_path):
+    from pypdf import PdfWriter
+    writer = PdfWriter()
+    writer.add_blank_page(width=600, height=800)
+    writer.encrypt("test-password")
+    path = tmp_path / "locked.pdf"
+    writer.write(path)
+    with pytest.raises(ValueError, match="password protected"):
+        list(parse(path))

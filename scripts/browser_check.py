@@ -19,6 +19,8 @@ def check(live=False):
     env = {**os.environ, "NOTEBOOK_DATA_DIR": str(output / f"data-{int(time.time())}"),
            "NOTEBOOK_MODEL_DIR": str(root / ".data" / "models"), "NOTEBOOK_PORT": "8081",
            "NOTEBOOK_OFFLINE": "0" if live else "1"}
+    if not live:
+        env.update(GEMINI_API_KEY="", NOTEBOOK_API_KEY="")
     errors, passed, timings = [], [], {}
     with (output / "server.log").open("w") as log:
         server = subprocess.Popen([sys.executable, "-m", "local_notebook.main"], env=env,
@@ -42,29 +44,38 @@ def check(live=False):
                 passed.append("home")
                 page.get_by_role("button", name="Create notebook", exact=True).click()
                 page.get_by_label("Notebook name").fill("Browser verification")
+                expect(page.get_by_label("API key", exact=True)).to_have_count(0)
+                passed.append("notebook creation has no API-key prompt")
                 page.get_by_role("button", name="Create notebook", exact=True).last.click()
                 expect(page.locator(".composer")).to_be_visible()
+                page.get_by_role("button", name="Toggle sources", exact=True).click()
                 passed.append("create notebook")
-                page.get_by_role("button", name="Add sources", exact=True).click()
+                page.locator('.source-panel').get_by_role("button", name="Add sources", exact=True).click()
                 page.locator("input[type=file]").set_input_files({"name": "verification.txt", "mimeType": "text/plain",
                     "buffer": b"Retrieval practice means recalling an idea without looking at notes. Feedback corrects mistakes. Spaced practice distributes learning sessions across several days. Interleaving mixes related question types so a learner chooses an appropriate strategy. A study loop combines collecting reliable sources, explaining key ideas, testing recall, and reflecting on errors."})
                 expect(page.get_by_text("Added verification.txt. Indexing in the background.")).to_be_visible(timeout=15000)
                 page.keyboard.press("Escape")
-                expect(page.get_by_text("1 passages · indexed", exact=True)).to_be_visible(timeout=60000)
+                expect(page.get_by_text("1 passage · indexed", exact=True)).to_be_visible(timeout=60000)
                 passed.extend(["file upload", "indexing"])
-                page.get_by_placeholder("Ask a question. Make a connection.").fill("What is retrieval practice?")
+                page.get_by_label("Ask about your sources", exact=True).fill("What is retrieval practice?")
                 started = time.perf_counter()
                 page.locator(".send-btn").click()
-                expect(page.locator(".conversation .markdown").first).to_contain_text(re.compile(r"\S"), timeout=120000)
-                timings["first_visible_answer_s"] = round(time.perf_counter() - started, 2)
-                expect(page.get_by_role("button", name="Save to notes", exact=True)).to_be_visible(timeout=120000)
-                timings["answer_complete_s"] = round(time.perf_counter() - started, 2)
-                if not live:
-                    expect(page.get_by_text("Source excerpts", exact=True)).to_be_visible()
-                expect(page.locator(".citation-chip").first).to_be_visible()
+                if live:
+                    expect(page.locator(".conversation .markdown").first).to_contain_text(re.compile(r"\S"), timeout=120000)
+                    timings["first_visible_answer_s"] = round(time.perf_counter() - started, 2)
+                    expect(page.get_by_role("button", name="Save to notes", exact=True)).to_be_visible(timeout=120000)
+                    timings["answer_complete_s"] = round(time.perf_counter() - started, 2)
+                    expect(page.locator(".citation-chip").first).to_be_visible()
+                    passed.extend(['live model chat', 'citations'])
+                else:
+                    expect(page.locator('.retrieval-status')).to_have_text('Set GEMINI_API_KEY in the project .env and restart the server to get a source-grounded answer.', timeout=30000)
+                    expect(page.get_by_text('Source excerpts', exact=True)).to_have_count(0)
+                    expect(page.locator('.assistant-message')).to_have_count(0)
+                    passed.append('missing model never falls back to pasted source excerpts')
                 page.screenshot(path=str(output / "chat.png"), full_page=True)
-                passed.extend(["live model chat" if live else "offline excerpts", "citations"])
-                page.get_by_role("button", name="Add a note", exact=True).click()
+                if not page.locator('.studio-tile').filter(has_text='Notes').is_visible():
+                    page.get_by_role('button', name='Toggle studio', exact=True).click()
+                page.locator('.studio-tile').filter(has_text='Notes').click()
                 page.get_by_label("Title", exact=True).fill("Browser-tested study note")
                 page.get_by_label("Markdown notes").fill("# Retrieval practice\n\nRecall ideas, then check the evidence.\n\n- Use feedback.\n- Return after a delay.")
                 with page.expect_download() as download:
@@ -74,7 +85,8 @@ def check(live=False):
                 expect(page.get_by_role("button", name="Browser-tested study note")).to_be_visible(timeout=10000)
                 page.reload()
                 expect(page.get_by_role("button", name="Browser-tested study note")).to_be_visible(timeout=10000)
-                expect(page.get_by_role("button", name="Save to notes", exact=True)).to_be_visible()
+                if live:
+                    expect(page.get_by_role("button", name="Save to notes", exact=True)).to_be_visible()
                 passed.extend(["note autosave", "PDF download", "reload persistence"])
                 if live:
                     for tile, instructions in [("Mind map", "Make a concise map with 3 leaf nodes, each with citations."),
@@ -84,7 +96,8 @@ def check(live=False):
                         page.get_by_label("Instructions", exact=True).fill(instructions)
                         started = time.perf_counter()
                         page.get_by_role("button", name="Generate", exact=True).click()
-                        expect(page.get_by_role("button", name="Export PDF", exact=True)).to_be_visible(timeout=180000)
+                        ready_button = 'Export mind map' if tile == 'Mind map' else 'Export PDF'
+                        expect(page.get_by_role("button", name=ready_button, exact=True)).to_be_visible(timeout=180000)
                         timings[tile.lower().replace(" ", "_") + "_s"] = round(time.perf_counter() - started, 2)
                         if tile == "Quiz":
                             for group in page.locator(".quiz-question").all():
@@ -95,6 +108,10 @@ def check(live=False):
                         passed.append("generated " + tile.lower())
                         page.keyboard.press("Escape")
                 page.get_by_role("button", name="Settings", exact=True).click()
+                expect(page.get_by_label("API key", exact=True)).to_have_count(0)
+                expect(page.get_by_text("Fast: gemini-3.5-flash-lite", exact=True)).to_be_visible()
+                expect(page.get_by_text("Main: gemini-3.8-flash", exact=True)).to_be_visible()
+                passed.append("settings shows env models without key entry or backup")
                 expect(page.get_by_text("Make yourself at home", exact=True)).to_be_visible()
                 page.screenshot(path=str(output / "settings.png"), full_page=True)
                 page.keyboard.press("Escape")
@@ -104,7 +121,8 @@ def check(live=False):
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), "Mobile overflow"
                 passed.extend(["settings", "mobile width"])
                 page.set_viewport_size({"width": 1440, "height": 1100})
-                page.get_by_role("button", name="Retrieval benchmarks", exact=True).click()
+                page.get_by_role("button", name="Notebook options", exact=True).click()
+                page.get_by_role("menuitem", name="Retrieval benchmarks", exact=True).click()
                 expect(page.get_by_text("Evidence before claims.", exact=True)).to_be_visible()
                 expect(page.locator("canvas")).to_have_count(2)
                 with page.expect_download() as download:

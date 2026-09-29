@@ -21,8 +21,15 @@ def embed_cached(directory: Path, texts: list[str], model) -> list[np.ndarray]:
                 f"SELECT digest,vector FROM embeddings WHERE digest IN ({placeholders})", batch))
         missing = {key: text for key, text in zip(keys, texts) if key not in cached}
         if missing:
-            vectors = model.embed(list(missing.values()), batch_size=16)
-            fresh = [(key, np.asarray(vector, dtype="<f4").tobytes()) for key, vector in zip(missing, vectors)]
+            # Similar lengths share a batch, avoiding padding short passages to the longest one.
+            ordered = sorted(missing, key=lambda key: len(missing[key])) if len(missing) > 16 else list(missing)
+            # Short passages gain throughput at 32; retain 16 for long chunks
+            # to bound ONNX padding/activation memory and keep cancellation quick.
+            batch_size = 32 if max(map(len, missing.values())) <= 1200 else 16
+            vectors = model.embed([missing[key] for key in ordered], batch_size=batch_size)
+            fresh = [(key, np.asarray(vector, dtype="<f4").tobytes()) for key, vector in zip(ordered, vectors)]
+            if len(fresh) != len(missing):
+                raise ValueError("The embedding model returned an incomplete batch. Retry this source.")
             connection.executemany("INSERT OR REPLACE INTO embeddings VALUES (?,?)", fresh)
             cached.update(fresh)
         return [np.frombuffer(cached[key], dtype="<f4") for key in keys]

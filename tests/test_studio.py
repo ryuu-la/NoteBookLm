@@ -5,7 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from local_notebook import providers, storage as db
-from local_notebook.exports import export_pdf
+from local_notebook.exports import artifact_markdown, export_pdf
 from local_notebook.retrieval.search import retrieve
 from local_notebook.studio import MindNode, Question, generate, validate_map
 
@@ -52,3 +52,61 @@ def test_endpoint_disallows_credentials_and_insecure_remote():
     with pytest.raises(ValueError):
         providers.validate_endpoint("https://secret@example.com/v1")
     assert providers.validate_endpoint("http://localhost:11434/v1/") == "http://localhost:11434/v1"
+
+
+def test_studio_previews_stream_before_artifact_is_saved(indexed, monkeypatch):
+    progress = []
+    payload = json.dumps({"title": "Biology", "root": {"name": "Photosynthesis", "description": "Plants convert light energy.", "citations": [1]}})
+
+    async def stream(*args, **kwargs):
+        assert kwargs['max_output_tokens'] == 8192
+        yield payload[:payload.index('description')]
+        assert progress and progress[0]['items'] == ['Photosynthesis']
+        assert not db.rows('SELECT * FROM artifacts WHERE notebook_id=?', (indexed[0],))
+        yield payload[payload.index('description'):]
+
+    monkeypatch.setattr(providers, 'configured', lambda: True)
+    monkeypatch.setattr(providers, 'stream', stream)
+    identifier = asyncio.run(generate(indexed[0], 'mindmap', retrieve(indexed[0], 'light'), 'Explain photosynthesis', on_progress=progress.append))
+    artifact = db.one('SELECT * FROM artifacts WHERE id=?', (identifier,))
+    assert progress[-1]['stage'] == 'complete'
+    assert progress[-1]['first_token_s'] is not None
+    assert 'Plants convert light energy.' in artifact_markdown(artifact)
+    assert 'Photosynthesis — Plants convert light energy. [1]' in artifact_markdown(artifact)
+
+
+def test_invalid_streamed_map_is_not_saved(indexed, monkeypatch):
+    async def stream(*args, **kwargs):
+        yield '{"title":"Invalid","root":{"name":"No evidence","citations":[99]}}'
+
+    monkeypatch.setattr(providers, 'configured', lambda: True)
+    monkeypatch.setattr(providers, 'stream', stream)
+    with pytest.raises(ValueError, match='invalid source reference'):
+        asyncio.run(generate(indexed[0], 'mindmap', retrieve(indexed[0], 'light'), 'Map'))
+    assert not db.rows('SELECT * FROM artifacts WHERE notebook_id=?', (indexed[0],))
+
+
+def test_gemini_connections_are_reused_and_closed(monkeypatch):
+    from google import genai
+    created, closed = [], []
+
+    class Client:
+        def __init__(self, **kwargs):
+            self.aio = self
+            created.append(self)
+
+        async def aclose(self):
+            closed.append(self)
+
+    monkeypatch.setattr(genai, 'Client', Client)
+
+    async def exercise():
+        first, second = await asyncio.gather(providers.gemini_client('fixture-one'), providers.gemini_client('fixture-one'))
+        assert first is second
+        different = await providers.gemini_client('fixture-two')
+        assert different is not first
+        assert not closed  # key changes must not kill another active request
+        await providers.close_clients()
+
+    asyncio.run(exercise())
+    assert len(created) == 2 and closed == created

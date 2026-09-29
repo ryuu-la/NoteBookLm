@@ -13,6 +13,58 @@ def benchmark_page():
         ui.link("Back to your notebooks", "/").classes("breadcrumb")
         ui.label("Evidence before claims.").classes("text-4xl")
         ui.label("Measured retrieval quality and latency on a reproducible, public fixture.").classes("muted")
+        rag_path = Path(__file__).resolve().parents[1] / 'assets/rag-evaluation.json'
+        if rag_path.exists():
+            rag = json.loads(rag_path.read_text(encoding='utf-8'))
+            summary = rag['summary']
+            ui.label('Conversation RAG evaluation').classes('text-2xl')
+            ui.label('Evaluation gates passed' if rag['passed'] else 'Evaluation gates failed — judgments need review').classes('text-sm muted')
+            ui.label(f"{rag['queries']} regression questions · {rag['passages']} indexed passages · {rag['mode']} · {rag['created_at'][:10]}").classes('muted')
+            ui.label('Fixture: 8 topic passages + 240 repetitive archive distractors. Prepared chunks; parsing and chunking are not evaluated.').classes('muted')
+            negatives = [c for c in rag['cases'] if not c['relevant']]
+            with ui.element('div').classes('w-full gap-4').style('display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))'):
+                metrics = [(f"{summary['recall_at_8']:.0%}", 'EVIDENCE RECALL@8'),
+                           (f"{sum(c['abstained'] for c in negatives)}/{len(negatives)}", 'UNANSWERABLE QUERIES REJECTED BY RETRIEVAL'),
+                           ('Passed' if summary['scope_pass'] and summary['route_pass'] else 'Failed', 'SCOPE AND ROUTING'),
+                           (f"{summary['p95_ms']} ms", 'P95 RETRIEVAL')]
+                for value, label in metrics:
+                    with ui.card().classes('panel p-5'):
+                        ui.label(value).classes('text-2xl')
+                        ui.label(label).classes('eyebrow mt-2')
+            ui.label('Answer generation evaluated' if rag['answers_evaluated'] else
+                     'Generated-answer quality has not been measured in this run. These scores measure retrieval and routing.').classes('muted')
+            if rag['answers_evaluated']:
+                support = summary['supported_claim_fraction']
+                support_label = f'{support:.1%}' if support is not None else 'not scored'
+                ui.label(f"Raw model verdicts: {summary['answer_correctness']:.1%} correct · "
+                         f"{support_label} mean quote-audited claim support").classes('text-lg')
+                ui.label(f"Generator: {rag['model']} · Judge: {rag.get('judge_model', rag['model'])} · "
+                         f"{summary.get('judge_reviews_needed', 0)} judgments flagged for review").classes('muted')
+                if rag['model'] == rag.get('judge_model', rag['model']):
+                    ui.label('Generator and judge use the same model. These judgments are not independent accuracy measurements.').classes('muted')
+                if not rag.get('model_abstention_evaluated', False):
+                    ui.label('Model refusal behavior was not evaluated: empty-evidence answers in this historical run were fixed refusal text.').classes('muted')
+                else:
+                    ui.label(f"Model-judged refusal accuracy: {summary['model_abstention_accuracy']:.1%}").classes('muted')
+                with ui.expansion('Answers and raw judge verdicts', icon='fact_check').classes('w-full panel p-4'):
+                    for case in rag['cases']:
+                        judgment = case['answer_evaluation']
+                        with ui.expansion(case['question']).classes('w-full'):
+                            ui.label(case['answer']).classes('whitespace-pre-wrap')
+                            ui.label(f"Raw correct verdict: {judgment['correct']} · Review flagged: {judgment.get('needs_review', False)}")
+                            ui.label(judgment['reason']).classes('muted whitespace-pre-wrap')
+                            for reason in judgment.get('review_reasons', []):
+                                ui.label(reason).classes('muted')
+            with ui.expansion('Cases, evidence, and evaluation limits', icon='science').classes('w-full panel p-4'):
+                ui.label(rag['protocol'])
+                ui.label(rag['limitations']).classes('muted')
+                ui.table(columns=[{'name': key, 'label': label, 'field': key, 'align': 'left'}
+                                  for key, label in [('question', 'Question'), ('category', 'Case'), ('score', 'Recall@8'), ('found', 'Retrieved evidence')]],
+                         rows=[{'question': c['question'], 'category': c['category'],
+                                'score': f"{c['recall_at_8']:.0%}" if c['recall_at_8'] is not None else ('Abstained' if c['abstained'] else 'False match'),
+                                'found': ', '.join(c['retrieved']) or 'No evidence'} for c in rag['cases']]).classes('w-full')
+            ui.button('Download conversation RAG evaluation', icon='download',
+                      on_click=lambda: ui.download.content(rag_path.read_bytes(), 'rag-evaluation.json')).props('outline')
         path = Path(__file__).resolve().parents[1] / "assets/retrieval-benchmark.json"
         if not path.exists():
             ui.label("No benchmark results yet. Run python benchmarks/retrieval.py from the project folder.")
@@ -20,10 +72,10 @@ def benchmark_page():
         data = json.loads(path.read_text(encoding="utf-8"))
         results = data["results"]
         names = [row["name"] for row in results]
-        with ui.row().classes("w-full gap-4"):
+        with ui.element('div').classes('w-full gap-4').style('display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))'):
             for value, label in [(data["queries"], "LABELED QUESTIONS"), (data["passages"], "PUBLIC PASSAGES"),
                                  ("BGE + MiniLM", "LOCAL CPU MODELS")]:
-                with ui.card().classes("panel p-5 flex-1 min-w-48"):
+                with ui.card().classes("panel p-5"):
                     ui.label(str(value)).classes("text-2xl")
                     ui.label(label).classes("eyebrow mt-2")
         base = {"backgroundColor": "transparent", "animation": False, "textStyle": {"color": "#bac6df"},

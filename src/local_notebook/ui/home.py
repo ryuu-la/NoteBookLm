@@ -13,8 +13,8 @@ def home():
         with ui.row().classes("welcome-row items-end justify-between w-full"):
             with ui.column().classes("gap-3"):
                 ui.label("A SPACE FOR YOUR CURIOSITY").classes("eyebrow")
-                ui.label("Good ideas start\nwith a little exploration.").classes("hero-title whitespace-pre-line")
-                ui.label("Bring your sources. Connect the dots. Make it yours.").classes("hero-subtitle")
+                ui.label("Your ideas.\nA little more connected.").classes("hero-title whitespace-pre-line")
+                ui.label("One place for your sources, questions, and discoveries.").classes("hero-subtitle")
             ui.button("Create notebook", icon="add", on_click=notebook_dialog).classes("primary-btn create-btn")
         with ui.row().classes("library-toolbar w-full items-center"):
             ui.label("Your notebooks").classes("section-title")
@@ -26,8 +26,8 @@ def home():
                 ui.icon("search", size="19px")
             sort = ui.select(["Last opened", "Name"], value="Last opened").props("borderless dense options-dense").classes("sort-control")
             with ui.button_group().props("flat").classes("view-toggle"):
-                grid_button = ui.button(icon="grid_view").props("flat dense").classes("active-view")
-                list_button = ui.button(icon="view_list").props("flat dense")
+                grid_button = ui.button(icon="grid_view").props('flat dense aria-label="Grid view" aria-pressed=true').classes("active-view")
+                list_button = ui.button(icon="view_list").props('flat dense aria-label="List view" aria-pressed=false')
         state = {"list": False}
 
         @ui.refreshable
@@ -38,7 +38,7 @@ def home():
             with ui.element("div").classes("notebook-grid" + (" list-layout" if state["list"] else "")):
                 for book in books:
                     notebook_card(book)
-                with ui.card().classes("new-notebook-card").props('role=button tabindex=0 aria-label="Start a new notebook"').on("click", notebook_dialog).on("keydown.enter", notebook_dialog):
+                with ui.card().classes("new-notebook-card").props('role=button tabindex=0 aria-label="Start a new notebook"').on("click", notebook_dialog).on("keydown.enter", notebook_dialog).on("keydown.space.prevent", notebook_dialog):
                     with ui.element("div").classes("new-circle"):
                         ui.icon("add", size="28px")
                     ui.label("Start something new").classes("font-medium text-base")
@@ -50,6 +50,8 @@ def home():
             state["list"] = as_list
             grid_button.classes(remove="active-view" if as_list else "", add="active-view" if not as_list else "")
             list_button.classes(remove="active-view" if not as_list else "", add="active-view" if as_list else "")
+            grid_button.props(f'aria-pressed={str(not as_list).lower()}')
+            list_button.props(f'aria-pressed={str(as_list).lower()}')
             cards.refresh()
 
         grid_button.on_click(lambda: switch_view(False))
@@ -81,6 +83,14 @@ def feature(icon, title, caption):
 
 
 def notebook_card(book):
+    from .workspace import delete_notebook_dialog
+    with ui.element('div').classes('notebook-card-wrap'):
+        ui.button(icon='delete_outline', on_click=lambda: delete_notebook_dialog(book)).props(
+            'flat round aria-label="Delete notebook"').classes('notebook-delete').tooltip(f"Delete {book['title']}")
+        notebook_card_link(book)
+
+
+def notebook_card_link(book):
     with ui.link(target=f"/notebook/{book['id']}").classes("notebook-link no-underline"):
         with ui.card().classes("notebook-card"):
             with ui.element("div").classes(f"card-art art-{book['color']}"):
@@ -95,6 +105,6 @@ def notebook_card(book):
                 ui.label(book["description"] or "Your next discovery starts here.").classes("card-description")
                 with ui.row().classes("card-meta w-full items-center"):
                     ui.icon("description", size="14px")
-                    ui.label(f"{book['source_count']} sources")
+                    ui.label(f"{book['source_count']} source{'s' if book['source_count'] != 1 else ''}")
                     ui.space()
                     ui.label(datetime.fromisoformat(book["updated_at"]).strftime("%b %d, %Y"))

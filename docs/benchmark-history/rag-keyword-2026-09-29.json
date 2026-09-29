@@ -1,0 +1,497 @@
+{
+  "created_at": "2026-09-29T14:51:50.773135+00:00",
+  "passages": 248,
+  "queries": 12,
+  "mode": "Keyword",
+  "answers_evaluated": false,
+  "model": null,
+  "judge_model": null,
+  "self_judged": false,
+  "model_abstention_evaluated": false,
+  "fixture_composition": {
+    "topic_passages": 8,
+    "repetitive_archive_distractors": 240,
+    "ingestion_evaluated": false
+  },
+  "passed": true,
+  "summary": {
+    "recall_at_8": 1.0,
+    "mrr_at_8": 0.9333,
+    "ndcg_at_8": 0.95,
+    "abstention_accuracy": 1.0,
+    "unanswerable_queries": 2,
+    "rejected_unanswerable_queries": 2,
+    "scope_pass": true,
+    "route_pass": true,
+    "overview_sources": 2,
+    "p50_ms": 8.5,
+    "p95_ms": 12
+  },
+  "cases": [
+    {
+      "id": "reported-fast-api-followup",
+      "question": "anything more about fast api",
+      "history": [
+        {
+          "role": "user",
+          "text": "What are the key ideas in these sources?"
+        },
+        {
+          "role": "assistant",
+          "text": "The sources cover web APIs, databases, and learning methods."
+        }
+      ],
+      "relevant": [
+        "fastapi",
+        "dependencies",
+        "validation",
+        "async"
+      ],
+      "category": "explicit follow-up",
+      "reference": "FastAPI uses Pydantic validation, generates OpenAPI documentation, and supports async I/O and dependency injection.",
+      "retrieved": [
+        "fastapi",
+        "dependencies",
+        "validation",
+        "async"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "anything more about fastapi",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 4,
+        "retrieved_passages": 4,
+        "best_relevance_score": 0,
+        "context_passages": 4,
+        "context_characters": 1011
+      },
+      "latency_ms": 8,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "topic-after-overview",
+      "question": "Explain database transactions",
+      "history": [
+        {
+          "role": "user",
+          "text": "What are the key ideas in these sources?"
+        },
+        {
+          "role": "assistant",
+          "text": "The sources cover web APIs, databases, and learning methods."
+        }
+      ],
+      "relevant": [
+        "transactions"
+      ],
+      "category": "explicit follow-up",
+      "reference": "Transaction atomicity means all changes succeed or roll back.",
+      "retrieved": [
+        "transactions",
+        "flask",
+        "dependencies"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain database transactions",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 3,
+        "retrieved_passages": 3,
+        "best_relevance_score": 0,
+        "context_passages": 3,
+        "context_characters": 715
+      },
+      "latency_ms": 8,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "named-overview",
+      "question": "Summarize the FastAPI dependency system",
+      "history": [],
+      "relevant": [
+        "dependencies"
+      ],
+      "category": "topic summary",
+      "reference": "Depends injects reusable dependencies; yield dependencies can release resources.",
+      "retrieved": [
+        "dependencies",
+        "fastapi",
+        "validation",
+        "async"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Summarize the FastAPI dependency system",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 4,
+        "retrieved_passages": 4,
+        "best_relevance_score": 0,
+        "context_passages": 4,
+        "context_characters": 1011
+      },
+      "latency_ms": 9,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "compound-name",
+      "question": "How does fast api validate requests?",
+      "history": [],
+      "relevant": [
+        "validation"
+      ],
+      "category": "compound name",
+      "reference": "FastAPI uses Pydantic to validate request fields.",
+      "retrieved": [
+        "dependencies",
+        "fastapi",
+        "validation",
+        "async"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "How does fastapi validate requests?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 4,
+        "retrieved_passages": 4,
+        "best_relevance_score": 0,
+        "context_passages": 4,
+        "context_characters": 1011
+      },
+      "latency_ms": 10,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 0.3333333333333333,
+      "ndcg_at_8": 0.5,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "paraphrase",
+      "question": "How can incomplete database changes be discarded together?",
+      "history": [],
+      "relevant": [
+        "transactions"
+      ],
+      "category": "paraphrase",
+      "reference": "A transaction rollback discards incomplete changes as a unit.",
+      "retrieved": [
+        "transactions",
+        "flask",
+        "dependencies"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "How can incomplete database changes be discarded together?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 3,
+        "retrieved_passages": 3,
+        "best_relevance_score": 0,
+        "context_passages": 3,
+        "context_characters": 715
+      },
+      "latency_ms": 11,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "reference-followup",
+      "question": "How does it handle cleanup?",
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain FastAPI dependencies"
+        }
+      ],
+      "relevant": [
+        "dependencies"
+      ],
+      "category": "referential follow-up",
+      "reference": "Dependencies with yield can clean up resources.",
+      "retrieved": [
+        "dependencies",
+        "fastapi",
+        "validation",
+        "async"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain FastAPI dependencies\nFollow-up: How does it handle cleanup?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 4,
+        "retrieved_passages": 4,
+        "best_relevance_score": 0,
+        "context_passages": 4,
+        "context_characters": 1011
+      },
+      "latency_ms": 10,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "generic-followup",
+      "question": "Tell me more",
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain database transactions"
+        }
+      ],
+      "relevant": [
+        "transactions"
+      ],
+      "category": "referential follow-up",
+      "reference": "Transactions ensure atomic changes and allow rollback.",
+      "retrieved": [
+        "transactions",
+        "flask",
+        "dependencies"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain database transactions\nFollow-up: Tell me more",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 3,
+        "retrieved_passages": 3,
+        "best_relevance_score": 0,
+        "context_passages": 3,
+        "context_characters": 715
+      },
+      "latency_ms": 8,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "new-topic",
+      "question": "Explain decision tree pruning",
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain FastAPI dependencies"
+        }
+      ],
+      "relevant": [
+        "trees"
+      ],
+      "category": "topic switch",
+      "reference": "Pruning reduces tree complexity and can reduce overfitting.",
+      "retrieved": [
+        "trees",
+        "forest"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Explain decision tree pruning",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 2,
+        "retrieved_passages": 2,
+        "best_relevance_score": 0,
+        "context_passages": 2,
+        "context_characters": 446
+      },
+      "latency_ms": 8,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "comparison",
+      "question": "Compare decision trees and random forests",
+      "history": [],
+      "relevant": [
+        "trees",
+        "forest"
+      ],
+      "category": "multi-source comparison",
+      "reference": "A tree uses feature splits; a forest aggregates varied trees to reduce variance.",
+      "retrieved": [
+        "forest",
+        "trees"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Compare decision trees and random forests",
+        "aspects": [
+          "decision trees",
+          "random forests"
+        ],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 2,
+        "retrieved_passages": 2,
+        "best_relevance_score": 0,
+        "context_passages": 2,
+        "context_characters": 446
+      },
+      "latency_ms": 10,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "async-limits",
+      "question": "Does async make CPU-heavy FastAPI work faster?",
+      "history": [],
+      "relevant": [
+        "async"
+      ],
+      "category": "limitation",
+      "reference": "No. Async helps nonblocking I/O; CPU-heavy work may need a worker.",
+      "retrieved": [
+        "async",
+        "fastapi",
+        "dependencies",
+        "validation"
+      ],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "Does async make CPU-heavy FastAPI work faster?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 4,
+        "retrieved_passages": 4,
+        "best_relevance_score": 0,
+        "context_passages": 4,
+        "context_characters": 1011
+      },
+      "latency_ms": 12,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 1.0,
+      "abstained": false,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "unknown",
+      "question": "What is the orbital period of Neptune?",
+      "history": [],
+      "relevant": [],
+      "category": "unanswerable",
+      "reference": "The selected sources do not provide this information.",
+      "retrieved": [],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "What is the orbital period of Neptune?",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 0,
+        "retrieved_passages": 0,
+        "best_relevance_score": null,
+        "context_passages": 0,
+        "context_characters": 0
+      },
+      "latency_ms": 7,
+      "recall_at_8": null,
+      "mrr_at_8": null,
+      "ndcg_at_8": null,
+      "abstained": true,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    },
+    {
+      "id": "unknown-after-overview",
+      "question": "anything about medieval pottery glazes",
+      "history": [
+        {
+          "role": "user",
+          "text": "What are the key ideas in these sources?"
+        },
+        {
+          "role": "assistant",
+          "text": "The sources cover web APIs, databases, and learning methods."
+        }
+      ],
+      "relevant": [],
+      "category": "unanswerable",
+      "reference": "The selected sources do not provide this information.",
+      "retrieved": [],
+      "diagnostics": {
+        "route": "targeted",
+        "query": "anything about medieval pottery glazes",
+        "aspects": [],
+        "indexed_passages": 248,
+        "selected_sources": 2,
+        "candidate_count": 0,
+        "retrieved_passages": 0,
+        "best_relevance_score": null,
+        "context_passages": 0,
+        "context_characters": 0
+      },
+      "latency_ms": 7,
+      "recall_at_8": null,
+      "mrr_at_8": null,
+      "ndcg_at_8": null,
+      "abstained": true,
+      "scope_pass": true,
+      "route_pass": true,
+      "top_score": null
+    }
+  ],
+  "fixture_sha256": "788b62823d6beea31c195916aa70c795e84605b6b08469f85961936fc8ff1d4e",
+  "duration_s": 0.5,
+  "protocol": "Chat retrieval workflow over 8 topic passages and 240 repetitive archive distractors across two sources, plus out-of-scope canaries. Prepared chunks bypass parsing and chunking. Warm retrieval-only latency, one pass. With --answers, the generator is called even with empty evidence; refusals are model-generated. No private documents.",
+  "limitations": "Developer-authored regression fixture, not held-out real-user or diverse long-document accuracy. No ingestion evaluation. Retrieval rejection and model abstention are separate metrics. Claim support is a macro-average over answers with judged claims, not the fraction of all factual claims. Quote verification cannot prove entailment or that the judge enumerated every claim. Single-pass latency is not a stable performance estimate. Self-judging is not independent validation.",
+  "metric_reference": "https://www.sbert.net/docs/package_reference/sentence_transformer/evaluation.html"
+}

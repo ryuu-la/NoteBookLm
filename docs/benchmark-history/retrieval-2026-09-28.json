@@ -1,0 +1,4549 @@
+{
+  "created_at": "2026-09-28T08:43:55.517680+00:00",
+  "corpus": "Original authored study notes v1",
+  "passages": 40,
+  "queries": 54,
+  "indexing_seconds": 1.19,
+  "fixture_sha256": "dd27d74819d0752378243156f4609cf83bdbe978ba96c4874f8aa5f1dc5f69af",
+  "python": "3.11.9",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "protocol": "One pass per configuration, warm model, unique uncached queries, top 8. Same indexed corpus. No LLM/API calls.",
+  "limitations": "Small developer-authored fixture, not held-out external evaluation. Recall measures labeled passage coverage, not generated-answer factual accuracy. No unanswerable-query or OCR evaluation. Warm latencies exclude model loading. Candidate ablation uses the same optimized engine in both configurations.",
+  "results": [
+    {
+      "name": "Keyword",
+      "semantic": false,
+      "rerank": false,
+      "candidates": 40,
+      "recall_at_8": 0.9907,
+      "mrr_at_8": 0.9182,
+      "ndcg_at_8": 0.9343,
+      "p50_ms": 12.0,
+      "p95_ms": 16,
+      "warmup_ms": 17,
+      "cases": [
+        {
+          "question": "Which penalty can make regression coefficients exactly zero?",
+          "relevant": [
+            "regularization"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "regularization",
+            "penalty_sport",
+            "supervised",
+            "interleaving",
+            "pca",
+            "overfitting"
+          ],
+          "latency_ms": 13,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can I discourage an overly complicated fitted predictor?",
+          "relevant": [
+            "regularization"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "regularization",
+            "validation",
+            "overfitting",
+            "knn"
+          ],
+          "latency_ms": 11,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What does low training error with high test error indicate?",
+          "relevant": [
+            "overfitting"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "overfitting",
+            "validation",
+            "pca",
+            "feedback",
+            "supervision",
+            "trees",
+            "supervised",
+            "knn"
+          ],
+          "latency_ms": 11,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why might a predictor memorize noise and fail on new examples?",
+          "relevant": [
+            "overfitting"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "overfitting",
+            "knn",
+            "noise_audio"
+          ],
+          "latency_ms": 11,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Where should preprocessing be fitted during K-fold validation?",
+          "relevant": [
+            "validation"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "validation",
+            "regularization",
+            "kmeans",
+            "knn",
+            "recall",
+            "unsupervised",
+            "transactions"
+          ],
+          "latency_ms": 11,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can each development example be held out once for model selection?",
+          "relevant": [
+            "validation"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "validation",
+            "overfitting",
+            "precision",
+            "supervision",
+            "cache_hardware",
+            "unsupervised",
+            "interleaving",
+            "forest"
+          ],
+          "latency_ms": 13,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which metric divides true positives by predicted positives?",
+          "relevant": [
+            "precision"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "precision",
+            "recall_notice",
+            "chunking",
+            "fusion",
+            "knn"
+          ],
+          "latency_ms": 11,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What measures how many actual positive cases a detector finds?",
+          "relevant": [
+            "precision"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "pca",
+            "supervised",
+            "citations",
+            "precision",
+            "interleaving",
+            "trees",
+            "forest"
+          ],
+          "latency_ms": 14,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 0.25,
+          "ndcg_at_8": 0.43067655807339306
+        },
+        {
+          "question": "What kind of learning uses paired inputs and known targets?",
+          "relevant": [
+            "supervised"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "supervised",
+            "indexes",
+            "citations",
+            "unsupervised",
+            "learning_schedule",
+            "recall_notice",
+            "penalty_sport",
+            "gradient"
+          ],
+          "latency_ms": 14,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Is predicting a house price classification or regression?",
+          "relevant": [
+            "supervised"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "supervised",
+            "tree_storage",
+            "precision_machining",
+            "unsupervised",
+            "kmeans"
+          ],
+          "latency_ms": 11,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can observations be grouped when no target labels are provided?",
+          "relevant": [
+            "unsupervised"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "supervised",
+            "unsupervised",
+            "kmeans",
+            "precision",
+            "pca",
+            "labels_print",
+            "tree_storage",
+            "forest_ecology"
+          ],
+          "latency_ms": 13,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 0.5,
+          "ndcg_at_8": 0.6309297535714575
+        },
+        {
+          "question": "Why do discovered clusters need interpretation rather than being accepted as true categories?",
+          "relevant": [
+            "unsupervised"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "unsupervised",
+            "feedback",
+            "precision",
+            "gradient_art",
+            "tree_storage",
+            "database_backup",
+            "kmeans",
+            "transactions"
+          ],
+          "latency_ms": 18,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which reduction method finds orthogonal directions of maximum variance?",
+          "relevant": [
+            "pca"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "pca",
+            "unsupervised",
+            "interleaving",
+            "gradient",
+            "forest",
+            "regularization"
+          ],
+          "latency_ms": 14,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can measurement scale distort principal components?",
+          "relevant": [
+            "pca"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "pca",
+            "fusion"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How do minimum leaf size and pruning control a tree?",
+          "relevant": [
+            "trees"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "trees",
+            "tree_storage",
+            "forest",
+            "gradient",
+            "chunking"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What model recursively divides examples using feature tests?",
+          "relevant": [
+            "trees"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "trees",
+            "forest",
+            "knn",
+            "chunking",
+            "supervision",
+            "overfitting",
+            "cache_hardware",
+            "unsupervised"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why does averaging randomized trees often reduce variance?",
+          "relevant": [
+            "forest"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "forest",
+            "trees",
+            "pca",
+            "regularization",
+            "forest_ecology",
+            "validation"
+          ],
+          "latency_ms": 13,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which ensemble uses bootstrap samples and random feature subsets?",
+          "relevant": [
+            "forest"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "forest",
+            "trees",
+            "indexes",
+            "unsupervised",
+            "knn"
+          ],
+          "latency_ms": 13,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What happens if an optimization learning rate is too large?",
+          "relevant": [
+            "gradient"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "gradient",
+            "citations",
+            "knn",
+            "spacing",
+            "unsupervised",
+            "supervised",
+            "chunking",
+            "learning_schedule"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does an optimizer move parameters to decrease a differentiable loss?",
+          "relevant": [
+            "gradient"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "gradient_art",
+            "penalty_sport",
+            "gradient"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 0.3333333333333333,
+          "ndcg_at_8": 0.5
+        },
+        {
+          "question": "Why should features be scaled before nearest-neighbor prediction?",
+          "relevant": [
+            "knn"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "knn",
+            "kmeans",
+            "supervision",
+            "pca",
+            "tree_storage",
+            "dense",
+            "transactions",
+            "reranking"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which predictor votes using labels of nearby stored examples?",
+          "relevant": [
+            "knn"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "knn",
+            "dense",
+            "database_backup",
+            "regularization",
+            "labels_print",
+            "supervised",
+            "reranking",
+            "overfitting"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which algorithm alternates centroid updates with nearest-center assignments?",
+          "relevant": [
+            "kmeans"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "kmeans",
+            "knn",
+            "unsupervised",
+            "indexes"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can initial cluster centers change a K-means solution?",
+          "relevant": [
+            "kmeans"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "kmeans",
+            "knn",
+            "cluster_computing",
+            "transactions",
+            "validation",
+            "feedback",
+            "interleaving"
+          ],
+          "latency_ms": 14,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What retrieval method combines term rarity with length normalization?",
+          "relevant": [
+            "bm25"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "bm25",
+            "dense",
+            "fusion",
+            "penalty_sport",
+            "fusion_physics",
+            "interleaving",
+            "gradient",
+            "recall"
+          ],
+          "latency_ms": 14,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why might keyword matching miss evidence expressed using synonyms?",
+          "relevant": [
+            "bm25"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "bm25",
+            "dense",
+            "citations",
+            "chunking",
+            "feedback",
+            "trees",
+            "forest",
+            "regularization"
+          ],
+          "latency_ms": 17,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can retrieval find passages that use different wording than a question?",
+          "relevant": [
+            "dense"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "dense",
+            "citations",
+            "bm25",
+            "precision_machining",
+            "chunking",
+            "forest",
+            "kmeans",
+            "recall"
+          ],
+          "latency_ms": 16,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does a nearby embedding prove a passage answers the question?",
+          "relevant": [
+            "dense"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "citations",
+            "dense",
+            "cache_hardware",
+            "reranking",
+            "knn",
+            "bm25",
+            "fusion"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 0.5,
+          "ndcg_at_8": 0.6309297535714575
+        },
+        {
+          "question": "How can lexical and vector rankings be combined without comparing raw scores?",
+          "relevant": [
+            "fusion"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "fusion",
+            "dense",
+            "bm25",
+            "recall",
+            "interleaving",
+            "validation",
+            "unsupervised",
+            "supervision"
+          ],
+          "latency_ms": 14,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What technique adds inverse rank contributions from multiple result lists?",
+          "relevant": [
+            "fusion"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "fusion",
+            "regularization",
+            "indexes",
+            "kmeans",
+            "knn"
+          ],
+          "latency_ms": 13,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can a reranker not recover a missing candidate?",
+          "relevant": [
+            "reranking"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "reranking",
+            "supervised",
+            "dense",
+            "forest",
+            "fusion",
+            "kmeans",
+            "pca",
+            "recall"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which relevance model reads a question and passage together?",
+          "relevant": [
+            "reranking"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "reranking",
+            "citations",
+            "dense",
+            "transactions",
+            "supervision",
+            "overfitting",
+            "cache_hardware",
+            "bm25"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What tradeoff comes from increasing passage overlap?",
+          "relevant": [
+            "chunking"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "bm25",
+            "chunking",
+            "reranking",
+            "citations",
+            "fusion"
+          ],
+          "latency_ms": 10,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 0.5,
+          "ndcg_at_8": 0.6309297535714575
+        },
+        {
+          "question": "Why can very small indexed text segments lose necessary context?",
+          "relevant": [
+            "chunking"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "chunking",
+            "gradient",
+            "pca",
+            "fusion",
+            "trees",
+            "forest",
+            "knn"
+          ],
+          "latency_ms": 15,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does a valid citation identifier guarantee factual support?",
+          "relevant": [
+            "citations"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "citations",
+            "labels_print",
+            "report_layout",
+            "gradient",
+            "transactions",
+            "fusion"
+          ],
+          "latency_ms": 11,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What should a grounded assistant do when evidence cannot answer?",
+          "relevant": [
+            "citations"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "citations",
+            "feedback",
+            "recall",
+            "report_layout",
+            "dense",
+            "chunking",
+            "bm25",
+            "spacing"
+          ],
+          "latency_ms": 10,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which transaction property means changes succeed together or roll back?",
+          "relevant": [
+            "transactions"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "transactions",
+            "kmeans",
+            "database_backup",
+            "forest_ecology",
+            "reranking",
+            "trees",
+            "knn"
+          ],
+          "latency_ms": 13,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why is a write-ahead log useful for recovery?",
+          "relevant": [
+            "transactions"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "transactions",
+            "database_backup",
+            "indexes",
+            "kmeans",
+            "gradient",
+            "spacing",
+            "feedback"
+          ],
+          "latency_ms": 10,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can adding many database indexes slow insertion?",
+          "relevant": [
+            "indexes"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "indexes",
+            "transactions",
+            "tree_storage",
+            "database_backup",
+            "fusion",
+            "interleaving",
+            "trees",
+            "forest"
+          ],
+          "latency_ms": 11,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can I check whether a lookup uses an index?",
+          "relevant": [
+            "indexes"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "indexes",
+            "database_backup",
+            "fusion",
+            "spacing"
+          ],
+          "latency_ms": 9,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does distributing study sessions differ from cramming?",
+          "relevant": [
+            "spacing"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "spacing",
+            "fusion_physics",
+            "recall"
+          ],
+          "latency_ms": 10,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does spacing describe when to practice or whether to recall from memory?",
+          "relevant": [
+            "spacing"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "spacing",
+            "recall",
+            "interleaving",
+            "forest_ecology",
+            "precision",
+            "recall_notice",
+            "cache_hardware",
+            "database_backup"
+          ],
+          "latency_ms": 10,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why should a learner attempt an answer before checking notes?",
+          "relevant": [
+            "recall"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "feedback",
+            "recall",
+            "spacing",
+            "citations",
+            "transactions",
+            "reranking",
+            "interleaving",
+            "bm25"
+          ],
+          "latency_ms": 10,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 0.5,
+          "ndcg_at_8": 0.6309297535714575
+        },
+        {
+          "question": "What study technique uses blank-page explanations followed by feedback?",
+          "relevant": [
+            "recall"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "recall",
+            "spacing",
+            "feedback",
+            "fusion_physics",
+            "indexes",
+            "report_layout",
+            "supervision",
+            "chunking"
+          ],
+          "latency_ms": 14,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does mixing related problem types train strategy selection?",
+          "relevant": [
+            "interleaving"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "interleaving",
+            "validation",
+            "precision",
+            "dense"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What distinguishes interleaved practice from a block of identical exercise types?",
+          "relevant": [
+            "interleaving"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "interleaving",
+            "recall_notice",
+            "recall",
+            "spacing",
+            "supervised"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why is an explanation more useful than showing only a quiz score?",
+          "relevant": [
+            "feedback"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "feedback",
+            "recall",
+            "bm25",
+            "reranking",
+            "spacing",
+            "precision",
+            "indexes",
+            "kmeans"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can a learner avoid repeatedly rehearsing an incorrect answer?",
+          "relevant": [
+            "feedback"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "feedback",
+            "spacing",
+            "recall",
+            "supervised",
+            "citations",
+            "interleaving",
+            "bm25"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Contrast learning from target labels with finding groups without labels.",
+          "relevant": [
+            "supervised",
+            "unsupervised"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "unsupervised",
+            "supervised",
+            "kmeans",
+            "regularization",
+            "labels_print",
+            "cluster_computing",
+            "learning_schedule",
+            "recall_notice"
+          ],
+          "latency_ms": 12,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Compare keyword-based search with embedding-based search.",
+          "relevant": [
+            "bm25",
+            "dense"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "cache_hardware",
+            "dense",
+            "validation",
+            "tree_storage",
+            "fusion_physics"
+          ],
+          "latency_ms": 10,
+          "recall_at_8": 0.5,
+          "mrr_at_8": 0.5,
+          "ndcg_at_8": 0.38685280723454163
+        },
+        {
+          "question": "How do spreading sessions over time and recalling without notes differ?",
+          "relevant": [
+            "spacing",
+            "recall"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "forest_ecology",
+            "spacing",
+            "recall",
+            "validation",
+            "unsupervised",
+            "supervision",
+            "bm25",
+            "supervised"
+          ],
+          "latency_ms": 13,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 0.5,
+          "ndcg_at_8": 0.6934264036172708
+        },
+        {
+          "question": "Compare a single recursively split predictor to an ensemble of randomized trees.",
+          "relevant": [
+            "trees",
+            "forest"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "trees",
+            "forest",
+            "forest_ecology",
+            "validation",
+            "overfitting",
+            "knn"
+          ],
+          "latency_ms": 13,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does nearest-neighbor prediction differ from centroid clustering?",
+          "relevant": [
+            "knn",
+            "kmeans"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "kmeans",
+            "knn",
+            "supervision",
+            "unsupervised",
+            "dense",
+            "supervised"
+          ],
+          "latency_ms": 10,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the difference between combining ranked lists and jointly scoring a query with a passage?",
+          "relevant": [
+            "fusion",
+            "reranking"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "fusion",
+            "fusion_physics",
+            "reranking",
+            "bm25",
+            "indexes",
+            "gradient_art",
+            "tree_storage",
+            "feedback"
+          ],
+          "latency_ms": 14,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 0.9197207891481876
+        }
+      ]
+    },
+    {
+      "name": "Hybrid",
+      "semantic": true,
+      "rerank": false,
+      "candidates": 40,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 0.9722,
+      "ndcg_at_8": 0.9767,
+      "p50_ms": 21.0,
+      "p95_ms": 34,
+      "warmup_ms": 29,
+      "cases": [
+        {
+          "question": "Which penalty can make regression coefficients exactly zero?",
+          "relevant": [
+            "regularization"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "regularization",
+            "penalty_sport",
+            "overfitting",
+            "supervised",
+            "pca",
+            "interleaving",
+            "gradient",
+            "reranking"
+          ],
+          "latency_ms": 24,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can I discourage an overly complicated fitted predictor?",
+          "relevant": [
+            "regularization"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "regularization",
+            "overfitting",
+            "knn",
+            "validation",
+            "gradient",
+            "unsupervised",
+            "supervised",
+            "reranking"
+          ],
+          "latency_ms": 19,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What does low training error with high test error indicate?",
+          "relevant": [
+            "overfitting"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "overfitting",
+            "validation",
+            "feedback",
+            "regularization",
+            "pca",
+            "supervised",
+            "knn",
+            "forest"
+          ],
+          "latency_ms": 23,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why might a predictor memorize noise and fail on new examples?",
+          "relevant": [
+            "overfitting"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "overfitting",
+            "noise_audio",
+            "knn",
+            "supervised",
+            "gradient",
+            "reranking",
+            "regularization",
+            "unsupervised"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Where should preprocessing be fitted during K-fold validation?",
+          "relevant": [
+            "validation"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "validation",
+            "regularization",
+            "kmeans",
+            "knn",
+            "unsupervised",
+            "recall",
+            "transactions",
+            "overfitting"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can each development example be held out once for model selection?",
+          "relevant": [
+            "validation"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "validation",
+            "overfitting",
+            "trees",
+            "forest",
+            "precision",
+            "unsupervised",
+            "cache_hardware",
+            "interleaving"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which metric divides true positives by predicted positives?",
+          "relevant": [
+            "precision"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "precision",
+            "fusion",
+            "knn",
+            "chunking",
+            "recall_notice",
+            "validation",
+            "trees",
+            "bm25"
+          ],
+          "latency_ms": 19,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What measures how many actual positive cases a detector finds?",
+          "relevant": [
+            "precision"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "precision",
+            "citations",
+            "pca",
+            "trees",
+            "forest",
+            "supervised",
+            "interleaving",
+            "bm25"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What kind of learning uses paired inputs and known targets?",
+          "relevant": [
+            "supervised"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "supervised",
+            "unsupervised",
+            "gradient",
+            "citations",
+            "indexes",
+            "learning_schedule",
+            "recall_notice",
+            "penalty_sport"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Is predicting a house price classification or regression?",
+          "relevant": [
+            "supervised"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "supervised",
+            "unsupervised",
+            "tree_storage",
+            "kmeans",
+            "precision_machining",
+            "knn",
+            "gradient",
+            "forest"
+          ],
+          "latency_ms": 19,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can observations be grouped when no target labels are provided?",
+          "relevant": [
+            "unsupervised"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "supervised",
+            "unsupervised",
+            "kmeans",
+            "labels_print",
+            "pca",
+            "knn",
+            "forest",
+            "validation"
+          ],
+          "latency_ms": 20,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 0.5,
+          "ndcg_at_8": 0.6309297535714575
+        },
+        {
+          "question": "Why do discovered clusters need interpretation rather than being accepted as true categories?",
+          "relevant": [
+            "unsupervised"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "unsupervised",
+            "kmeans",
+            "bm25",
+            "tree_storage",
+            "precision",
+            "reranking",
+            "fusion",
+            "forest"
+          ],
+          "latency_ms": 26,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which reduction method finds orthogonal directions of maximum variance?",
+          "relevant": [
+            "pca"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "pca",
+            "gradient",
+            "regularization",
+            "unsupervised",
+            "forest",
+            "interleaving",
+            "validation",
+            "overfitting"
+          ],
+          "latency_ms": 22,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can measurement scale distort principal components?",
+          "relevant": [
+            "pca"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "pca",
+            "fusion",
+            "regularization",
+            "overfitting",
+            "precision_machining",
+            "precision",
+            "knn",
+            "gradient"
+          ],
+          "latency_ms": 18,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How do minimum leaf size and pruning control a tree?",
+          "relevant": [
+            "trees"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "trees",
+            "tree_storage",
+            "forest",
+            "gradient",
+            "chunking",
+            "forest_ecology",
+            "precision_machining",
+            "interleaving"
+          ],
+          "latency_ms": 20,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What model recursively divides examples using feature tests?",
+          "relevant": [
+            "trees"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "trees",
+            "forest",
+            "validation",
+            "unsupervised",
+            "overfitting",
+            "knn",
+            "dense",
+            "chunking"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why does averaging randomized trees often reduce variance?",
+          "relevant": [
+            "forest"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "forest",
+            "trees",
+            "regularization",
+            "validation",
+            "pca",
+            "forest_ecology",
+            "gradient",
+            "overfitting"
+          ],
+          "latency_ms": 20,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which ensemble uses bootstrap samples and random feature subsets?",
+          "relevant": [
+            "forest"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "forest",
+            "unsupervised",
+            "knn",
+            "trees",
+            "indexes",
+            "regularization",
+            "overfitting",
+            "reranking"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What happens if an optimization learning rate is too large?",
+          "relevant": [
+            "gradient"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "gradient",
+            "knn",
+            "unsupervised",
+            "supervised",
+            "spacing",
+            "citations",
+            "chunking",
+            "penalty_sport"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does an optimizer move parameters to decrease a differentiable loss?",
+          "relevant": [
+            "gradient"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "gradient",
+            "gradient_art",
+            "penalty_sport",
+            "regularization",
+            "overfitting",
+            "reranking",
+            "trees",
+            "knn"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why should features be scaled before nearest-neighbor prediction?",
+          "relevant": [
+            "knn"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "knn",
+            "kmeans",
+            "regularization",
+            "supervised",
+            "pca",
+            "reranking",
+            "dense",
+            "tree_storage"
+          ],
+          "latency_ms": 20,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which predictor votes using labels of nearby stored examples?",
+          "relevant": [
+            "knn"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "knn",
+            "dense",
+            "supervised",
+            "reranking",
+            "unsupervised",
+            "labels_print",
+            "overfitting",
+            "regularization"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which algorithm alternates centroid updates with nearest-center assignments?",
+          "relevant": [
+            "kmeans"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "kmeans",
+            "knn",
+            "unsupervised",
+            "indexes",
+            "reranking",
+            "gradient",
+            "regularization",
+            "dense"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can initial cluster centers change a K-means solution?",
+          "relevant": [
+            "kmeans"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "kmeans",
+            "knn",
+            "cluster_computing",
+            "validation",
+            "feedback",
+            "transactions",
+            "interleaving",
+            "unsupervised"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What retrieval method combines term rarity with length normalization?",
+          "relevant": [
+            "bm25"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "bm25",
+            "dense",
+            "fusion",
+            "recall",
+            "trees",
+            "gradient",
+            "citations",
+            "penalty_sport"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why might keyword matching miss evidence expressed using synonyms?",
+          "relevant": [
+            "bm25"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "bm25",
+            "citations",
+            "dense",
+            "chunking",
+            "regularization",
+            "feedback",
+            "trees",
+            "forest"
+          ],
+          "latency_ms": 22,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can retrieval find passages that use different wording than a question?",
+          "relevant": [
+            "dense"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "dense",
+            "bm25",
+            "citations",
+            "recall",
+            "chunking",
+            "spacing",
+            "reranking",
+            "recall_notice"
+          ],
+          "latency_ms": 24,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does a nearby embedding prove a passage answers the question?",
+          "relevant": [
+            "dense"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "dense",
+            "citations",
+            "reranking",
+            "knn",
+            "bm25",
+            "fusion",
+            "cache_hardware",
+            "chunking"
+          ],
+          "latency_ms": 23,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can lexical and vector rankings be combined without comparing raw scores?",
+          "relevant": [
+            "fusion"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "fusion",
+            "bm25",
+            "dense",
+            "unsupervised",
+            "validation",
+            "supervised",
+            "regularization",
+            "recall"
+          ],
+          "latency_ms": 22,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What technique adds inverse rank contributions from multiple result lists?",
+          "relevant": [
+            "fusion"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "fusion",
+            "regularization",
+            "kmeans",
+            "knn",
+            "indexes",
+            "reranking",
+            "bm25",
+            "unsupervised"
+          ],
+          "latency_ms": 22,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can a reranker not recover a missing candidate?",
+          "relevant": [
+            "reranking"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "reranking",
+            "fusion",
+            "dense",
+            "recall",
+            "bm25",
+            "forest",
+            "citations",
+            "unsupervised"
+          ],
+          "latency_ms": 19,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which relevance model reads a question and passage together?",
+          "relevant": [
+            "reranking"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "reranking",
+            "dense",
+            "citations",
+            "bm25",
+            "fusion",
+            "overfitting",
+            "validation",
+            "trees"
+          ],
+          "latency_ms": 20,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What tradeoff comes from increasing passage overlap?",
+          "relevant": [
+            "chunking"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "chunking",
+            "reranking",
+            "bm25",
+            "citations",
+            "fusion",
+            "dense",
+            "gradient",
+            "regularization"
+          ],
+          "latency_ms": 18,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can very small indexed text segments lose necessary context?",
+          "relevant": [
+            "chunking"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "chunking",
+            "gradient",
+            "fusion",
+            "knn",
+            "trees",
+            "pca",
+            "forest",
+            "dense"
+          ],
+          "latency_ms": 22,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does a valid citation identifier guarantee factual support?",
+          "relevant": [
+            "citations"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "citations",
+            "report_layout",
+            "labels_print",
+            "fusion",
+            "transactions",
+            "gradient",
+            "bm25",
+            "precision"
+          ],
+          "latency_ms": 20,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What should a grounded assistant do when evidence cannot answer?",
+          "relevant": [
+            "citations"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "citations",
+            "feedback",
+            "recall",
+            "reranking",
+            "validation",
+            "overfitting",
+            "chunking",
+            "spacing"
+          ],
+          "latency_ms": 19,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which transaction property means changes succeed together or roll back?",
+          "relevant": [
+            "transactions"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "transactions",
+            "database_backup",
+            "reranking",
+            "trees",
+            "kmeans",
+            "forest_ecology",
+            "knn",
+            "recall_notice"
+          ],
+          "latency_ms": 22,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why is a write-ahead log useful for recovery?",
+          "relevant": [
+            "transactions"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "database_backup",
+            "transactions",
+            "spacing",
+            "indexes",
+            "feedback",
+            "gradient",
+            "kmeans",
+            "recall"
+          ],
+          "latency_ms": 18,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 0.5,
+          "ndcg_at_8": 0.6309297535714575
+        },
+        {
+          "question": "Why can adding many database indexes slow insertion?",
+          "relevant": [
+            "indexes"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "indexes",
+            "tree_storage",
+            "transactions",
+            "fusion",
+            "interleaving",
+            "database_backup",
+            "forest",
+            "trees"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can I check whether a lookup uses an index?",
+          "relevant": [
+            "indexes"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "indexes",
+            "fusion",
+            "database_backup",
+            "spacing",
+            "bm25",
+            "reranking",
+            "citations",
+            "chunking"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does distributing study sessions differ from cramming?",
+          "relevant": [
+            "spacing"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "spacing",
+            "recall",
+            "fusion_physics",
+            "interleaving",
+            "chunking",
+            "learning_schedule",
+            "validation",
+            "unsupervised"
+          ],
+          "latency_ms": 33,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does spacing describe when to practice or whether to recall from memory?",
+          "relevant": [
+            "spacing"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "spacing",
+            "recall",
+            "precision",
+            "recall_notice",
+            "interleaving",
+            "reranking",
+            "cache_hardware",
+            "regularization"
+          ],
+          "latency_ms": 20,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why should a learner attempt an answer before checking notes?",
+          "relevant": [
+            "recall"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "feedback",
+            "recall",
+            "spacing",
+            "citations",
+            "interleaving",
+            "reranking",
+            "bm25",
+            "transactions"
+          ],
+          "latency_ms": 33,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 0.5,
+          "ndcg_at_8": 0.6309297535714575
+        },
+        {
+          "question": "What study technique uses blank-page explanations followed by feedback?",
+          "relevant": [
+            "recall"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "recall",
+            "spacing",
+            "feedback",
+            "report_layout",
+            "chunking",
+            "supervision",
+            "indexes",
+            "fusion_physics"
+          ],
+          "latency_ms": 36,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does mixing related problem types train strategy selection?",
+          "relevant": [
+            "interleaving"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "interleaving",
+            "validation",
+            "dense",
+            "precision",
+            "gradient",
+            "overfitting",
+            "regularization",
+            "reranking"
+          ],
+          "latency_ms": 31,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What distinguishes interleaved practice from a block of identical exercise types?",
+          "relevant": [
+            "interleaving"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "interleaving",
+            "recall",
+            "spacing",
+            "recall_notice",
+            "supervised",
+            "validation",
+            "reranking",
+            "chunking"
+          ],
+          "latency_ms": 30,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why is an explanation more useful than showing only a quiz score?",
+          "relevant": [
+            "feedback"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "feedback",
+            "recall",
+            "bm25",
+            "reranking",
+            "spacing",
+            "indexes",
+            "precision",
+            "validation"
+          ],
+          "latency_ms": 22,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can a learner avoid repeatedly rehearsing an incorrect answer?",
+          "relevant": [
+            "feedback"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "feedback",
+            "recall",
+            "spacing",
+            "interleaving",
+            "citations",
+            "bm25",
+            "supervised",
+            "reranking"
+          ],
+          "latency_ms": 21,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Contrast learning from target labels with finding groups without labels.",
+          "relevant": [
+            "supervised",
+            "unsupervised"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "unsupervised",
+            "supervised",
+            "labels_print",
+            "kmeans",
+            "knn",
+            "regularization",
+            "bm25",
+            "recall"
+          ],
+          "latency_ms": 34,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Compare keyword-based search with embedding-based search.",
+          "relevant": [
+            "bm25",
+            "dense"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "dense",
+            "tree_storage",
+            "validation",
+            "cache_hardware",
+            "bm25",
+            "reranking",
+            "recall",
+            "unsupervised"
+          ],
+          "latency_ms": 33,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 0.8503449055347546
+        },
+        {
+          "question": "How do spreading sessions over time and recalling without notes differ?",
+          "relevant": [
+            "spacing",
+            "recall"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "recall",
+            "spacing",
+            "validation",
+            "feedback",
+            "unsupervised",
+            "bm25",
+            "regularization",
+            "supervised"
+          ],
+          "latency_ms": 22,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Compare a single recursively split predictor to an ensemble of randomized trees.",
+          "relevant": [
+            "trees",
+            "forest"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "trees",
+            "forest",
+            "validation",
+            "knn",
+            "overfitting",
+            "forest_ecology",
+            "reranking",
+            "unsupervised"
+          ],
+          "latency_ms": 24,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does nearest-neighbor prediction differ from centroid clustering?",
+          "relevant": [
+            "knn",
+            "kmeans"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "knn",
+            "kmeans",
+            "unsupervised",
+            "dense",
+            "supervised",
+            "supervision",
+            "reranking",
+            "gradient"
+          ],
+          "latency_ms": 35,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the difference between combining ranked lists and jointly scoring a query with a passage?",
+          "relevant": [
+            "fusion",
+            "reranking"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "fusion",
+            "reranking",
+            "bm25",
+            "indexes",
+            "citations",
+            "feedback",
+            "tree_storage",
+            "fusion_physics"
+          ],
+          "latency_ms": 26,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        }
+      ]
+    },
+    {
+      "name": "Hybrid + 40 reranked",
+      "semantic": true,
+      "rerank": true,
+      "candidates": 40,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 0.9977,
+      "p50_ms": 529.5,
+      "p95_ms": 1007,
+      "warmup_ms": 612,
+      "cases": [
+        {
+          "question": "Which penalty can make regression coefficients exactly zero?",
+          "relevant": [
+            "regularization"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "regularization",
+            "penalty_sport",
+            "supervised",
+            "pca",
+            "precision",
+            "reranking",
+            "gradient",
+            "overfitting"
+          ],
+          "latency_ms": 502,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can I discourage an overly complicated fitted predictor?",
+          "relevant": [
+            "regularization"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "regularization",
+            "overfitting",
+            "knn",
+            "trees",
+            "pca",
+            "supervised",
+            "forest",
+            "validation"
+          ],
+          "latency_ms": 511,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What does low training error with high test error indicate?",
+          "relevant": [
+            "overfitting"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "overfitting",
+            "feedback",
+            "supervised",
+            "regularization",
+            "trees",
+            "validation",
+            "knn",
+            "precision"
+          ],
+          "latency_ms": 514,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why might a predictor memorize noise and fail on new examples?",
+          "relevant": [
+            "overfitting"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "overfitting",
+            "knn",
+            "supervised",
+            "noise_audio",
+            "trees",
+            "precision",
+            "forest",
+            "feedback"
+          ],
+          "latency_ms": 511,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Where should preprocessing be fitted during K-fold validation?",
+          "relevant": [
+            "validation"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "validation",
+            "kmeans",
+            "regularization",
+            "knn",
+            "transactions",
+            "reranking",
+            "unsupervised",
+            "citations"
+          ],
+          "latency_ms": 472,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can each development example be held out once for model selection?",
+          "relevant": [
+            "validation"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "validation",
+            "overfitting",
+            "regularization",
+            "supervised",
+            "gradient",
+            "unsupervised",
+            "trees",
+            "knn"
+          ],
+          "latency_ms": 502,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which metric divides true positives by predicted positives?",
+          "relevant": [
+            "precision"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "precision",
+            "knn",
+            "pca",
+            "fusion",
+            "supervised",
+            "forest",
+            "precision_machining",
+            "trees"
+          ],
+          "latency_ms": 507,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What measures how many actual positive cases a detector finds?",
+          "relevant": [
+            "precision"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "precision",
+            "pca",
+            "citations",
+            "reranking",
+            "dense",
+            "forest",
+            "regularization",
+            "validation"
+          ],
+          "latency_ms": 527,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What kind of learning uses paired inputs and known targets?",
+          "relevant": [
+            "supervised"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "supervised",
+            "unsupervised",
+            "feedback",
+            "interleaving",
+            "citations",
+            "kmeans",
+            "gradient",
+            "pca"
+          ],
+          "latency_ms": 499,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Is predicting a house price classification or regression?",
+          "relevant": [
+            "supervised"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "supervised",
+            "pca",
+            "knn",
+            "precision",
+            "forest",
+            "unsupervised",
+            "tree_storage",
+            "overfitting"
+          ],
+          "latency_ms": 533,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can observations be grouped when no target labels are provided?",
+          "relevant": [
+            "unsupervised"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "unsupervised",
+            "kmeans",
+            "supervised",
+            "pca",
+            "forest",
+            "citations",
+            "trees",
+            "regularization"
+          ],
+          "latency_ms": 537,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why do discovered clusters need interpretation rather than being accepted as true categories?",
+          "relevant": [
+            "unsupervised"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "unsupervised",
+            "cluster_computing",
+            "supervised",
+            "kmeans",
+            "pca",
+            "forest",
+            "knn",
+            "precision"
+          ],
+          "latency_ms": 513,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which reduction method finds orthogonal directions of maximum variance?",
+          "relevant": [
+            "pca"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "pca",
+            "regularization",
+            "gradient",
+            "forest",
+            "reranking",
+            "unsupervised",
+            "precision",
+            "trees"
+          ],
+          "latency_ms": 571,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can measurement scale distort principal components?",
+          "relevant": [
+            "pca"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "pca",
+            "knn",
+            "regularization",
+            "map_projection",
+            "precision_machining",
+            "fusion",
+            "overfitting",
+            "precision"
+          ],
+          "latency_ms": 518,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How do minimum leaf size and pruning control a tree?",
+          "relevant": [
+            "trees"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "trees",
+            "gradient",
+            "tree_storage",
+            "forest",
+            "precision",
+            "regularization",
+            "precision_machining",
+            "feedback"
+          ],
+          "latency_ms": 543,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What model recursively divides examples using feature tests?",
+          "relevant": [
+            "trees"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "trees",
+            "overfitting",
+            "unsupervised",
+            "regularization",
+            "supervised",
+            "knn",
+            "validation",
+            "forest"
+          ],
+          "latency_ms": 522,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why does averaging randomized trees often reduce variance?",
+          "relevant": [
+            "forest"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "forest",
+            "regularization",
+            "trees",
+            "pca",
+            "overfitting",
+            "precision",
+            "noise_audio",
+            "tree_storage"
+          ],
+          "latency_ms": 472,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which ensemble uses bootstrap samples and random feature subsets?",
+          "relevant": [
+            "forest"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "forest",
+            "trees",
+            "regularization",
+            "unsupervised",
+            "pca",
+            "dense",
+            "kmeans",
+            "knn"
+          ],
+          "latency_ms": 547,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What happens if an optimization learning rate is too large?",
+          "relevant": [
+            "gradient"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "gradient",
+            "unsupervised",
+            "supervised",
+            "regularization",
+            "feedback",
+            "knn",
+            "overfitting",
+            "spacing"
+          ],
+          "latency_ms": 481,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does an optimizer move parameters to decrease a differentiable loss?",
+          "relevant": [
+            "gradient"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "gradient",
+            "gradient_art",
+            "regularization",
+            "reranking",
+            "precision",
+            "pca",
+            "cache_hardware",
+            "chunking"
+          ],
+          "latency_ms": 526,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why should features be scaled before nearest-neighbor prediction?",
+          "relevant": [
+            "knn"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "knn",
+            "pca",
+            "kmeans",
+            "forest",
+            "supervised",
+            "dense",
+            "trees",
+            "tree_storage"
+          ],
+          "latency_ms": 719,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which predictor votes using labels of nearby stored examples?",
+          "relevant": [
+            "knn"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "knn",
+            "supervised",
+            "forest",
+            "dense",
+            "unsupervised",
+            "kmeans",
+            "pca",
+            "tree_storage"
+          ],
+          "latency_ms": 1038,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which algorithm alternates centroid updates with nearest-center assignments?",
+          "relevant": [
+            "kmeans"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "kmeans",
+            "knn",
+            "unsupervised",
+            "indexes",
+            "gradient_art",
+            "dense",
+            "reranking",
+            "regularization"
+          ],
+          "latency_ms": 706,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can initial cluster centers change a K-means solution?",
+          "relevant": [
+            "kmeans"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "kmeans",
+            "knn",
+            "cluster_computing",
+            "unsupervised",
+            "validation",
+            "interleaving",
+            "transactions",
+            "supervised"
+          ],
+          "latency_ms": 1085,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What retrieval method combines term rarity with length normalization?",
+          "relevant": [
+            "bm25"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "bm25",
+            "recall",
+            "dense",
+            "spacing",
+            "fusion",
+            "regularization",
+            "citations",
+            "precision"
+          ],
+          "latency_ms": 1007,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why might keyword matching miss evidence expressed using synonyms?",
+          "relevant": [
+            "bm25"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "bm25",
+            "dense",
+            "citations",
+            "feedback",
+            "chunking",
+            "reranking",
+            "kmeans",
+            "supervised"
+          ],
+          "latency_ms": 778,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can retrieval find passages that use different wording than a question?",
+          "relevant": [
+            "dense"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "dense",
+            "bm25",
+            "citations",
+            "recall",
+            "reranking",
+            "chunking",
+            "spacing",
+            "fusion"
+          ],
+          "latency_ms": 552,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does a nearby embedding prove a passage answers the question?",
+          "relevant": [
+            "dense"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "dense",
+            "citations",
+            "cache_hardware",
+            "reranking",
+            "chunking",
+            "knn",
+            "recall",
+            "fusion"
+          ],
+          "latency_ms": 529,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can lexical and vector rankings be combined without comparing raw scores?",
+          "relevant": [
+            "fusion"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "fusion",
+            "bm25",
+            "dense",
+            "reranking",
+            "validation",
+            "precision",
+            "regularization",
+            "recall"
+          ],
+          "latency_ms": 518,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What technique adds inverse rank contributions from multiple result lists?",
+          "relevant": [
+            "fusion"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "fusion",
+            "regularization",
+            "bm25",
+            "kmeans",
+            "reranking",
+            "fusion_physics",
+            "supervised",
+            "gradient"
+          ],
+          "latency_ms": 520,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can a reranker not recover a missing candidate?",
+          "relevant": [
+            "reranking"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "reranking",
+            "database_backup",
+            "recall",
+            "recall_notice",
+            "transactions",
+            "spacing",
+            "dense",
+            "feedback"
+          ],
+          "latency_ms": 501,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which relevance model reads a question and passage together?",
+          "relevant": [
+            "reranking"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "reranking",
+            "dense",
+            "citations",
+            "fusion",
+            "bm25",
+            "chunking",
+            "overfitting",
+            "regularization"
+          ],
+          "latency_ms": 497,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What tradeoff comes from increasing passage overlap?",
+          "relevant": [
+            "chunking"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "chunking",
+            "bm25",
+            "fusion",
+            "reranking",
+            "dense",
+            "citations",
+            "regularization",
+            "precision"
+          ],
+          "latency_ms": 488,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can very small indexed text segments lose necessary context?",
+          "relevant": [
+            "chunking"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "chunking",
+            "indexes",
+            "dense",
+            "pca",
+            "gradient",
+            "reranking",
+            "bm25",
+            "trees"
+          ],
+          "latency_ms": 594,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does a valid citation identifier guarantee factual support?",
+          "relevant": [
+            "citations"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "citations",
+            "transactions",
+            "report_layout",
+            "dense",
+            "feedback",
+            "bm25",
+            "fusion",
+            "gradient"
+          ],
+          "latency_ms": 518,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What should a grounded assistant do when evidence cannot answer?",
+          "relevant": [
+            "citations"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "citations",
+            "feedback",
+            "dense",
+            "recall",
+            "reranking",
+            "chunking",
+            "regularization",
+            "overfitting"
+          ],
+          "latency_ms": 549,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which transaction property means changes succeed together or roll back?",
+          "relevant": [
+            "transactions"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "transactions",
+            "database_backup",
+            "reranking",
+            "kmeans",
+            "recall_notice",
+            "validation",
+            "spacing",
+            "fusion"
+          ],
+          "latency_ms": 544,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why is a write-ahead log useful for recovery?",
+          "relevant": [
+            "transactions"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "transactions",
+            "database_backup",
+            "indexes",
+            "reranking",
+            "spacing",
+            "feedback",
+            "recall",
+            "recall_notice"
+          ],
+          "latency_ms": 531,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can adding many database indexes slow insertion?",
+          "relevant": [
+            "indexes"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "indexes",
+            "chunking",
+            "transactions",
+            "tree_storage",
+            "regularization",
+            "database_backup",
+            "reranking",
+            "bm25"
+          ],
+          "latency_ms": 501,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can I check whether a lookup uses an index?",
+          "relevant": [
+            "indexes"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "indexes",
+            "chunking",
+            "database_backup",
+            "dense",
+            "citations",
+            "reranking",
+            "recall",
+            "bm25"
+          ],
+          "latency_ms": 542,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does distributing study sessions differ from cramming?",
+          "relevant": [
+            "spacing"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "spacing",
+            "cluster_computing",
+            "learning_schedule",
+            "recall",
+            "unsupervised",
+            "supervised",
+            "interleaving",
+            "trees"
+          ],
+          "latency_ms": 594,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does spacing describe when to practice or whether to recall from memory?",
+          "relevant": [
+            "spacing"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "spacing",
+            "recall",
+            "recall_notice",
+            "precision",
+            "reranking",
+            "interleaving",
+            "supervised",
+            "cache_hardware"
+          ],
+          "latency_ms": 673,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why should a learner attempt an answer before checking notes?",
+          "relevant": [
+            "recall"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "recall",
+            "feedback",
+            "spacing",
+            "citations",
+            "interleaving",
+            "reranking",
+            "recall_notice",
+            "unsupervised"
+          ],
+          "latency_ms": 564,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What study technique uses blank-page explanations followed by feedback?",
+          "relevant": [
+            "recall"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "recall",
+            "feedback",
+            "spacing",
+            "supervision",
+            "interleaving",
+            "unsupervised",
+            "trees",
+            "chunking"
+          ],
+          "latency_ms": 553,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does mixing related problem types train strategy selection?",
+          "relevant": [
+            "interleaving"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "interleaving",
+            "forest",
+            "trees",
+            "supervised",
+            "overfitting",
+            "regularization",
+            "chunking",
+            "validation"
+          ],
+          "latency_ms": 481,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What distinguishes interleaved practice from a block of identical exercise types?",
+          "relevant": [
+            "interleaving"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "interleaving",
+            "recall",
+            "learning_schedule",
+            "spacing",
+            "supervised",
+            "dense",
+            "regularization",
+            "trees"
+          ],
+          "latency_ms": 546,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why is an explanation more useful than showing only a quiz score?",
+          "relevant": [
+            "feedback"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "feedback",
+            "reranking",
+            "recall",
+            "bm25",
+            "precision",
+            "indexes",
+            "overfitting",
+            "forest"
+          ],
+          "latency_ms": 525,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can a learner avoid repeatedly rehearsing an incorrect answer?",
+          "relevant": [
+            "feedback"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "feedback",
+            "recall",
+            "spacing",
+            "interleaving",
+            "supervised",
+            "unsupervised",
+            "bm25",
+            "reranking"
+          ],
+          "latency_ms": 547,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Contrast learning from target labels with finding groups without labels.",
+          "relevant": [
+            "supervised",
+            "unsupervised"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "unsupervised",
+            "supervised",
+            "kmeans",
+            "pca",
+            "regularization",
+            "labels_print",
+            "knn",
+            "recall"
+          ],
+          "latency_ms": 570,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Compare keyword-based search with embedding-based search.",
+          "relevant": [
+            "bm25",
+            "dense"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "dense",
+            "cache_hardware",
+            "tree_storage",
+            "bm25",
+            "reranking",
+            "recall",
+            "indexes",
+            "validation"
+          ],
+          "latency_ms": 544,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 0.8772153153380493
+        },
+        {
+          "question": "How do spreading sessions over time and recalling without notes differ?",
+          "relevant": [
+            "spacing",
+            "recall"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "spacing",
+            "recall",
+            "precision",
+            "recall_notice",
+            "reranking",
+            "unsupervised",
+            "supervised",
+            "feedback"
+          ],
+          "latency_ms": 530,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Compare a single recursively split predictor to an ensemble of randomized trees.",
+          "relevant": [
+            "trees",
+            "forest"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "trees",
+            "forest",
+            "knn",
+            "tree_storage",
+            "validation",
+            "pca",
+            "fusion",
+            "kmeans"
+          ],
+          "latency_ms": 576,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does nearest-neighbor prediction differ from centroid clustering?",
+          "relevant": [
+            "knn",
+            "kmeans"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "knn",
+            "kmeans",
+            "supervised",
+            "unsupervised",
+            "cluster_computing",
+            "dense",
+            "pca",
+            "trees"
+          ],
+          "latency_ms": 524,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the difference between combining ranked lists and jointly scoring a query with a passage?",
+          "relevant": [
+            "fusion",
+            "reranking"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "fusion",
+            "reranking",
+            "bm25",
+            "dense",
+            "fusion_physics",
+            "citations",
+            "spacing",
+            "chunking"
+          ],
+          "latency_ms": 498,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        }
+      ]
+    },
+    {
+      "name": "Hybrid + 16 reranked",
+      "semantic": true,
+      "rerank": true,
+      "candidates": 16,
+      "recall_at_8": 1.0,
+      "mrr_at_8": 1.0,
+      "ndcg_at_8": 0.9977,
+      "p50_ms": 229.5,
+      "p95_ms": 252,
+      "warmup_ms": 224,
+      "cases": [
+        {
+          "question": "Which penalty can make regression coefficients exactly zero?",
+          "relevant": [
+            "regularization"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "regularization",
+            "penalty_sport",
+            "supervised",
+            "pca",
+            "precision",
+            "reranking",
+            "gradient",
+            "overfitting"
+          ],
+          "latency_ms": 243,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can I discourage an overly complicated fitted predictor?",
+          "relevant": [
+            "regularization"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "regularization",
+            "overfitting",
+            "knn",
+            "trees",
+            "pca",
+            "supervised",
+            "validation",
+            "precision"
+          ],
+          "latency_ms": 270,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What does low training error with high test error indicate?",
+          "relevant": [
+            "overfitting"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "overfitting",
+            "feedback",
+            "supervised",
+            "regularization",
+            "trees",
+            "validation",
+            "knn",
+            "precision"
+          ],
+          "latency_ms": 235,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why might a predictor memorize noise and fail on new examples?",
+          "relevant": [
+            "overfitting"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "overfitting",
+            "knn",
+            "supervised",
+            "noise_audio",
+            "trees",
+            "precision",
+            "forest",
+            "feedback"
+          ],
+          "latency_ms": 228,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Where should preprocessing be fitted during K-fold validation?",
+          "relevant": [
+            "validation"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "validation",
+            "kmeans",
+            "regularization",
+            "knn",
+            "transactions",
+            "reranking",
+            "unsupervised",
+            "citations"
+          ],
+          "latency_ms": 229,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can each development example be held out once for model selection?",
+          "relevant": [
+            "validation"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "validation",
+            "overfitting",
+            "regularization",
+            "supervised",
+            "gradient",
+            "unsupervised",
+            "trees",
+            "knn"
+          ],
+          "latency_ms": 237,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which metric divides true positives by predicted positives?",
+          "relevant": [
+            "precision"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "precision",
+            "knn",
+            "pca",
+            "fusion",
+            "supervised",
+            "forest",
+            "trees",
+            "regularization"
+          ],
+          "latency_ms": 230,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What measures how many actual positive cases a detector finds?",
+          "relevant": [
+            "precision"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "precision",
+            "pca",
+            "citations",
+            "reranking",
+            "dense",
+            "forest",
+            "regularization",
+            "supervised"
+          ],
+          "latency_ms": 231,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What kind of learning uses paired inputs and known targets?",
+          "relevant": [
+            "supervised"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "supervised",
+            "unsupervised",
+            "feedback",
+            "citations",
+            "gradient",
+            "learning_schedule",
+            "dense",
+            "reranking"
+          ],
+          "latency_ms": 225,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Is predicting a house price classification or regression?",
+          "relevant": [
+            "supervised"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "supervised",
+            "pca",
+            "knn",
+            "forest",
+            "unsupervised",
+            "tree_storage",
+            "overfitting",
+            "regularization"
+          ],
+          "latency_ms": 221,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can observations be grouped when no target labels are provided?",
+          "relevant": [
+            "unsupervised"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "unsupervised",
+            "kmeans",
+            "supervised",
+            "pca",
+            "forest",
+            "trees",
+            "regularization",
+            "chunking"
+          ],
+          "latency_ms": 226,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why do discovered clusters need interpretation rather than being accepted as true categories?",
+          "relevant": [
+            "unsupervised"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "unsupervised",
+            "cluster_computing",
+            "kmeans",
+            "pca",
+            "forest",
+            "precision",
+            "fusion",
+            "reranking"
+          ],
+          "latency_ms": 228,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which reduction method finds orthogonal directions of maximum variance?",
+          "relevant": [
+            "pca"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "pca",
+            "regularization",
+            "gradient",
+            "forest",
+            "reranking",
+            "unsupervised",
+            "precision",
+            "trees"
+          ],
+          "latency_ms": 249,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can measurement scale distort principal components?",
+          "relevant": [
+            "pca"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "pca",
+            "knn",
+            "regularization",
+            "precision_machining",
+            "fusion",
+            "overfitting",
+            "precision",
+            "reranking"
+          ],
+          "latency_ms": 245,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How do minimum leaf size and pruning control a tree?",
+          "relevant": [
+            "trees"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "trees",
+            "gradient",
+            "tree_storage",
+            "forest",
+            "precision_machining",
+            "reranking",
+            "kmeans",
+            "chunking"
+          ],
+          "latency_ms": 219,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What model recursively divides examples using feature tests?",
+          "relevant": [
+            "trees"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "trees",
+            "overfitting",
+            "unsupervised",
+            "regularization",
+            "supervised",
+            "knn",
+            "validation",
+            "forest"
+          ],
+          "latency_ms": 233,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why does averaging randomized trees often reduce variance?",
+          "relevant": [
+            "forest"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "forest",
+            "regularization",
+            "trees",
+            "pca",
+            "overfitting",
+            "tree_storage",
+            "validation",
+            "reranking"
+          ],
+          "latency_ms": 216,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which ensemble uses bootstrap samples and random feature subsets?",
+          "relevant": [
+            "forest"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "forest",
+            "trees",
+            "regularization",
+            "unsupervised",
+            "pca",
+            "dense",
+            "kmeans",
+            "knn"
+          ],
+          "latency_ms": 236,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What happens if an optimization learning rate is too large?",
+          "relevant": [
+            "gradient"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "gradient",
+            "unsupervised",
+            "supervised",
+            "regularization",
+            "knn",
+            "overfitting",
+            "spacing",
+            "chunking"
+          ],
+          "latency_ms": 252,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does an optimizer move parameters to decrease a differentiable loss?",
+          "relevant": [
+            "gradient"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "gradient",
+            "gradient_art",
+            "regularization",
+            "reranking",
+            "pca",
+            "trees",
+            "forest",
+            "penalty_sport"
+          ],
+          "latency_ms": 229,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why should features be scaled before nearest-neighbor prediction?",
+          "relevant": [
+            "knn"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "knn",
+            "pca",
+            "kmeans",
+            "forest",
+            "supervised",
+            "dense",
+            "trees",
+            "tree_storage"
+          ],
+          "latency_ms": 226,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which predictor votes using labels of nearby stored examples?",
+          "relevant": [
+            "knn"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "knn",
+            "supervised",
+            "forest",
+            "dense",
+            "unsupervised",
+            "kmeans",
+            "overfitting",
+            "reranking"
+          ],
+          "latency_ms": 248,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which algorithm alternates centroid updates with nearest-center assignments?",
+          "relevant": [
+            "kmeans"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "kmeans",
+            "knn",
+            "unsupervised",
+            "indexes",
+            "dense",
+            "reranking",
+            "regularization",
+            "gradient"
+          ],
+          "latency_ms": 225,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can initial cluster centers change a K-means solution?",
+          "relevant": [
+            "kmeans"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "kmeans",
+            "knn",
+            "cluster_computing",
+            "unsupervised",
+            "validation",
+            "interleaving",
+            "transactions",
+            "gradient"
+          ],
+          "latency_ms": 226,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What retrieval method combines term rarity with length normalization?",
+          "relevant": [
+            "bm25"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "bm25",
+            "recall",
+            "dense",
+            "spacing",
+            "fusion",
+            "citations",
+            "reranking",
+            "recall_notice"
+          ],
+          "latency_ms": 238,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why might keyword matching miss evidence expressed using synonyms?",
+          "relevant": [
+            "bm25"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "bm25",
+            "dense",
+            "citations",
+            "feedback",
+            "chunking",
+            "reranking",
+            "supervised",
+            "precision"
+          ],
+          "latency_ms": 225,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can retrieval find passages that use different wording than a question?",
+          "relevant": [
+            "dense"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "dense",
+            "bm25",
+            "citations",
+            "recall",
+            "reranking",
+            "chunking",
+            "spacing",
+            "learning_schedule"
+          ],
+          "latency_ms": 234,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does a nearby embedding prove a passage answers the question?",
+          "relevant": [
+            "dense"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "dense",
+            "citations",
+            "cache_hardware",
+            "reranking",
+            "chunking",
+            "knn",
+            "recall",
+            "fusion"
+          ],
+          "latency_ms": 252,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can lexical and vector rankings be combined without comparing raw scores?",
+          "relevant": [
+            "fusion"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "fusion",
+            "bm25",
+            "dense",
+            "reranking",
+            "validation",
+            "regularization",
+            "recall",
+            "unsupervised"
+          ],
+          "latency_ms": 243,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What technique adds inverse rank contributions from multiple result lists?",
+          "relevant": [
+            "fusion"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "fusion",
+            "regularization",
+            "bm25",
+            "kmeans",
+            "reranking",
+            "gradient",
+            "unsupervised",
+            "indexes"
+          ],
+          "latency_ms": 241,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can a reranker not recover a missing candidate?",
+          "relevant": [
+            "reranking"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "reranking",
+            "recall",
+            "recall_notice",
+            "dense",
+            "forest",
+            "fusion",
+            "supervised",
+            "citations"
+          ],
+          "latency_ms": 240,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which relevance model reads a question and passage together?",
+          "relevant": [
+            "reranking"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "reranking",
+            "dense",
+            "citations",
+            "fusion",
+            "bm25",
+            "chunking",
+            "overfitting",
+            "regularization"
+          ],
+          "latency_ms": 217,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What tradeoff comes from increasing passage overlap?",
+          "relevant": [
+            "chunking"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "chunking",
+            "bm25",
+            "fusion",
+            "reranking",
+            "dense",
+            "citations",
+            "regularization",
+            "noise_audio"
+          ],
+          "latency_ms": 214,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can very small indexed text segments lose necessary context?",
+          "relevant": [
+            "chunking"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "chunking",
+            "indexes",
+            "dense",
+            "pca",
+            "gradient",
+            "reranking",
+            "bm25",
+            "trees"
+          ],
+          "latency_ms": 221,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does a valid citation identifier guarantee factual support?",
+          "relevant": [
+            "citations"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "citations",
+            "transactions",
+            "report_layout",
+            "dense",
+            "feedback",
+            "bm25",
+            "fusion",
+            "gradient"
+          ],
+          "latency_ms": 217,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What should a grounded assistant do when evidence cannot answer?",
+          "relevant": [
+            "citations"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "citations",
+            "feedback",
+            "dense",
+            "recall",
+            "reranking",
+            "chunking",
+            "regularization",
+            "overfitting"
+          ],
+          "latency_ms": 226,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Which transaction property means changes succeed together or roll back?",
+          "relevant": [
+            "transactions"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "transactions",
+            "database_backup",
+            "reranking",
+            "kmeans",
+            "recall_notice",
+            "spacing",
+            "feedback",
+            "precision"
+          ],
+          "latency_ms": 225,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why is a write-ahead log useful for recovery?",
+          "relevant": [
+            "transactions"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "transactions",
+            "database_backup",
+            "indexes",
+            "reranking",
+            "spacing",
+            "feedback",
+            "recall",
+            "recall_notice"
+          ],
+          "latency_ms": 221,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why can adding many database indexes slow insertion?",
+          "relevant": [
+            "indexes"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "indexes",
+            "chunking",
+            "transactions",
+            "tree_storage",
+            "regularization",
+            "database_backup",
+            "reranking",
+            "bm25"
+          ],
+          "latency_ms": 212,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can I check whether a lookup uses an index?",
+          "relevant": [
+            "indexes"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "indexes",
+            "chunking",
+            "database_backup",
+            "dense",
+            "citations",
+            "reranking",
+            "recall",
+            "bm25"
+          ],
+          "latency_ms": 215,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does distributing study sessions differ from cramming?",
+          "relevant": [
+            "spacing"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "spacing",
+            "learning_schedule",
+            "recall",
+            "unsupervised",
+            "interleaving",
+            "trees",
+            "reranking",
+            "chunking"
+          ],
+          "latency_ms": 237,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Does spacing describe when to practice or whether to recall from memory?",
+          "relevant": [
+            "spacing"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "spacing",
+            "recall",
+            "recall_notice",
+            "precision",
+            "reranking",
+            "interleaving",
+            "cache_hardware",
+            "dense"
+          ],
+          "latency_ms": 225,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why should a learner attempt an answer before checking notes?",
+          "relevant": [
+            "recall"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "recall",
+            "feedback",
+            "spacing",
+            "citations",
+            "interleaving",
+            "reranking",
+            "recall_notice",
+            "precision"
+          ],
+          "latency_ms": 224,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What study technique uses blank-page explanations followed by feedback?",
+          "relevant": [
+            "recall"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "recall",
+            "feedback",
+            "spacing",
+            "supervision",
+            "interleaving",
+            "unsupervised",
+            "chunking",
+            "fusion_physics"
+          ],
+          "latency_ms": 226,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does mixing related problem types train strategy selection?",
+          "relevant": [
+            "interleaving"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "interleaving",
+            "forest",
+            "trees",
+            "supervised",
+            "overfitting",
+            "regularization",
+            "validation",
+            "gradient"
+          ],
+          "latency_ms": 228,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What distinguishes interleaved practice from a block of identical exercise types?",
+          "relevant": [
+            "interleaving"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "interleaving",
+            "recall",
+            "spacing",
+            "supervised",
+            "regularization",
+            "trees",
+            "gradient",
+            "overfitting"
+          ],
+          "latency_ms": 236,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Why is an explanation more useful than showing only a quiz score?",
+          "relevant": [
+            "feedback"
+          ],
+          "category": "direct",
+          "retrieved": [
+            "feedback",
+            "reranking",
+            "recall",
+            "bm25",
+            "precision",
+            "indexes",
+            "forest",
+            "validation"
+          ],
+          "latency_ms": 235,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How can a learner avoid repeatedly rehearsing an incorrect answer?",
+          "relevant": [
+            "feedback"
+          ],
+          "category": "paraphrase",
+          "retrieved": [
+            "feedback",
+            "recall",
+            "spacing",
+            "interleaving",
+            "supervised",
+            "bm25",
+            "reranking",
+            "citations"
+          ],
+          "latency_ms": 231,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Contrast learning from target labels with finding groups without labels.",
+          "relevant": [
+            "supervised",
+            "unsupervised"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "unsupervised",
+            "supervised",
+            "kmeans",
+            "pca",
+            "regularization",
+            "labels_print",
+            "knn",
+            "recall"
+          ],
+          "latency_ms": 230,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Compare keyword-based search with embedding-based search.",
+          "relevant": [
+            "bm25",
+            "dense"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "dense",
+            "cache_hardware",
+            "tree_storage",
+            "bm25",
+            "reranking",
+            "recall",
+            "validation",
+            "chunking"
+          ],
+          "latency_ms": 248,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 0.8772153153380493
+        },
+        {
+          "question": "How do spreading sessions over time and recalling without notes differ?",
+          "relevant": [
+            "spacing",
+            "recall"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "spacing",
+            "recall",
+            "recall_notice",
+            "unsupervised",
+            "supervised",
+            "feedback",
+            "bm25",
+            "supervision"
+          ],
+          "latency_ms": 222,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "Compare a single recursively split predictor to an ensemble of randomized trees.",
+          "relevant": [
+            "trees",
+            "forest"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "trees",
+            "forest",
+            "knn",
+            "tree_storage",
+            "validation",
+            "fusion",
+            "kmeans",
+            "overfitting"
+          ],
+          "latency_ms": 239,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "How does nearest-neighbor prediction differ from centroid clustering?",
+          "relevant": [
+            "knn",
+            "kmeans"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "knn",
+            "kmeans",
+            "supervised",
+            "unsupervised",
+            "cluster_computing",
+            "dense",
+            "pca",
+            "trees"
+          ],
+          "latency_ms": 249,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        },
+        {
+          "question": "What is the difference between combining ranked lists and jointly scoring a query with a passage?",
+          "relevant": [
+            "fusion",
+            "reranking"
+          ],
+          "category": "comparison",
+          "retrieved": [
+            "fusion",
+            "reranking",
+            "bm25",
+            "dense",
+            "fusion_physics",
+            "citations",
+            "spacing",
+            "chunking"
+          ],
+          "latency_ms": 252,
+          "recall_at_8": 1.0,
+          "mrr_at_8": 1.0,
+          "ndcg_at_8": 1.0
+        }
+      ]
+    }
+  ]
+}

@@ -4,7 +4,7 @@ from functools import lru_cache
 import lancedb
 import pyarrow as pa
 
-from ..config import DATA, EMBED_MODEL, MODEL_CACHE
+from ..config import DATA, EMBED_MODEL, MODEL_CACHE, EMBED_THREADS
 
 _lock = RLock()
 _model = None
@@ -17,7 +17,7 @@ def embedding_model():
     with _lock:
         if _model is None:
             from fastembed import TextEmbedding
-            _model = TextEmbedding(EMBED_MODEL, cache_dir=str(MODEL_CACHE), threads=2)
+            _model = TextEmbedding(EMBED_MODEL, cache_dir=str(MODEL_CACHE), threads=EMBED_THREADS)
         return _model
 
 
@@ -76,4 +76,5 @@ def rerank(query: str, passages: list[dict]) -> list[dict]:
             _reranker = TextCrossEncoder("Xenova/ms-marco-MiniLM-L-6-v2",
                                         cache_dir=str(MODEL_CACHE), threads=2)
     scores = list(_reranker.rerank(query, [passage["text"] for passage in passages], batch_size=8))
-    return [passage for _, passage in sorted(zip(scores, passages), key=lambda pair: pair[0], reverse=True)]
+    return [{**passage, 'relevance_score': float(score)}
+            for score, passage in sorted(zip(scores, passages), key=lambda pair: pair[0], reverse=True)]

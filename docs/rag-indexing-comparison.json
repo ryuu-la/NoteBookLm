@@ -1,0 +1,49 @@
+{
+  "protocol": "Same machine, separate isolated libraries; 1000-page synthetic PDF, semantic indexing, then cached reindex. One unprofiled run before and after; short digital pages, no OCR. Timing varies with load.",
+  "before": {
+    "corpus": "Synthetic digital PDF, 40 words per page; no OCR or complex layout",
+    "pages": 1000,
+    "chunks": 1000,
+    "mode": "hybrid",
+    "ingestion_seconds": 8.05,
+    "pages_per_second": 124.25,
+    "cached_reindex_seconds": 1.03,
+    "peak_process_rss_mb": 420.0,
+    "retrieval_ms": [
+      30,
+      24,
+      25,
+      26,
+      26
+    ],
+    "exact_record_recall_at_8": 1.0,
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "logical_cpus": 12,
+    "embedding_threads": 4,
+    "machine_ram_gb": 15.8
+  },
+  "after": {
+    "corpus": "Synthetic digital PDF, 40 words per page; no OCR or complex layout",
+    "pages": 1000,
+    "chunks": 1000,
+    "mode": "hybrid",
+    "ingestion_seconds": 7.42,
+    "pages_per_second": 134.74,
+    "cached_reindex_seconds": 0.81,
+    "peak_process_rss_mb": 385.4,
+    "retrieval_ms": [
+      37,
+      25,
+      25,
+      31,
+      38
+    ],
+    "exact_record_recall_at_8": 1.0,
+    "python": "3.11.9",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "logical_cpus": 12,
+    "embedding_threads": 4,
+    "machine_ram_gb": 15.8
+  }
+}

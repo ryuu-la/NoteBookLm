@@ -1,22 +1,110 @@
 {
-  "corpus": "Synthetic digital PDF, 40 words per page; no OCR or complex layout",
+  "created_at": "2026-09-29T14:49:51.459077+00:00",
+  "corpus": "Synthetic digital PDF, approximately 40 words per page; no OCR or complex layout",
+  "protocol": "Single run; preloaded embedding model. Initial ingestion, cached reindex, then exact-ID probes. PDF creation and model loading excluded from ingestion time. RSS sampled every 200 ms across ingestion, reindex and probes.",
+  "limitations": "Short synthetic pages; not textbook, OCR or semantic-answer accuracy. Five or fewer unique probes; no repeated-run confidence interval. Memory is process RSS, not whole-system memory.",
+  "passed": true,
+  "probe_count": 5,
+  "probes": [
+    {
+      "page": 1,
+      "hit": true,
+      "mode": "Hybrid retrieval",
+      "retrieved": [
+        "Page 1",
+        "Page 10000",
+        "Page 2",
+        "Page 5700",
+        "Page 3",
+        "Page 3700",
+        "Page 4",
+        "Page 8081"
+      ],
+      "latency_ms": 122
+    },
+    {
+      "page": 17,
+      "hit": true,
+      "mode": "Hybrid retrieval",
+      "retrieved": [
+        "Page 17",
+        "Page 16",
+        "Page 4717",
+        "Page 1",
+        "Page 8017",
+        "Page 2",
+        "Page 4317",
+        "Page 3"
+      ],
+      "latency_ms": 116
+    },
+    {
+      "page": 5000,
+      "hit": true,
+      "mode": "Hybrid retrieval",
+      "retrieved": [
+        "Page 5000",
+        "Page 500",
+        "Page 1",
+        "Page 5001",
+        "Page 2",
+        "Page 5005",
+        "Page 3",
+        "Page 5003"
+      ],
+      "latency_ms": 138
+    },
+    {
+      "page": 9999,
+      "hit": true,
+      "mode": "Hybrid retrieval",
+      "retrieved": [
+        "Page 9999",
+        "Page 9099",
+        "Page 1",
+        "Page 6900",
+        "Page 2",
+        "Page 9909",
+        "Page 3",
+        "Page 4399"
+      ],
+      "latency_ms": 128
+    },
+    {
+      "page": 10000,
+      "hit": true,
+      "mode": "Hybrid retrieval",
+      "retrieved": [
+        "Page 10000",
+        "Page 1",
+        "Page 3700",
+        "Page 2",
+        "Page 5700",
+        "Page 3",
+        "Page 6091",
+        "Page 4"
+      ],
+      "latency_ms": 131
+    }
+  ],
   "pages": 10000,
   "chunks": 10000,
   "mode": "hybrid",
-  "ingestion_seconds": 126.67,
-  "pages_per_second": 78.95,
-  "cached_reindex_seconds": 22.16,
-  "peak_process_rss_mb": 557.4,
+  "ingestion_seconds": 76.0,
+  "pages_per_second": 131.59,
+  "cached_reindex_seconds": 10.24,
+  "peak_process_rss_mb": 479.7,
   "retrieval_ms": [
-    41,
-    28,
-    27,
-    28,
-    28
+    122,
+    116,
+    138,
+    128,
+    131
   ],
   "exact_record_recall_at_8": 1.0,
   "python": "3.11.9",
   "platform": "Windows-10-10.0.26200-SP0",
   "logical_cpus": 12,
+  "embedding_threads": 4,
   "machine_ram_gb": 15.8
 }

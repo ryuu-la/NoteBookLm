@@ -1,12 +1,14 @@
 import hashlib
 import logging
 import threading
+import time
 from pathlib import Path
 
 from .. import storage as db
 from ..config import DATA, MAX_UPLOAD
 from ..retrieval import vectors
 from .parsers import SUPPORTED, parse
+from .chunking import make_splitter
 
 logger = logging.getLogger(__name__)
 _wake = threading.Event()
@@ -40,7 +42,7 @@ def add_file(notebook_id: str, name: str, data: bytes, url="") -> str:
 
 
 def update(identifier: str, **fields) -> None:
-    allowed = {"status", "progress", "units", "chunks", "error"}
+    allowed = {"status", "progress", "units", "chunks", "error", "detail", "elapsed_seconds"}
     if not set(fields) <= allowed:
         raise ValueError("Invalid source update")
     db.execute("UPDATE sources SET " + ",".join(f"{key}=?" for key in fields) + " WHERE id=?",
@@ -53,40 +55,96 @@ def is_cancelled(identifier: str) -> bool:
 
 
 def ingest(source: dict) -> None:
-    from llama_index.core.node_parser import SentenceSplitter
-    splitter = SentenceSplitter(chunk_size=600, chunk_overlap=70)
+    # Keep one connection open for the job. Closing the last WAL connection
+    # after every progress update forces repeated checkpoints on Windows.
+    # Commit each checkpoint explicitly so cancellation/recovery remain durable.
+    with db.connect() as connection:
+        _ingest(source, connection)
+
+
+def _ingest(source: dict, connection) -> None:
     identifier = source["id"]
-    checkpoint = source["chunks"]
-    update(identifier, status="parsing", error="")
+    checkpoint = source["chunks"] if source.get('index_version') == 2 else 0
+    started = time.perf_counter()
+    last_poll = 0.0
+    last_report = 0.0
+    semantic = db.settings()["semantic"]
+
+    def cancelled(force=False):
+        nonlocal last_poll
+        now = time.perf_counter()
+        if _stop.is_set():
+            return True
+        if force or now - last_poll >= .2:
+            last_poll = now
+            return is_cancelled(identifier)
+        return False
+
+    def report(**fields):
+        # A completed batch must never turn a cancelled job back into an active job.
+        fields["elapsed_seconds"] = round(time.perf_counter() - started, 1)
+        connection.execute("UPDATE sources SET " + ",".join(f"{key}=?" for key in fields)
+                           + " WHERE id=? AND status!='cancelled'", (*fields.values(), identifier))
+        connection.commit()
+
+    if cancelled(True):
+        return
+    report(status="parsing", progress=0, error="", chunks=checkpoint, index_version=2,
+           detail="Reading and organizing your document…")
+    splitter = make_splitter(semantic)
     if not checkpoint:
         vectors.remove(identifier)
         db.execute("DELETE FROM chunks WHERE source_id=?", (identifier,))
     ordinal, batch, units = 0, [], 0
-    semantic = db.settings()["semantic"]
-    for units, block in enumerate(parse(Path(source["path"])), 1):
-        if is_cancelled(identifier):
-            return
-        if not block.text.strip():
-            continue
-        for text in splitter.split_text(block.text):
-            if ordinal < checkpoint:
-                ordinal += 1
-                continue
-            batch.append({"id": f"{identifier}_{ordinal}", "source_id": identifier,
-                          "notebook_id": source["notebook_id"], "ordinal": ordinal,
-                          "locator": block.locator, "text": text})
-            ordinal += 1
-        if len(batch) >= 128:
-            flush(batch, semantic)
-            batch = []
-            update(identifier, status="indexing", chunks=ordinal, units=units)
-    if batch:
-        flush(batch, semantic)
-    if is_cancelled(identifier):
+    # Stage text on disk first: bounded memory, early progress, and a known embedding total.
+    blocks = parse(Path(source["path"]))
+    try:
+        for units, block in enumerate(blocks, 1):
+            if cancelled():
+                return
+            if block.text.strip():
+                for text in splitter.split_text(block.text):
+                    batch.append({"id": f"{identifier}_{ordinal}", "source_id": identifier,
+                                  "notebook_id": source["notebook_id"], "ordinal": ordinal,
+                                  "locator": block.locator, "text": text})
+                    ordinal += 1
+                    if len(batch) >= 256:
+                        flush(batch, False)
+                        batch = []
+            now = time.perf_counter()
+            if now - last_report >= .25:
+                last_report = now
+                report(progress=int(block.progress * (30 if semantic else 95)), units=units,
+                       detail=f"Reading {block.locator.lower()} · {ordinal:,} passages found")
+        if batch:
+            flush(batch, False)
+    finally:
+        blocks.close()
+    if cancelled(True):
         return
     if not ordinal:
         raise ValueError("No readable text was found in this source.")
-    update(identifier, status="ready", progress=100, chunks=ordinal, units=units)
+    if semantic:
+        indexed = min(checkpoint, ordinal)
+        report(status="indexing", progress=30 + int(69 * indexed / ordinal), units=units,
+               detail=f"Indexing {indexed:,} of {ordinal:,} passages")
+        # Modest batches keep cancellation responsive and avoid monopolizing the UI CPU.
+        while indexed < ordinal:
+            if cancelled(True):
+                return
+            rows = db.rows("SELECT * FROM chunks WHERE source_id=? AND ordinal>=? ORDER BY ordinal LIMIT 64",
+                           (identifier, indexed))
+            if not rows:
+                raise ValueError("The import checkpoint is incomplete. Reindex this source.")
+            vectors.insert(rows)
+            indexed = rows[-1]["ordinal"] + 1
+            report(chunks=indexed, progress=30 + int(69 * indexed / ordinal),
+                   detail=f"Indexed {indexed:,} of {ordinal:,} passages · {time.perf_counter() - started:.0f}s")
+    if cancelled(True):
+        return
+    elapsed = time.perf_counter() - started
+    report(status="ready", progress=100, chunks=ordinal, units=units,
+           detail=f"Ready in {elapsed:.1f}s · {ordinal:,} searchable passages")
 
 
 def flush(chunks: list[dict], semantic: bool) -> None:
@@ -110,7 +168,8 @@ def loop() -> None:
             ingest(source)
         except Exception as exc:
             logger.exception("Source ingestion failed for %s", source["id"])
-            update(source["id"], status="error", error=str(exc)[:500])
+            if not is_cancelled(source["id"]):
+                update(source["id"], status="error", error=str(exc)[:500], detail="Import needs attention")
         finally:
             _active.discard(source["id"])
 
@@ -131,7 +190,7 @@ def stop() -> None:
 def retry(identifier: str) -> None:
     if identifier in _active:
         raise ValueError("This source is still being processed. Cancel it and wait before reindexing.")
-    update(identifier, status="queued", error="", progress=0, chunks=0, units=0)
+    update(identifier, status="queued", error="", progress=0, chunks=0, units=0, detail="Waiting to start", elapsed_seconds=0)
     _wake.set()
 
 
