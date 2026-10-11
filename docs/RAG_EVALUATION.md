@@ -1,9 +1,12 @@
 # RAG behavior and reproducible evaluations
 
-Chat searches the **entire index of selected, ready sources**, then sends a bounded set
+Chat searches the **available index of selected, ready or indexing sources**, then sends a bounded set
 of relevant passages to the generation model. PDF extraction is one ingestion adapter;
 it is not the chat answer. A missing model connection produces a setup error, never a
 substitute answer made from pasted excerpts.
+
+The active configuration is text-only. Parsed text is searchable during indexing;
+dense coverage is incomplete until Ready and is disclosed in retrieval diagnostics.
 
 ## Retrieval and grounded generation
 
@@ -13,7 +16,7 @@ substitute answer made from pasted excerpts.
 3. Search SQLite FTS/BM25 and EmbeddingGemma 2 embeddings with notebook/source filters applied before
    candidate selection. Resolve spaced compound names when the joined term exists in the
    selected index. Comparison requests also search their two aspects.
-4. Fuse candidate rankings, deduplicate text/image evidence, and fit it to the prompt budget.
+4. Fuse candidate rankings, deduplicate text evidence, and fit it to the prompt budget.
    EmbeddingGemma 2 is the only retrieval model; there is no separate reranker.
 5. Abstain when no evidence is found. Filter weak dense-only candidates using cosine similarity.
    The threshold is a retrieval heuristic,
@@ -29,12 +32,15 @@ Interrupted indexes from the older chunking version restart safely rather than r
 incompatible ordinal checkpoint.
 
 Indexing keeps one SQLite connection open during a job while committing progress checkpoints,
-avoiding repeated last-connection WAL checkpoints. Short embedding inputs use batches of 32;
-long inputs retain batches of 16 to bound memory. Cancellation still checks between 64-passage
-write batches. The [before/after fixture](rag-indexing-comparison.json) measured first indexing
+avoiding repeated last-connection WAL checkpoints. Current embedding/write batches contain
+up to eight text records grouped by actual token count. Per-record `vector_ready` flags
+preserve restart recovery when batching changes document order. Cancellation checks between
+batches; x86 CPU inference uses cached OpenVINO FP32 where eligible.
+
+The historical, pre-Gemma [before/after fixture](rag-indexing-comparison.json) measured first indexing
 at **8.05 → 7.42 s**, cached reindexing at **1.03 → 0.81 s**, and peak RSS at **420 → 385.4 MB**
 for 1,000 short digital pages, with 5/5 exact-record retrieval probes in both runs. These are
-single-run observations on the same machine, not timings for arbitrary PDFs or OCR.
+single-run observations for an older pipeline, not current Gemma or arbitrary-PDF timings.
 
 Broad overview requests distribute their bounded evidence across sources and source
 positions. They are not exhaustive page-by-page summaries. The scope stays in the model
@@ -51,12 +57,15 @@ retrieval does not mean every passage is inserted into every prompt.
 # Actual local EmbeddingGemma 2 embeddings, plus the existing ranking benchmark
 .venv/Scripts/python.exe benchmarks/rag.py
 .venv/Scripts/python.exe benchmarks/retrieval.py
-.venv/Scripts/python.exe benchmarks/multimodal.py
 
 # Live generation + a separate model judging claim support (provider usage applies)
 # Keys come from the project .env or process environment, never CLI arguments.
 .venv/Scripts/python.exe benchmarks/rag.py --answers --model gemini-3.5-flash-lite --judge-model gemini-3.8-flash --output test-results/rag-live.json
 ```
+
+`benchmarks/multimodal.py` is retained for the older image path and does not run
+as a current text-only setup gate. Do not change product text-only mode merely
+to reproduce an obsolete benchmark.
 
 `benchmarks/rag_cases.py` contains explicit relevance judgments and reference facts for
 12 conversation cases over 8 factual topic passages and 240 repetitive archive distractors.
@@ -95,10 +104,10 @@ Open `/benchmarks` for per-question evidence and downloadable JSON. Reports reco
 fixture hash, model names, mode, timestamp, and whether answers were actually generated.
 API-free runs must not be presented as measured answer accuracy.
 The published October 10 Gemma run is retrieval-only: recall@8 is 1.0 on both authored
-text fixtures, with both negative conversation cases rejected. Four authored raster
-diagrams were each retrieved first using native image embeddings, with no OCR. These
-development checks are not held-out real-world accuracy measurements. Dense-only
-text/image similarity cutoffs are 0.65/0.62 and require domain-specific evaluation.
+text fixtures, with both negative conversation cases rejected. Earlier image-enabled
+checks retrieved four authored raster diagrams first; vision/OCR are now disabled.
+These development checks are not held-out real-world accuracy measurements.
+Dense-only similarity thresholds require domain-specific evaluation.
 The default output is `test-results/rag-evaluation.json`, so an API-free run cannot silently
 replace the published live-answer report. Publishing to the app requires an explicit
 `--output src/local_notebook/assets/rag-evaluation.json` after reviewing the intended run.
@@ -109,7 +118,7 @@ judge can be wrong; inspect its claim/quote records and retain failed reports wh
 The initial live report is retained under `test-results/rag-live-answers.json`; it exposed
 grouped-citation parsing and inconsistent judge interpretations of additional supported facts.
 
-The committed live run used Flash Lite for both generator and judge after the separate judge
+The historical live run used Flash Lite for both generator and judge after the separate judge
 returned provider errors. It retrieved all labeled evidence, resolved all citations, and scored
 96.7% on the quote-audited supported-claim metric. Its raw correctness verdict was 10/12, but
 two negative verdicts contradicted the judge's own fully-supported, complete claim assessments.
@@ -120,6 +129,8 @@ Its two empty-evidence answers were fixed refusal text, not model responses: the
 includes a judge quote containing an ellipsis, which failed verbatim verification. The newer
 audit flags that failure for review as well; the historical report retains its original
 two review flags and original measurements. This run has not been replaced by a new live test.
+The current committed app report is retrieval-only (`answers_evaluated: false`),
+not that historical live evaluation and not a generated-answer accuracy score.
 
 On 2026-09-29, the API-free [hybrid regression run](benchmark-history/rag-retrieval-2026-09-29.json)
 passed with Recall@8 1.0000, MRR@8 0.9500, nDCG@8 0.9631, 2/2 retrieval rejections,

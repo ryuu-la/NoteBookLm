@@ -1,6 +1,45 @@
 Verification record
 ===================
 
+Current checks and behavior · 2026-10-11
+--------------------------------------
+
+The active app uses text-only EmbeddingGemma 2, index version 4, a cached
+OpenVINO FP32 graph on eligible x86 CPUs and PyTorch on the other supported
+execution paths. Vision/audio, image uploads, OCR and LLM image attachments are
+disabled. Records below are historical milestones; their model configuration,
+test counts and performance apply to the recorded run, not automatically to the
+current application. In particular, old multimodal and BGE/MiniLM results are
+not current enabled features or current Gemma speed measurements.
+
+- **204 automated tests** passed, with two upstream test-client deprecation
+  warnings. Ruff, dependency consistency, the keyword RAG gate, benchmark
+  table/chart consistency and staged-secret checks also passed before publication.
+- **19 deterministic map/Studio browser checks** passed without JavaScript
+  errors. Coverage includes a collapsed map moving freely, independent topic
+  dragging, live connector endpoints, pointer-anchored wheel zoom, keyboard
+  movement, resize preservation, touch panning/pinch, exports and generation
+  recovery. Run `python scripts/mindmap_check.py` to reproduce.
+- The website browser check confirmed a simulated HTTP 403 becomes a website
+  error, retry remains enabled, Paste article text selects the text panel and
+  pasted text indexes successfully. This fixture does not establish live website
+  availability. A separate live Wikipedia request returned 403 from this connection.
+- Actual token counts now order batches of eight. On the same 64-section local
+  sample, two character-ordered runs averaged **29.79 s** and two token-ordered
+  runs averaged **25.90 s**: **13.1% less embedding time**, or 1.15x throughput.
+  Run order was reversed for the second pair. Minimum output cosine agreement
+  was **0.99999976**; maximum absolute vector difference was **1.79e-7**.
+  These are sample embedding timings and numerical-agreement checks, not a
+  full-document speedup or retrieval-accuracy evaluation. The full source's
+  calculated padded input count fell from 430,624 to 363,712 tokens.
+  `python scripts/indexing_batch_check.py` writes the local, ignored report to
+  `test-results/indexing-token-batching.json`; it waits for active imports first.
+
+The documentation was audited against current code on October 11. That review
+does not certify fresh installation on every platform or rerun historical live
+provider benchmarks. See [the setup guide](../README_OF_AGENTS.md) for current
+dependencies, configuration and reproducible commands.
+
 Faster CPU indexing · 2026-10-10
 -------------------------------
 

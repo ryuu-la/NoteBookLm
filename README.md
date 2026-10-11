@@ -18,10 +18,10 @@ What works
 - Tokenizer-aware text chunking; local EmbeddingGemma 2 text embeddings (vision/audio disabled), LanceDB vectors, SQLite FTS5/BM25, and reciprocal rank fusion.
 - Optimized full-precision CPU inference, cached model compilation, indexing batches grouped by actual token count, and reuse of existing embeddings for duplicate documents.
 - Streaming Gemini chat, selected-source filtering, clickable evidence locations, stop generation, and saved conversations. Without a model connection, the app explains how to configure .env; it never substitutes excerpts for an answer.
-- Structured, validated mind maps and quizzes; quiz scoring with explanations; source-grounded reports.
+- Structured mind maps with free canvas panning, draggable topics, wheel/pinch zoom, Fit map and Reset layout; validated quizzes with scoring/explanations; source-grounded reports.
 - Agent-callable Studio tools: Data Analytics, Spreadsheet, and Deep Research, with inline charts/tables, Excel/CSV downloads, and saved results.
 - Autosaved Markdown notes, answer-to-note capture, and PDF/Markdown/JSON downloads with retained source references where available.
-- `gemini-3.8-flash` and `gemini-3.5-flash-lite`, plus an OpenAI-compatible adapter for local or remote endpoints.
+- `gemini-3.8-flash` and `gemini-3.5-flash-lite`, a RunInfra model selector, and an OpenAI-compatible adapter for local or remote endpoints.
 - Project `.env` configuration, local data ownership, bounded ingestion batches, duplicate detection, and restart checkpoints.
 - Fast/Main chat switch, visible streaming status, reusable local embedding cache, and a retrieval benchmark dashboard with downloadable judgments.
 
@@ -67,19 +67,19 @@ Python 3.11 is the tested runtime. The UI and business logic are Python; NiceGUI
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e '.[dev,ocr]'
+.\.venv\Scripts\python.exe -m pip install -e '.[dev]'
 .\.venv\Scripts\python.exe scripts\download_models.py
 .\.venv\Scripts\python.exe -m local_notebook.main
 ```
 
 On Linux/macOS, use `.venv/bin/python` instead. PDF export needs DejaVu Sans on Linux or the installed Segoe UI font on Windows. The exact verified Windows dependency snapshot is in `requirements-lock-windows.txt`; use that file only on Windows, then install this package with `pip install -e . --no-deps`.
 
-First setup downloads the EmbeddingGemma 2 checkpoint and PyTorch runtime; allow several GB of disk space. Retrieval runs locally with the text and vision encoders, with audio disabled. Semantic imports index images and visual PDF pages directly, without requiring OCR. Optional OCR remains available for keyword-only scanned imports. LibreOffice is needed for old `.doc`, `.ppt`, and `.xls` files. The `advanced` extra reserves Docling for future adapters.
+First setup downloads the EmbeddingGemma 2 checkpoint and PyTorch runtime; allow several GB of disk space, including the additional compiled CPU graph. The current app is text-only: vision/audio, image uploads, OCR and image attachments are disabled. On eligible x86 CPUs, a cached snapshot uses OpenVINO FP32; first conversion/compilation adds startup time. CUDA and other CPU architectures use PyTorch. Installing the retained `ocr` extra does not enable scanned-image ingestion. LibreOffice is needed for old `.doc`, `.ppt`, and `.xls` files. The `advanced` extra reserves Docling for future adapters. See the [complete agent setup guide](README_OF_AGENTS.md).
 
 Connect a model
 ---------------
 
-1. Open the project [`.env`](.env). On a fresh checkout, copy `.env.example` to `.env` first.
+1. Open the project's local `.env`. On a fresh checkout, copy [`.env.example`](.env.example) to `.env` first; preserve an existing file.
 2. Fill in `GEMINI_API_KEY` with your own key:
 
    ```dotenv
@@ -114,8 +114,9 @@ The chat RAG workflow now has a separate [conversation and answer evaluation sui
 
 The September UI/indexing refresh reduced the isolated 1,000-page ingestion fixture from **14.57 s to 8.68 s**. These historical fixture timings do **not** measure a full EmbeddingGemma 2 import. Dense books require substantially more CPU work to embed their text. See the [UI changes, benchmark comparison, and validation scope](docs/UI_REFRESH.md).
 
-- **163 automated tests** passed locally, covering parsing/OCR, isolation, citations, migration, image provenance, recovery, embedding reuse, source overviews, PDF export, streaming, and local origin checks.
-- An isolated headless Edge run passed **17 browser checks with a real Gemini connection**. Fast chat became visible in **2.40 s**; a small mind map took **3.48 s**, a two-question quiz **2.42 s**, and a short report **2.92 s**. These are single-run observations, not service guarantees.
+- **204 automated tests** passed locally on October 11, 2026, including text-only behavior, isolation, citations, migration/recovery, token-based batching, website failures, embedding reuse, provider adapters and local origin checks. Retained OCR/image helpers are exercised separately from the active text-only pipeline.
+- **19 deterministic mind-map/Studio browser checks** passed, including free panning, topic dragging, live connections, wheel/pinch zoom, resize behavior and structured-generation recovery, with no JavaScript errors.
+- A historical isolated Edge run passed **17 browser checks with a real Gemini connection**. Fast chat became visible in **2.40 s**; a small mind map took **3.48 s**, a two-question quiz **2.42 s**, and a short report **2.92 s**. These are older single-run observations, not current provider guarantees.
 - Four deterministic browser checks verified a visible waiting state, partial streaming before completion, stopping chat, and cancelling Studio without saving an artifact.
 - A **10,000-page synthetic digital PDF** exercises ingestion and cached reindexing, followed by five exact-record probes with the reranker off. See the [generated measurement table and raw results](docs/VERIFICATION.md#10000-page-benchmark) for historical timings, memory, and probe outcomes; those pre-migration measurements do not describe Gemma performance.
 - Live Flash and Flash-Lite connections and a public URL import were verified.
@@ -148,25 +149,25 @@ Open **Retrieval benchmarks** in the top bar, or visit `/benchmarks`. Compare ke
 
 ![Retrieval benchmark](docs/images/retrieval-benchmark.png)
 
-The separate live answer report currently **fails its evaluation gates** and needs judge review. It is not a validated answer-accuracy score.
+The committed conversation report is **retrieval-only** (`answers_evaluated: false`). A historical live-answer report failed its gates and still needs judge review; neither report establishes current generated-answer accuracy.
 
 This small developer-authored fixture measures finding labeled evidence, **not perfect generated-answer accuracy**. It is not an independent held-out evaluation. The committed [query-level results](src/local_notebook/assets/retrieval-benchmark.json) expose every ranking and timing. See [methodology and limits](docs/RETRIEVAL_BENCHMARK.md).
 
 Data and configuration
 ----------------------
 
-EmbeddingGemma 2 is the only retrieval model (`google/embeddinggemma-2`, pinned revision, 768 dimensions). Text is split using its tokenizer into 512-token passages with 64-token overlap. On restart, existing ready sources using an older index are queued for rebuilding from their originals; chats and stored citation snapshots are preserved. Images selected as evidence are sent to your configured answer provider, which must support image input. Up to four retrieved images are attached per answer.
+EmbeddingGemma 2 is the only retrieval model (`google/embeddinggemma-2`, pinned revision, 768 dimensions). Text is split using its tokenizer into 512-token sections with 64-token overlap. Index version 4 rebuilds older ready sources from originals at startup while preserving chats and stored citation snapshots. The active pipeline sends text evidence only. Text is searchable while semantic indexing finishes; completed vectors are checkpointed individually, and dense coverage remains incomplete until Ready.
 
-Runtime data lives under `.data/`, which is excluded from Git. It contains SQLite metadata, originals, search indexes, model caches, and logs. `NOTEBOOK_DATA_DIR`, `NOTEBOOK_MODEL_DIR`, and `NOTEBOOK_PORT` override the defaults. `NOTEBOOK_EMBED_THREADS` controls local embedding CPU threads (1–8; defaults to at most 4). `NOTEBOOK_NO_SAMPLE=1` disables first-run samples. `NOTEBOOK_OFFLINE=1` disables model generation for testing; chat asks for a model connection rather than returning raw excerpts.
+Runtime data lives under `.data/`, which is excluded from Git. It contains SQLite metadata, originals, search indexes, model caches, and logs. `NOTEBOOK_DATA_DIR`, `NOTEBOOK_MODEL_DIR`, and `NOTEBOOK_PORT` override the defaults. `NOTEBOOK_EMBED_THREADS` accepts 1–8 threads; its default is half the logical CPU count, rounded down, bounded to 1–6. `NOTEBOOK_EMBED_BACKEND=pytorch` bypasses the eligible CPU OpenVINO path for diagnosis. `NOTEBOOK_NO_SAMPLE=1` disables first-run samples. `NOTEBOOK_OFFLINE=1` makes the answer-provider configuration check fail; it is not a network sandbox and does not stop model downloads or all web requests.
 
-To back up, stop the app and copy the whole data directory. Restore it while the app is stopped. Credential-store keys are outside that directory. The server binds only to loopback and checks HTTP and WebSocket host/origin boundaries. This is a single-user local app, not a shared hosted service.
+To back up, stop the app and copy the whole configured data directory. Restore it while the app is stopped. Provider credentials are in the project `.env` or process environment, not an OS credential store or the settings database; preserve them separately and privately. Include a separately configured model cache if needed. The launcher keeps its log/PID files in the project `.data`. The server binds only to loopback and checks HTTP and WebSocket host/origin boundaries. This is a single-user local app, not a shared hosted service.
 
 Known boundaries
 ----------------
 
-- Integrated Wikipedia search was blocked by the upstream endpoint in this environment. Gemini search returned a provider quota error. Browser search and direct public URL import remain available; neither bypasses paywalls or private documents.
+- Upstream sites can block search or URL imports. A Wikipedia import returned HTTP 403 from this connection; the app now explains the website error and offers Paste article text. Direct URL access is not guaranteed, and LLM keys cannot fix a website access block.
 - Broad Studio overviews sample sections within a bounded context. They explicitly warn when not every passage is covered. Full-corpus hierarchical summarization is future work.
-- EmbeddingGemma 2 runs in float32 on CPU or bfloat16 on supported GPUs. Multilingual and visual retrieval quality must be measured on your own material; an embedding similarity score is not proof that a passage answers a question.
+- EmbeddingGemma 2 runs in float32 on CPU or bfloat16 on supported CUDA GPUs (otherwise float32). Domain and language quality need evaluation on representative text; an embedding similarity score is not proof that a passage answers a question. Images and OCR are disabled.
 - Parsing is best effort. Complex formulas, merged cells, chart semantics, handwritten scans, unsupported encodings, and proprietary formats may need a different source export. Spreadsheet extraction preserves row/sheet context; it is not a spreadsheet calculation engine.
 - No audio/video overview generator, login-based Google Drive import, collaboration, or deployment service is included.
 - Citation IDs and locations are validated, but this does not prove every generated claim is entailed. Verify important answers against original evidence.

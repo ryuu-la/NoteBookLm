@@ -53,7 +53,7 @@ Additional measured improvements
 
 A timing-only check on an existing 437-passage PDF reduced warm retrieval from approximately 3.7 s to 1.3 s across the same three queries. Its contents and query-level evidence are not published. This diagnostic is separate from the public relevance fixture.
 
-The current synthetic 10,000-page ingestion and reindex measurements are generated from the raw report in [VERIFICATION.md](VERIFICATION.md#10000-page-benchmark). These are single-run observations, not a controlled multi-run confidence interval; page text is short and no OCR is involved. Historical before/after runs are retained separately and should not be interpreted as guaranteed speedups.
+The historical, pre-Gemma synthetic 10,000-page ingestion and reindex measurements are generated from the raw report in [VERIFICATION.md](VERIFICATION.md#10000-page-benchmark). These are single-run observations, not a controlled multi-run confidence interval; page text is short and no OCR is involved. They do not measure current Gemma dense-book indexing. Historical before/after runs are retained separately and should not be interpreted as guaranteed speedups.
 
 An isolated live browser run measured 2.40 s until the first visible Fast-mode answer, 3.48 s for a three-leaf mind map, 2.42 s for a two-question quiz, and 2.92 s for a short report. These use one short original source and Flash-Lite. During separate probes Flash reported high demand and took 9–12 s to deliver the first token, while Flash-Lite took 1.2–1.8 s. Provider demand and answer size affect latency independently of retrieval.
 
