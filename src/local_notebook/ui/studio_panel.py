@@ -4,12 +4,14 @@ import time
 
 from nicegui import ui
 
-from .. import storage as db
-from ..retrieval.search import coverage, retrieve
+from .. import providers, storage as db
+from ..config import RUNINFRA_MODELS
+from ..retrieval.workflow import source_evidence
 from ..studio import generate
 from .artifacts import artifact_view, note_editor
-from .common import error_message
+from .common import error_message, error_text
 from .studio_tasks import StudioWindow, task_dock
+from .progress import RunProgress
 
 KINDS = {"mindmap": ("account_tree", "Mind map", "See the connections", "pink"),
          "quiz": ("quiz", "Quiz", "Put yourself to the test", "blue"),
@@ -18,6 +20,42 @@ KINDS = {"mindmap": ("account_tree", "Mind map", "See the connections", "pink"),
          "analytics": ("bar_chart", "Data Analytics", "Find insights and chart data", "blue"),
          "spreadsheet": ("table_view", "Spreadsheet", "Organize and export data", "green"),
          "deep_research": ("travel_explore", "Deep Research", "Explore websites in depth", "pink")}
+
+
+
+def model_control(busy=lambda: False):
+    """One shared choice for new Studio runs and the RunInfra chat selector."""
+    def options(settings):
+        return RUNINFRA_MODELS if settings['provider'] == 'RunInfra' else {
+            'main': settings['model'], 'fast': settings['fast_model']}
+
+    def value(settings):
+        return settings['model'] if settings['provider'] == 'RunInfra' else ('fast' if settings['studio_fast'] else 'main')
+
+    settings = db.settings()
+    choice = ui.select(options(settings), value=value(settings), label='Model').props(
+        'dense outlined options-dense aria-label="Studio model"').classes('w-full studio-model')
+    choice.tooltip('Used for new Studio tasks. Running tasks keep their original model.')
+
+    def changed(event):
+        current = db.settings()
+        if current['provider'] == 'RunInfra' and event.value in RUNINFRA_MODELS:
+            db.save_settings({'runinfra_model': event.value})
+        elif current['provider'] != 'RunInfra' and event.value in {'main', 'fast'}:
+            db.save_settings({'studio_fast': event.value == 'fast'})
+    choice.on_value_change(changed)
+
+    def sync():
+        choice.set_enabled(not busy())
+        if busy():
+            return
+        current = db.settings()
+        if choice.options != options(current):
+            choice.set_options(options(current), value=value(current))
+        elif choice.value != value(current):
+            choice.set_value(value(current))
+    ui.timer(.5, sync)
+    return choice
 
 
 def studio_panel(notebook_id: str, on_collapse=None):
@@ -30,6 +68,7 @@ def studio_panel(notebook_id: str, on_collapse=None):
         with ui.column().classes("studio-content w-full"):
             ui.label("Make something meaningful.").classes("studio-title")
             ui.label("Study, connect, and keep the ideas that matter.").classes("studio-subtitle")
+            model_control()
             task_dock()
             with ui.element("div").classes("studio-grid"):
                 for kind, (icon, label, caption, color) in KINDS.items():
@@ -90,14 +129,14 @@ def generate_dialog(notebook_id, kind):
             ui.space()
             window.button()
         ui.label("Grounded in the sources you’ve selected.").classes("muted")
+        model_control(lambda: bool(state["task"]))
         topic = ui.input("Focus on a topic (optional)", placeholder="Leave blank for a source overview").props("outlined").classes("w-full")
         defaults = {"quiz": "Create 5 medium-difficulty multiple choice questions.",
                     "mindmap": "Explore the topic in depth: key concepts, subtopics, how they connect, practical examples, and limitations. Use concise labels and source-backed explanations.",
                     "report": "Create a study guide with key concepts, practical examples, and a concise summary."}
         instructions = ui.textarea("Instructions", value=defaults[kind]).props("outlined rows=3").classes("w-full")
-        status = ui.label("Large-library overviews use sampled sections; focus on a topic for deeper coverage.").classes("text-xs muted").props('role=status aria-live=polite')
-        progress = ui.linear_progress(show_value=False).props("indeterminate")
-        progress.visible = False
+        status = RunProgress()
+        status.expansion.visible = False
         with ui.column().classes("studio-preview w-full") as preview:
             ui.label("Taking shape").classes("eyebrow")
             preview_text = ui.label("").classes("studio-preview-text whitespace-pre-line")
@@ -105,6 +144,12 @@ def generate_dialog(notebook_id, kind):
         timing = ui.label("").classes("text-xs muted")
 
         def on_progress(event):
+            if event['stage'] == 'retrying':
+                state['stage'] = 'Completing a fresh draft after an incomplete model response'
+                preview_text.set_text('')
+                preview.visible = False
+                tick()
+                return
             if event["stage"] == "complete":
                 logging.getLogger(__name__).info(
                     "Studio timing kind=%s retrieval_s=%.3f first_token_s=%s generation_s=%.3f prompt_chars=%d output_chars=%d",
@@ -123,8 +168,8 @@ def generate_dialog(notebook_id, kind):
             tick()
         def tick():
             if state["task"]:
-                status.set_text(f"{state['stage']} · {time.perf_counter() - state['started']:.0f}s")
-                window.update(status.text)
+                status.set_text(state["stage"])
+                window.update(f"{state['stage']} · {time.perf_counter() - state['started']:.0f}s")
         ui.timer(1, tick)
 
         def cancel():
@@ -133,6 +178,7 @@ def generate_dialog(notebook_id, kind):
                 state["task"].cancel()
             dialog.close()
 
+        @providers.model_run
         async def create():
             if state["task"]:
                 return
@@ -141,14 +187,14 @@ def generate_dialog(notebook_id, kind):
             button.props("loading")
             topic.disable()
             instructions.disable()
-            progress.visible = True
+            status.reset()
             preview.visible = False
             timing.set_text("")
             status.set_text("Reading your sources and creating your study material…")
             try:
-                evidence = await asyncio.to_thread(retrieve, notebook_id, topic.value, 12) if topic.value.strip() else await asyncio.to_thread(coverage, notebook_id, 12)
+                evidence = await source_evidence(notebook_id, topic.value.strip() or "source overview")
                 state["retrieval_s"] = time.perf_counter() - state["started"]
-                settings = db.settings()
+                settings = providers.current_settings()
                 model = settings["fast_model"] if settings["studio_fast"] else settings["model"]
                 state["stage"] = f"Creating with {model}"
                 tick()
@@ -162,7 +208,7 @@ def generate_dialog(notebook_id, kind):
                 window.update('Cancelled')
             except Exception as exc:
                 error_message(exc)
-                status.set_text("Could not generate. Check your model connection and try again.")
+                status.set_text(error_text(exc))
                 window.update('Failed · reopen to retry')
             finally:
                 state["task"] = None
@@ -170,7 +216,6 @@ def generate_dialog(notebook_id, kind):
                 button.props(remove="loading")
                 topic.enable()
                 instructions.enable()
-                progress.visible = False
         with ui.row().classes("w-full justify-end"):
             ui.button("Cancel", on_click=cancel).props("flat")
             button = ui.button("Generate", icon="auto_awesome", on_click=create).classes("primary-btn")
@@ -187,13 +232,13 @@ def agent_dialog(notebook_id, kind):
             ui.space()
             window.button()
         ui.label('Use selected sources, research the web, and create saved results.').classes('text-sm muted')
+        model_control(lambda: bool(state["task"]))
         request = ui.textarea('What should the agent do?', placeholder='Describe the topic, data, and result you need').props('outlined rows=4').classes('w-full')
         online = ui.checkbox('Search the web', value=kind == 'deep_research')
         if kind == 'deep_research':
             online.disable()
-        status = ui.label('').props('role=status aria-live=polite').classes('text-sm muted')
-        progress = ui.linear_progress().props('indeterminate')
-        progress.visible = False
+        status = RunProgress()
+        status.expansion.visible = False
 
         def cancel():
             window.stop()
@@ -201,13 +246,15 @@ def agent_dialog(notebook_id, kind):
                 state['task'].cancel()
             dialog.close()
 
+        @providers.model_run
         async def create():
             if state['task'] or not (request.value or '').strip():
                 return
             state['task'] = asyncio.current_task()
             button.disable()
             request.disable()
-            progress.visible = True
+            online.disable()
+            status.reset()
             def update_status(text):
                 status.set_text(text)
                 window.update(text)
@@ -237,7 +284,8 @@ def agent_dialog(notebook_id, kind):
                 state['task'] = None
                 button.enable()
                 request.enable()
-                progress.visible = False
+                if kind != 'deep_research':
+                    online.enable()
         with ui.row().classes('w-full justify-end'):
             ui.button('Cancel', on_click=cancel).props('flat')
             button = ui.button('Run agent', icon='auto_awesome', on_click=create).classes('primary-btn')

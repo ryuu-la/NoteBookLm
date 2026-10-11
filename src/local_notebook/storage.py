@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from .config import DATA, gemini_models, prepare
+from .config import DATA, RUNINFRA_MODELS, INDEX_VERSION, gemini_models, prepare
 
 
 def uid() -> str:
@@ -67,19 +67,46 @@ def initialize() -> None:
         CREATE TABLE IF NOT EXISTS message_blocks (
             message_id TEXT PRIMARY KEY REFERENCES messages(id) ON DELETE CASCADE,
             content TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS message_runs (
+            message_id TEXT PRIMARY KEY REFERENCES messages(id) ON DELETE CASCADE,
+            content TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-        PRAGMA user_version=2;
+        CREATE TABLE IF NOT EXISTS source_cleanup (id TEXT PRIMARY KEY, path TEXT NOT NULL);
+        PRAGMA user_version=3;
         """)
         columns = {row[1] for row in db.execute("PRAGMA table_info(sources)")}
         for name, declaration in {"detail": "TEXT DEFAULT ''", "elapsed_seconds": "REAL DEFAULT 0",
                                   "index_version": "INTEGER DEFAULT 0"}.items():
             if name not in columns:
                 db.execute(f"ALTER TABLE sources ADD COLUMN {name} {declaration}")
+        chunk_columns = {row[1] for row in db.execute("PRAGMA table_info(chunks)")}
+        if "image" not in chunk_columns:
+            db.execute("ALTER TABLE chunks ADD COLUMN image TEXT NOT NULL DEFAULT ''")
+        if "vector_ready" not in chunk_columns:
+            db.execute("ALTER TABLE chunks ADD COLUMN vector_ready INTEGER NOT NULL DEFAULT 0")
+            # Previous versions committed vectors in ordinal order. Preserve those
+            # checkpoints when switching to length-grouped batches.
+            db.execute("""UPDATE chunks SET vector_ready=1 WHERE EXISTS (
+                SELECT 1 FROM sources s WHERE s.id=chunks.source_id
+                AND s.index_version=? AND chunks.ordinal<s.chunks)""", (INDEX_VERSION,))
+        if "token_count" not in chunk_columns:
+            db.execute("ALTER TABLE chunks ADD COLUMN token_count INTEGER NOT NULL DEFAULT 0")
+        db.execute("CREATE INDEX IF NOT EXISTS chunks_pending_tokens ON chunks(source_id,vector_ready,token_count,ordinal)")
+        db.execute("DROP INDEX IF EXISTS chunks_pending")
         if "detail" not in columns:
             # Older imports used a different PDF extractor and interleaved checkpoints.
             db.execute("UPDATE sources SET chunks=0, progress=0 WHERE status IN ('queued','parsing','indexing')")
         db.execute("UPDATE sources SET status='queued', error='' WHERE status IN ('parsing','indexing')")
         db.execute("DELETE FROM settings WHERE key IN ('api_key', 'fallback_model')")
+        db.execute("DELETE FROM settings WHERE key IN ('rerank', 'rerank_candidates')")
+        semantic = db.execute("SELECT value FROM settings WHERE key='semantic'").fetchone()
+        if semantic is None or json.loads(semantic[0]):
+            # Old vectors cannot be queried with the new model. Preserve originals,
+            # chat and citation snapshots; the worker rebuilds each source once.
+            db.execute("""UPDATE sources SET status='queued', chunks=0, progress=0,
+                error='', detail='Updating the search index for EmbeddingGemma 2'
+                WHERE status='ready' AND index_version!=?""", (INDEX_VERSION,))
+        db.execute("PRAGMA user_version=3")
 
 
 def rows(sql: str, args=()) -> list[dict]:
@@ -160,17 +187,25 @@ def save_artifact(notebook_id: str, kind: str, title: str, content: str, citatio
 def settings() -> dict:
     defaults = {"provider": "Gemini", "model": "gemini-3.8-flash",
                 "fast_model": "gemini-3.5-flash-lite", "endpoint": "http://localhost:11434/v1",
-                "semantic": True, "rerank": True, "thinking_level": "minimal", "studio_fast": True,
-                "rerank_candidates": 16}
+                "semantic": True, "thinking_level": "minimal", "studio_fast": True}
     defaults.update({row["key"]: json.loads(row["value"]) for row in rows("SELECT * FROM settings")})
     defaults.pop("fallback_model", None)
     defaults.pop("api_key", None)
+    defaults.pop("rerank", None)
+    defaults.pop("rerank_candidates", None)
     if defaults["provider"] == "Gemini":
         defaults.update(gemini_models())
+    elif defaults['provider'] == 'RunInfra':
+        selected = defaults.get('runinfra_model', 'glm-5-3-flash')
+        if selected not in RUNINFRA_MODELS:
+            selected = 'glm-5-3-flash'
+        defaults.update(runinfra_model=selected, model=selected, fast_model=selected,
+                        studio_fast=False, endpoint='https://api.runinfra.ai/v1')
     return defaults
 
 
 def save_settings(values: dict) -> None:
     with connect() as db:
         db.executemany("INSERT OR REPLACE INTO settings VALUES (?,?)",
-                       [(key, json.dumps(value)) for key, value in values.items() if key not in {"api_key", "fallback_model"}])
+                       [(key, json.dumps(value)) for key, value in values.items()
+                        if key not in {"api_key", "fallback_model", "rerank", "rerank_candidates"}])

@@ -49,6 +49,7 @@ def main():
                 page.wait_for_url(f'**/notebook/{book}')
                 page.wait_for_function('window.socket?.connected === true')
                 expect(page.locator('body')).to_have_class(re.compile(r'\bbody--light\b'))
+                page.wait_for_timeout(500)
                 page.get_by_role('button', name='Toggle sources', exact=True).click()
                 page.get_by_role('button', name='Toggle studio', exact=True).click()
                 question = page.get_by_role('textbox', name='Ask about your sources')
@@ -58,6 +59,30 @@ def main():
                 expect(page.locator('.send-btn')).to_be_enabled()
                 page.wait_for_timeout(500)
                 page.screenshot(path=str(output / 'workspace-light.png'), full_page=True)
+                page.get_by_role('button', name='Settings', exact=True).click()
+                page.get_by_role('combobox', name='Model provider').click()
+                page.get_by_role('option', name='RunInfra', exact=True).click()
+                expect(page.get_by_role('combobox', name='RunInfra model', exact=True)).to_be_visible()
+                expect(page.get_by_text('Use the fast model for Studio', exact=True)).not_to_be_visible()
+                expect(page.get_by_role('textbox', name='Compatible API base URL')).not_to_be_visible()
+                page.screenshot(path=str(output / 'settings-runinfra.png'), full_page=True)
+                page.get_by_role('button', name='Save settings', exact=True).click()
+                assert db.settings()['provider'] == 'RunInfra'
+                assert db.settings()['model'] == 'glm-5-3-flash'
+                answer_model = page.get_by_role('combobox', name='Answer model', exact=True)
+                expect(answer_model).to_have_value('GLM 5.3 Flash', timeout=5000)
+                for label, model_id in [('Qwen 3.8 27B', 'Qwen/Qwen3.8-27B'),
+                                        ('DeepSeek V4.1 Flash', 'deepseek-ai/DeepSeek-V4.1-Flash')]:
+                    answer_model.click()
+                    page.get_by_role('option', name=label, exact=True).click()
+                    expect(answer_model).to_have_value(label)
+                    assert db.settings()['model'] == db.settings()['fast_model'] == model_id
+                page.get_by_role('button', name='Toggle light theme', exact=True).click()
+                page.wait_for_timeout(350)
+                page.screenshot(path=str(output / 'workspace-dark.png'), full_page=True)
+                page.emulate_media(reduced_motion='reduce')
+                assert page.locator('.studio-tile').first.evaluate("el => getComputedStyle(el).animationName") == 'none'
+                page.get_by_role('button', name='Toggle light theme', exact=True).click()
                 page.set_viewport_size({'width': 390, 'height': 844})
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 page.screenshot(path=str(output / 'mobile-light.png'), full_page=True)
@@ -74,7 +99,7 @@ def main():
                 browser.close()
             print('Passed: light/dark persistence, deletion cancel/confirm, empty-notebook web request, responsive layout.')
         finally:
-            server.terminate()
+            subprocess.run(['taskkill', '/PID', str(server.pid), '/T', '/F'], capture_output=True)
             server.wait(timeout=15)
 
 

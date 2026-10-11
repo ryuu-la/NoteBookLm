@@ -5,11 +5,9 @@ from pydantic import BaseModel, Field
 from .chat import citation_numbers
 
 
-def require_retrieval_mode(evidence, *, semantic: bool, rerank: bool = False) -> None:
+def require_retrieval_mode(evidence, *, semantic: bool) -> None:
     """A requested benchmark path must not silently fall back to a cheaper one."""
     expected = 'Hybrid retrieval' if semantic else 'Keyword search'
-    if rerank:
-        expected += ' + reranker'
     if evidence.warning or evidence.mode != expected:
         raise RuntimeError(f'Benchmark expected {expected}, received {evidence.mode}: {evidence.warning}')
 

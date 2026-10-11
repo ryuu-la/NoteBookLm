@@ -13,13 +13,15 @@
 .map-count,.map-zoom { color:#a5b0c1; font-size:12px; font-variant-numeric:tabular-nums; }
 .map-count { margin-right:8px; }
 .map-stage { position:relative; display:flex; flex:1; min-height:0; }
-.map-viewport { flex:1; min-width:0; min-height:0; overflow:auto; overscroll-behavior:contain; border:1px solid #343c49; border-radius:12px; background-color:#141922; background-image:radial-gradient(#ffffff14 1px,transparent 1px); background-size:20px 20px; cursor:grab; }
-.map-viewport:active { cursor:grabbing; }
-.map-size { position:relative; min-width:100%; }
-.map-svg { display:block; position:absolute; top:0; left:0; transform-origin:top left; overflow:visible; }
+.map-viewport { position:relative; flex:1; min-width:0; min-height:0; overflow:clip; overscroll-behavior:contain; touch-action:none; user-select:none; border:1px solid #343c49; border-radius:12px; background-color:#141922; background-image:radial-gradient(#ffffff14 1px,transparent 1px); background-size:20px 20px; cursor:grab; }
+.map-viewport:focus-visible { outline:2px solid #79b8ff; outline-offset:-3px; }
+.map-dragging,.map-dragging .map-node-label { cursor:grabbing; }
+.map-svg { display:block; position:absolute; inset:0; overflow:hidden; }
+.map-world { transform-origin:0 0; will-change:transform; }
+.map-gesture-hint { position:absolute; bottom:10px; left:14px; pointer-events:none; color:#99a6ba; font-size:11px; }
 .map-node { display:flex; align-items:center; height:84px; width:220px; margin:2px; border:1px solid color-mix(in srgb,var(--branch) 42%,#242b36); border-left:4px solid var(--branch); border-radius:13px; background:color-mix(in srgb,var(--branch) 11%,#171d28); overflow:hidden; }
 .map-node-selected { outline:2px solid var(--branch); outline-offset:-2px; }
-.map-node-label { flex:1; min-width:0; height:100%; padding:10px 12px; background:none; border:0; color:#f1f3f9; text-align:left; cursor:pointer; font:inherit; }
+.map-node-label { flex:1; min-width:0; height:100%; padding:10px 12px; background:none; border:0; color:#f1f3f9; text-align:left; cursor:grab; font:inherit; }
 .map-node-label > span { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:14px; font-weight:600; line-height:19px; }
 .map-node-label small { display:block; margin-top:5px; font-size:10px; color:var(--branch); }
 .map-node-toggle { flex-shrink:0; margin-right:9px; width:26px; height:26px; border:1px solid color-mix(in srgb,var(--branch) 40%,transparent); border-radius:8px; background:#ffffff08; color:var(--branch); cursor:pointer; font-size:18px; }

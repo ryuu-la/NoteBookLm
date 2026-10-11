@@ -1,6 +1,6 @@
 # Folio system architecture
 
-Folio is a local, single-user RAG application. Documents are parsed, indexed, searched, reranked, and linked to evidence on this computer. Gemini receives the question, bounded conversation history, and selected evidence to generate an answer. Text extraction is the first stage of indexing, not the answer engine.
+Folio is a local, single-user RAG application. Documents are parsed, indexed, searched, and linked to evidence on this computer. Gemini receives the question, bounded conversation history, and selected evidence to generate an answer. Text extraction is the first stage of indexing, not the answer engine.
 
 This document describes the implemented system as of September 29, 2026. Future work is separated in [the implementation plan](../PROJECT_PLAN.md).
 
@@ -15,14 +15,14 @@ flowchart TB
         Queue[Durable ingestion queue - worker thread]
         Parse[PDFium / document adapters / optional OCR]
         Chunk[Token-aware passages + source locations]
-        Embed[FastEmbed BGE - local ONNX]
+        Embed[EmbeddingGemma 2 - local text and vision]
         Cache[(Embedding cache - digests and vectors)]
         SQL[(SQLite - metadata, passages, FTS5, messages, artifacts)]
-        Vectors[(LanceDB - scoped 384-dimensional vectors)]
+        Vectors[(LanceDB - scoped 768-dimensional vectors)]
         Files[(Original files and local model assets)]
         Route[Research workflow - context and query routing]
         Search[BM25 + dense retrieval / distributed overview]
-        Rank[Rank fusion + MiniLM reranker]
+        Rank[Reciprocal rank fusion]
         Context[Bounded evidence and numbered citations]
         Provider[Async provider adapter - streaming]
         Validate[Citation checks / artifact validation]
@@ -60,7 +60,7 @@ There is no external vector service, application account, Redis queue, or separa
 | Gemini key | `GEMINI_API_KEY` in `.env` or process environment | Empty; user supplies it |
 | Fast model | `GEMINI_FAST_MODEL` | `gemini-3.5-flash-lite` |
 | Main model | `GEMINI_MAIN_MODEL` | `gemini-3.8-flash` |
-| Retrieval and Main thinking preferences | Non-secret SQLite settings | Hybrid + reranker, 16 candidates, minimal thinking |
+| Retrieval and Main thinking preferences | Non-secret SQLite settings | Gemma + keyword fusion, minimal thinking |
 | Data directory | `NOTEBOOK_DATA_DIR` | `.data` |
 | Embedding threads | `NOTEBOOK_EMBED_THREADS` | Half available CPUs, up to 4; configurable from 1 to 8 |
 
@@ -89,14 +89,14 @@ stateDiagram-v2
 
 1. Hash uploaded bytes, reject duplicates within the notebook, and store the original under an internal filename. Uploads are bounded at 150 MB; URL downloads at 25 MB.
 2. Stream page, row, or section units through adapters. Digital PDFs use PDFium; scans can use local OCR. Location metadata travels with every passage.
-3. Semantic indexing uses the embedding tokenizer: 384 tokens with 48-token overlap, preferring sentence boundaries. Keyword-only indexing uses LlamaIndex sentence splitting. All parsed units are processed, not just the first pages.
+3. Semantic indexing uses the embedding tokenizer: 512 tokens with 64-token overlap, preferring sentence boundaries. Keyword-only indexing uses LlamaIndex sentence splitting. All parsed units are processed, not just the first pages.
 4. Stage text in SQLite batches of 256. FTS5 triggers maintain the keyword index. Report parsed units and passage counts.
-5. Read batches of 64 passages for vector insertion. Reuse embeddings by SHA-256 of model identifier and passage text. Uncached inference uses batches of 32 for short text and 16 for longer passages, with length ordering to reduce padding.
+5. Read batches of 64 passages for vector insertion. Reuse embeddings by SHA-256 of model identifier and passage text. Uncached text inference uses batches of eight with length ordering to reduce padding. Images are decoded one at a time; the vision encoder uses a 1120-token budget.
 6. Upsert vectors, then advance the durable checkpoint. Only completed sources become `ready` and eligible for retrieval. Check cancellation between parser units and batches.
 
 SQLite WAL and committed checkpoints make progress durable. Interrupted jobs are requeued, reparsed, and already committed vector ordinals skipped. Deterministic IDs and upserts make replay idempotent. Extraction does not resume from a PDF byte offset. SQLite and LanceDB do not share a transaction; the ready-state gate prevents partial imports from entering answers.
 
-Indexing time depends on text volume, passage length, CPU, model startup, and OCR. The current embedding path is CPU-based; a GPU does not automatically accelerate it. Changing the embedding model or chunking contract requires a versioned rebuild and retrieval evaluation.
+Indexing time depends on text volume, passage length, CPU, model startup, and OCR. The embedding path uses PyTorch: float32 on CPU, or bfloat16 on supported CUDA devices. float16 is unsupported. Changing the embedding model or chunking contract requires a versioned rebuild and retrieval evaluation.
 
 ## Question-to-answer flow
 
@@ -106,7 +106,7 @@ sequenceDiagram
     participant UI as Chat UI
     participant RAG as Research workflow
     participant Index as SQLite / LanceDB
-    participant Rank as Local reranker
+    participant Rank as Rank fusion
     participant API as Selected Gemini model
     User->>UI: Ask in Fast or Main
     UI->>UI: Check configuration and selected ready sources
@@ -129,7 +129,7 @@ sequenceDiagram
     end
 ```
 
-Targeted retrieval searches the full index of selected, ready sources. Explicit new topics stand alone; referential follow-ups use prior context. Compound-name matching and comparison aspects supplement query matching. BM25 and dense search each return up to 40 candidates. Reciprocal rank fusion uses `1 / (60 + rank)`; optional MiniLM reranking scores a shortlist of 16 or 40. Duplicate text is removed. Chat normally keeps eight passages within the retrieval text budget, then packs evidence and labels into a 30,000-character prompt budget. Low reranker relevance can trigger abstention; this threshold is a heuristic requiring evaluation.
+Targeted retrieval searches the full index of selected, ready sources. Explicit new topics stand alone; referential follow-ups use prior context. Compound-name matching and comparison aspects supplement query matching. BM25 and dense search each return up to 40 candidates. Reciprocal rank fusion uses `1 / (60 + rank)`; there is no separate reranker. Weak dense-only neighbors are filtered by a cosine similarity heuristic; keyword matches remain available for exact identifiers. Duplicate text and image references are removed. Chat normally keeps eight passages within the retrieval text budget, then packs evidence and labels into a 30,000-character prompt budget. The answer model must decline unsupported questions. The similarity threshold is a retrieval heuristic requiring evaluation, not a calibrated probability. Up to four numbered images are attached to the answer model alongside the text evidence.
 
 Broad overviews use distributed source coverage rather than literal search for “key ideas.” Up to 80 passages are sampled across sources and document positions. Context packing preserves breadth instead of consuming the budget at the beginning of a book. This is bounded synthesis, not an exhaustive review in one API request. Full-document hierarchical synthesis is planned separately. All successfully parsed text is searchable, while each answer uses a bounded evidence set.
 
@@ -184,8 +184,12 @@ Run unit tests, Ruff, isolated browser checks, and the keyword RAG gate without 
 | `config.py`, `main.py` | Environment, startup, local access boundary |
 | `storage.py` | SQL schema, persistence and non-secret settings |
 | `ingestion/` | Parsers, jobs, chunking, recovery, discovery |
-| `retrieval/` | Embeddings, vectors, fusion, reranker, workflow |
+| `retrieval/` | Embeddings, vectors, fusion, workflow |
 | `providers.py`, `chat.py` | Streaming, retry boundaries, prompts, citations |
 | `studio.py`, `exports.py` | Structured generation and exports |
 | `ui/` | NiceGUI pages, controls, mind-map component, CSS |
 | `evaluation.py`, `benchmarks/`, `tests/`, `scripts/` | Metrics, fixtures, performance and browser checks |
+
+Embedding migration (index version 3): only the `embeddinggemma2_v1` LanceDB table is queried. Older ready sources are queued once at startup and rebuilt with the new tokenizer. Originals, messages and stored citation snapshots survive. Image references retain source digest and page/frame/embedded-asset location; both embedding and answering decode the same pixels. Cache identity includes model revision, dimensions, prompt, normalization and image preprocessing contract.
+
+Chunk IDs include the indexing version, so old citation links cannot silently point to different text after rebuilding. PDF pages with raster images or at least eight vector paths receive visual embeddings; simple borders and underlines are skipped, while their text remains indexed. Visual inference commits one image checkpoint at a time. Dense-only text/image score cutoffs are 0.65/0.62; they were checked on the authored development fixtures and need evaluation for other domains.

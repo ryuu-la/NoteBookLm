@@ -59,7 +59,7 @@ def main():
                       NOTEBOOK_NO_SAMPLE='1', NOTEBOOK_OFFLINE='1')
     from local_notebook import storage as db
     db.initialize()
-    db.save_settings({'theme': 'light', 'semantic': False, 'rerank': False})
+    db.save_settings({'theme': 'light', 'semantic': False})
     book = db.create_notebook('Web research test')
     errors = []
     with (output / 'server.log').open('w') as log:

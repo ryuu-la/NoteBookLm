@@ -18,6 +18,7 @@ def serve():
             await asyncio.sleep(2)
             return json.dumps({'tools': ['analytics', 'spreadsheet'], 'queries': ['Avatar cast', 'Avatar revenue']})
         if 'declarative data recipe' in system:
+            await asyncio.sleep(2)  # Allow minimizing/cancelling an in-flight tool in the browser fixture.
             return json.dumps({'title': 'Sales by region', 'table': 0, 'group_by': 'Region', 'value': 'Sales',
                                'operation': 'sum', 'chart': 'bar'})
         await asyncio.sleep(2)
@@ -48,7 +49,7 @@ def check():
     from local_notebook import storage as db
     from local_notebook.ingestion import jobs
     db.initialize()
-    db.save_settings({'semantic': False, 'rerank': False})
+    db.save_settings({'semantic': False, 'provider': 'RunInfra'})
     book = db.create_notebook('Agent Studio checks')
     source = jobs.add_file(book, 'sales.csv', b'Region,Sales\nEast,10\nWest,20\nEast,30\n')
     jobs.ingest(db.one('SELECT * FROM sources WHERE id=?', (source,)))
@@ -72,10 +73,16 @@ def check():
                 page.wait_for_function('window.socket?.connected === true')
                 page.wait_for_timeout(500)
                 page.get_by_role('button', name='Toggle studio', exact=True).click()
+                page.locator('.studio-panel .studio-model').click()
+                page.get_by_role('option', name='Qwen 3.8 27B', exact=True).click()
+                expect(page.locator('.composer .model-select')).to_contain_text('Qwen 3.8 27B')
+                assert db.settings()['model'] == 'Qwen/Qwen3.8-27B'
                 for name in ('Data Analytics', 'Spreadsheet', 'Deep Research'):
                     expect(page.get_by_role('button', name=name, exact=True)).to_be_visible()
                 for name in ('Mind map', 'Quiz', 'Reports', 'Notes', 'Data Analytics', 'Spreadsheet', 'Deep Research'):
                     page.get_by_role('button', name=name, exact=True).click()
+                    if name != 'Notes':
+                        expect(page.get_by_role('dialog').locator('.studio-model')).to_contain_text('Qwen 3.8 27B')
                     page.get_by_role('button', name='Minimize tool', exact=True).click()
                     expect(page.get_by_role('dialog')).not_to_be_visible()
                     page.get_by_role('button', name=f'Restore {name}', exact=True).click()
@@ -92,7 +99,8 @@ def check():
                 page.reload()
                 page.wait_for_function('window.socket?.connected === true')
                 expect(page.locator('.assistant-message .nicegui-echart')).to_have_count(1)
-                expect(page.locator('.nicegui-echart svg path[fill="#6c9fe8"]')).to_have_count(2)
+                # Bars use SVG gradients; verify both rendered data marks.
+                expect(page.locator('.nicegui-echart svg path[fill^="url("]')).to_have_count(2)
                 page.wait_for_timeout(300)
                 page.locator('.nicegui-echart').scroll_into_view_if_needed()
                 page.screenshot(path=str(output / 'desktop.png'), full_page=True)

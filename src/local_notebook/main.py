@@ -3,14 +3,14 @@ import os
 from pathlib import Path
 
 from fastapi import HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from nicegui import app, ui
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 from urllib.parse import urlsplit
 
 from . import providers, storage as db
-from .config import DATA
+from .config import DATA, TEXT_ONLY
 from .ingestion import jobs
 from .seed import seed
 from .ui.common import header, theme
@@ -67,6 +67,19 @@ def configure():
         return FileResponse(path, filename=source["name"], media_type="application/octet-stream",
                             headers={"X-Content-Type-Options": "nosniff"})
 
+    @app.get("/image/{chunk_id}")
+    def evidence_image(chunk_id: str):
+        if TEXT_ONLY:
+            raise HTTPException(404, "Images are disabled in text-only mode")
+        from .ingestion.media import answer_images
+        chunk = db.one("""SELECT c.* FROM chunks c JOIN sources s ON s.id=c.source_id
+            WHERE c.id=? AND s.status IN ('ready','indexing') AND c.image!=''""", (chunk_id,))
+        if not chunk:
+            raise HTTPException(404, "Image evidence not found")
+        image = answer_images([chunk], limit=1)[0]
+        return Response(image['data'], media_type=image['mime_type'],
+                        headers={"X-Content-Type-Options": "nosniff"})
+
     ui.page("/", title="Folio · Your knowledge, connected")(home)
     ui.page("/notebook/{notebook_id}", title="Notebook · Folio")(workspace)
     from .ui.benchmarks import benchmark_page
@@ -77,7 +90,7 @@ def configure():
         theme()
         header("Source evidence")
         source = db.one("""SELECT c.*,s.name,s.url FROM chunks c JOIN sources s ON s.id=c.source_id
-            WHERE c.id=? AND s.status='ready'""", (chunk_id,))
+            WHERE c.id=? AND s.status IN ('ready','indexing')""", (chunk_id,))
         with ui.column().classes("p-10 max-w-4xl mx-auto w-full gap-5"):
             if not source:
                 ui.label("This passage is no longer available. Its source may have been removed or reindexed.")
@@ -86,6 +99,8 @@ def configure():
             ui.link("Back to notebook", f"/notebook/{source['notebook_id']}")
             ui.label(source["name"]).classes("text-3xl")
             ui.label(source["locator"]).classes("eyebrow")
+            if source.get('image'):
+                ui.image(f"/image/{chunk_id}").classes('w-full')
             ui.label(source["text"]).classes("whitespace-pre-wrap leading-loose text-base")
             ui.link("Download original", f"/original/{source['source_id']}")
             if source["url"]:

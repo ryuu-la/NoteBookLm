@@ -20,3 +20,4 @@ service-account*.json
 dist/
 build/
 test-results/
+*.partial.json

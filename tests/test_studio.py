@@ -46,7 +46,7 @@ def test_generation_saves_validated_quiz(indexed, monkeypatch):
 
 def test_generation_refuses_missing_provider(indexed, monkeypatch):
     monkeypatch.setattr(providers, "configured", lambda: False)
-    with pytest.raises(ValueError, match="Connect Gemini"):
+    with pytest.raises(ValueError, match="Configure your selected provider"):
         asyncio.run(generate(indexed[0], "quiz", retrieve(indexed[0], "light"), "Quiz"))
 
 
@@ -94,9 +94,67 @@ def test_invalid_streamed_map_is_not_saved(indexed, monkeypatch):
 
     monkeypatch.setattr(providers, 'configured', lambda: True)
     monkeypatch.setattr(providers, 'stream', stream)
-    with pytest.raises(ValueError, match='invalid source reference'):
+    with pytest.raises(ValueError, match='could not finish a valid mind map'):
         asyncio.run(generate(indexed[0], 'mindmap', retrieve(indexed[0], 'light'), 'Map'))
     assert not db.rows('SELECT * FROM artifacts WHERE notebook_id=?', (indexed[0],))
+
+
+@pytest.mark.parametrize('kind', ['mindmap', 'quiz'])
+@pytest.mark.parametrize('failure', ['truncated_json', 'output_limit', 'empty'])
+def test_studio_recovers_incomplete_output_before_saving(indexed, monkeypatch, kind, failure):
+    valid = ({'title': 'Biology', 'root': {'name': 'Photosynthesis', 'citations': [1]}}
+             if kind == 'mindmap' else {'title': 'Biology', 'questions': [{'question': 'What captures light?',
+                 'options': ['Chlorophyll', 'Sand'], 'answer': 0, 'explanation': 'Chlorophyll captures light.', 'citations': [1]}]})
+    calls, events = [], []
+    async def complete(system, prompt, **kwargs):
+        calls.append(kwargs)
+        assert 'No Markdown' in system
+        assert not db.rows('SELECT * FROM artifacts WHERE notebook_id=?', (indexed[0],))
+        if len(calls) == 1:
+            if failure == 'output_limit':
+                raise providers.OutputLimitError('Output limit')
+            if failure == 'empty':
+                raise providers.EmptyResponseError('No answer')
+            return '{"title":"Biology","root":{"name":"Photosyn'
+        assert 'COMPLETE valid JSON' in prompt
+        return json.dumps(valid)
+    monkeypatch.setattr(providers, 'configured', lambda: True)
+    monkeypatch.setattr(providers, 'complete', complete)
+    identifier = asyncio.run(generate(indexed[0], kind, retrieve(indexed[0], 'light'), 'Study', on_progress=events.append))
+    assert len(calls) == 2 and calls[1]['max_output_tokens'] > calls[0]['max_output_tokens']
+    assert any(event['stage'] == 'retrying' for event in events)
+    assert db.one('SELECT kind FROM artifacts WHERE id=?', (identifier,))['kind'] == kind
+    assert len(db.rows('SELECT * FROM artifacts WHERE notebook_id=?', (indexed[0],))) == 1
+
+
+def test_studio_stops_after_one_recovery_and_hides_parser_error(indexed, monkeypatch):
+    calls = []
+    async def complete(*args, **kwargs):
+        calls.append(1)
+        return '{"title":"Unterminated'
+    monkeypatch.setattr(providers, 'configured', lambda: True)
+    monkeypatch.setattr(providers, 'complete', complete)
+    with pytest.raises(ValueError, match='No incomplete result was saved') as error:
+        asyncio.run(generate(indexed[0], 'mindmap', retrieve(indexed[0], 'light'), 'Map'))
+    assert 'Unterminated' not in str(error.value)
+    assert len(calls) == 2
+    assert not db.rows('SELECT * FROM artifacts WHERE notebook_id=?', (indexed[0],))
+
+
+def test_invalid_json_preview_does_not_abort_stream(indexed, monkeypatch):
+    calls = []
+    async def stream(*args, **kwargs):
+        calls.append(1)
+        if len(calls) == 1:
+            yield r'{"title":"Bad draft","root":{"name":"Bad\q label","citations":[1]}}'
+        else:
+            yield '{"title":"Biology","root":{"name":"Photosynthesis","citations":[1]}}'
+    monkeypatch.setattr(providers, 'configured', lambda: True)
+    monkeypatch.setattr(providers, 'stream', stream)
+    events = []
+    result = asyncio.run(generate(indexed[0], 'mindmap', retrieve(indexed[0], 'light'), 'Map', on_progress=events.append))
+    assert len(calls) == 2
+    assert db.one('SELECT id FROM artifacts WHERE id=?', (result,))
 
 
 def test_gemini_connections_are_reused_and_closed(monkeypatch):

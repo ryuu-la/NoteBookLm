@@ -1,6 +1,112 @@
 Verification record
 ===================
 
+Faster CPU indexing · 2026-10-10
+-------------------------------
+
+On x86 CPUs, text-only Gemma now uses an OpenVINO FP32 graph with the same
+checkpoint, prompts, tokenizer, mean pooling and normalization. The graph is
+compiled once and cached locally. CUDA retains the PyTorch path. The override
+`NOTEBOOK_EMBED_BACKEND=pytorch` is available for comparison/debugging.
+
+Indexing groups similar text lengths and stores completion per text record,
+so restarting cannot skip records after the order changes. Existing sequential
+checkpoints are migrated. Fully cached imports do not initialize either model
+runtime. Source locations, embedding keys, and vector dimensions are unchanged.
+
+A local sample of 64 text sections from an uploaded PDF took 38.59 seconds in
+the previous runtime/order and 25.13 seconds with the new runtime/order: 1.54x
+throughput, or 35% less embedding time. No embedding-result cache was used in
+either measurement. Minimum output cosine agreement was 0.99999988 and maximum
+absolute vector difference was 2.98e-7. This measures the sample's embedding
+stage, not whole-library or first-install timing. First graph conversion and
+loading took 23.23 seconds and is already cached on this machine.
+
+Integrated Intel graphics was tested but did not provide enough additional
+benefit to replace the full-precision CPU path. Quantization was not enabled.
+The local timing report is `test-results/indexing-speed.json`.
+179 automated tests, Ruff and dependency checks passed. An isolated browser
+deleted a notebook during real indexing in 604.5 ms; health checks took 1.8–3.2 ms,
+cleanup completed and no JavaScript errors occurred.
+
+Text-only operation · 2026-10-10
+-------------------------------
+
+The active configuration now disables vision/audio loading, image uploads,
+image indexing, OCR, image evidence retrieval, image previews and LLM image
+attachments. Native document text uses the same Gemma model and embedding cache.
+Index version 4 rebuilds older source indexes with new citation IDs; originals
+and saved answers remain intact. Scanned PDFs need selectable text supplied
+before import. Retained multimodal helpers are tested only with an explicit
+test fixture that disables text-only mode. 177 tests and Ruff passed.
+
+Simpler indexing and answer compatibility · 2026-10-10
+----------------------------------------------------
+
+The source panel now shows Indexing/Ready without passage counts or batch details.
+The cached tokenizer makes extracted text available before loading Gemma's weights.
+On this six-core CPU, an eight-text/image probe took 4.85/3.70 seconds with six
+threads versus 5.76/4.38 seconds with four (about 15% less time, not a whole-file
+benchmark). CPU indexing of image-heavy books still takes minutes. An experimental
+INT8 conversion changed embeddings too much and was not enabled.
+
+A live synthetic-image probe confirmed that RunInfra's DeepSeek V4.1 Flash
+deployment accepts text only. Chat and Studio now use extracted text from the
+same source page for that deployment, preserving real citations and avoiding
+unsupported image payloads. Image-only evidence reports the model limitation.
+A live synthetic-text check successfully streamed a cited answer. 173 automated
+tests and Ruff passed.
+
+Indexing responsiveness fix · 2026-10-10
+---------------------------------------
+
+- Split model inference from vector-table locking; queries have priority between
+  small indexing batches. Checkpoints now commit every eight text passages.
+- Source and notebook deletion immediately remove the database records, with
+  durable file/vector cleanup after the import releases its resources.
+- Extracted text is searchable while embeddings build. Document-description
+  questions use source coverage without waiting for a query embedding.
+- Removed the forced 1,120-token image setting and restored the checkpoint's
+  native 280-token budget. Text embedding caches remain reusable; image cache
+  keys include the budget. Small image details may have lower retrieval fidelity;
+  extracted PDF text and answer attachments keep their existing resolution.
+- 171 tests and Ruff passed. Four authored raster diagrams still ranked first;
+  this is a small regression fixture, not a general accuracy measurement.
+- An isolated Edge check deleted a notebook during real Gemma indexing and
+  navigated home in 645 ms. Five health requests during indexing took 1.3–2.7 ms.
+  Deferred cleanup completed and no JavaScript errors were recorded.
+
+Reproduce the active-import UI check with `python scripts/responsiveness_check.py`.
+CPU embedding still takes time; deletion and browsing no longer wait for it.
+
+EmbeddingGemma 2 migration · 2026-10-10
+-------------------------------------
+
+EmbeddingGemma 2 is now the only retrieval model, with text and vision enabled and
+audio disabled. BGE/FastEmbed and MiniLM reranking were removed from runtime code,
+dependencies and settings. Old downloaded checkpoints were moved out of the active
+model cache into a reversible local archive.
+
+- 163 automated tests, Ruff and `pip check` passed.
+- 15 isolated offline Edge checks passed, including upload/indexing, settings,
+  benchmark charts/downloads and mobile width; no JavaScript errors were recorded.
+- Three repetitions of 54 authored text questions: recall@8 1.0000, MRR@8 0.9630,
+  nDCG@8 0.9684; warm median retrieval 63 ms and p95 144 ms on this machine.
+- The 12-case conversation fixture recovered all labeled answerable evidence and
+  rejected both unanswerable cases, with scope and routing checks passing.
+- Four authored raster diagrams were each retrieved first without OCR. After the
+  image relevance gate, each query attached only its matching diagram.
+
+These are development fixtures, not general or held-out accuracy claims. Generated
+answer quality was not evaluated in this migration. Existing personal PDFs were not
+modified by the tests; on next startup, their old indexes are queued for rebuilding.
+Originals, chat and stored citation snapshots remain; old citation IDs are never
+reused for different chunk boundaries. Visual indexing runs on CPU here and takes
+longer than text indexing.
+
+Earlier records below describe the previous retrieval pipeline; their performance
+and live-answer measurements do not establish Gemma performance or answer quality.
+
 Verified locally on 2026-09-16 using Python 3.11.9 on Windows, with 12 logical CPUs and approximately 15.8 GB RAM. This record describes measured behavior, not every aspiration in the initial project plan.
 
 Benchmark audit update · 2026-09-29

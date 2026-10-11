@@ -6,6 +6,16 @@ from local_notebook.retrieval import vectors
 
 
 @pytest.fixture
+def multimodal(monkeypatch):
+    """Exercise retained image helpers explicitly; the application defaults to text only."""
+    from local_notebook import providers
+    from local_notebook.ingestion import media
+    from local_notebook.retrieval import search
+    for module in (jobs, vectors, providers, media, search):
+        monkeypatch.setattr(module, 'TEXT_ONLY', False)
+
+
+@pytest.fixture
 def library(tmp_path, monkeypatch):
     for directory in (tmp_path / "originals", tmp_path / "vectors"):
         directory.mkdir()
@@ -13,7 +23,7 @@ def library(tmp_path, monkeypatch):
     monkeypatch.setattr(jobs, "DATA", tmp_path)
     monkeypatch.setattr(vectors, "DATA", tmp_path)
     db.initialize()
-    db.save_settings({"semantic": False, "rerank": False})
+    db.save_settings({"semantic": False})
     return db.create_notebook("Test notebook")
 
 

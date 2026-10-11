@@ -2,11 +2,14 @@ import asyncio
 import json
 import logging
 import re
+import time
 
 from nicegui import ui
 
 from .. import agent, chat, providers, research, storage as db
-from ..retrieval.workflow import ResearchWorkflow
+from ..config import RUNINFRA_MODELS
+from ..retrieval.workflow import source_evidence
+from .progress import RunProgress, saved_progress
 from .artifacts import note_editor
 from .common import error_message, error_text, header, notebook_dialog, theme, theme_toggle
 from .settings import settings_dialog
@@ -149,21 +152,41 @@ def chat_panel(book: dict):
                     research_mode = ui.select({'auto': 'Auto', 'sources': 'Sources', 'web': 'Agent'},
                                               value=saved_mode if saved_mode in {'auto', 'sources', 'web'} else 'auto').props(
                         'borderless dense options-dense hide-bottom-space aria-label="Research mode"').classes('research-mode')
-                    research_mode.tooltip('Agent can retrieve notebook documents, search the web, and read websites together')
-                    mode = ui.select({"fast": "Fast", "main": "Main"},
-                                     value="fast" if settings["provider"] == "Gemini" else "main").props(
+                    research_mode.tooltip('Use selected sources by default. Ask to search online when you need the web.')
+                    runinfra = settings['provider'] == 'RunInfra'
+                    mode = ui.select(RUNINFRA_MODELS if runinfra else {"fast": "Fast", "main": "Main"},
+                                     value=settings['model'] if runinfra else ('fast' if settings['provider'] == 'Gemini' else 'main')).props(
                                          'borderless dense options-dense hide-bottom-space aria-label="Answer model"').classes("model-select")
-                    mode.tooltip(f"Fast: {settings['fast_model']} · Main: {settings['model']}")
+                    with mode:
+                        model_tip = ui.tooltip(settings['model'] if runinfra else f"Fast: {settings['fast_model']} · Main: {settings['model']}")
+                    model_provider = {'value': settings['provider']}
+                    def select_model(event):
+                        if db.settings()['provider'] == 'RunInfra' and event.value in RUNINFRA_MODELS:
+                            db.save_settings({'runinfra_model': event.value})
+                            model_tip.set_text(event.value)
+                    mode.on_value_change(select_model)
                     stop_button = ui.button(icon="stop", on_click=lambda: state["task"].cancel() if state["task"] else None).props('round flat dense aria-label="Stop generation"').tooltip("Stop generation")
                     stop_button.visible = False
                     send_button = ui.button(icon="arrow_upward", color=None, on_click=lambda: ask(question.value)).props('round unelevated aria-label="Send question"').classes("send-btn").tooltip("Send question")
             ui.label("Folio can make mistakes. Check answers against your sources.").classes("composer-caption")
 
         def update_count():
+            current = db.settings()
+            if not state['busy']:
+                is_runinfra = current['provider'] == 'RunInfra'
+                if current['provider'] != model_provider['value']:
+                    model_provider['value'] = current['provider']
+                    mode.set_options(RUNINFRA_MODELS if is_runinfra else {'fast': 'Fast', 'main': 'Main'},
+                                     value=current['model'] if is_runinfra else 'fast')
+                elif is_runinfra and mode.value != current['model']:
+                    mode.set_value(current['model'])
+                model_tip.set_text(current['model'] if is_runinfra else f"Fast: {current['fast_model']} · Main: {current['model']}")
+                if is_runinfra:
+                    other_model_button.visible = False
             sources = db.sources(notebook_id)
-            count = sum(source["selected"] for source in sources if source["status"] == "ready")
+            count = sum(source["selected"] for source in sources if source["status"] in {"ready", "indexing"})
             source_count.set_text(f"{count} source{'s' if count != 1 else ''}")
-            web_request = research.use_web(question.value or '', research_mode.value, db.messages(notebook_id))
+            web_request = research.use_web(question.value or '', research_mode.value, db.messages(notebook_id), has_sources=bool(count))
             tool_request = agent.requested_tools(question.value or '')
             send_button.set_enabled(bool((count or web_request or tool_request) and (question.value or "").strip() and not state["busy"]))
             signature = [(row["id"], row["status"]) for row in sources]
@@ -220,13 +243,15 @@ def chat_panel(book: dict):
                     ui.button("Save and send", on_click=save).classes("primary-btn")
             dialog.open()
 
+        @providers.model_run
         async def generate(value, user_id=None):
             question_text = (value or "").strip()
             if not question_text or state["busy"]:
                 return
-            web_request = research.use_web(question_text, research_mode.value, db.messages(notebook_id))
+            web_request = research.use_web(question_text, research_mode.value, db.messages(notebook_id),
+                                           has_sources=any(s['selected'] and s['status'] in {'ready', 'indexing'} for s in db.sources(notebook_id)))
             tool_request = agent.requested_tools(question_text)
-            if not web_request and not tool_request and not any(row["selected"] and row["status"] == "ready" for row in db.sources(notebook_id)):
+            if not web_request and not tool_request and not any(row["selected"] and row["status"] in {"ready", "indexing"} for row in db.sources(notebook_id)):
                 ui.notify("Add or select a ready source to start a conversation.", position="top")
                 return
             state["busy"], state["task"] = True, asyncio.current_task()
@@ -250,13 +275,7 @@ def chat_panel(book: dict):
                 messages.refresh()
                 status.set_text("")
                 with live:
-                    with ui.column().classes("pending-answer") as skeleton:
-                        with ui.row().classes("thinking-label"):
-                            ui.icon("auto_awesome", size="18px")
-                            pending = ui.label("Searching your sources…").props('role=status')
-                    if web_request or tool_request:
-                        with ui.expansion('Agent activity', icon='travel_explore', value=True).classes('research-activity w-full'):
-                            activity = ui.column().classes('gap-1 w-full')
+                    pending = RunProgress()
                     with ui.column().classes("assistant-message streaming-answer w-full"):
                         markdown = ui.markdown("").classes("markdown w-full")
                 scroll_end(True)
@@ -266,9 +285,6 @@ def chat_panel(book: dict):
                 history[-1] = {**history[-1], "text": question_text}
                 def research_progress(text):
                     pending.set_text(text)
-                    with activity:
-                        ui.label(text).classes('text-xs muted')
-                    scroll_end()
 
                 if tool_request:
                     tool_run = await agent.run(notebook_id, question_text, history[:-1], web=web_request,
@@ -277,8 +293,9 @@ def chat_panel(book: dict):
                 elif web_request:
                     evidence = await research.research(notebook_id, question_text, history[:-1], research_progress, depth='quick')
                 else:
-                    evidence = await ResearchWorkflow(timeout=180).run(
-                        notebook_id=notebook_id, query=question_text, history=history[:-1])
+                    pending.set_text('Reading your selected sources')
+                    evidence = await source_evidence(notebook_id, question_text, history[:-1])
+                evidence = chat.fit_evidence(evidence, images_supported=providers.supports_images())
                 logging.getLogger(__name__).info(
                     "RAG route=%s mode=%s indexed=%s candidates=%s context=%d retrieval_ms=%d",
                     evidence.diagnostics.get('route'), evidence.mode,
@@ -286,26 +303,35 @@ def chat_panel(book: dict):
                     len(evidence.passages), evidence.elapsed_ms)
                 if evidence.warning:
                     logging.getLogger(__name__).info("RAG evidence scope: %s", evidence.warning)
-                pending.set_text("Preparing your answer…")
+                pending.set_text("Writing your answer")
                 if not evidence.passages and not (tool_run and tool_run.outputs):
-                    answer = "I couldn’t find evidence for that in the selected sources. Try a more specific question or add a source that covers it."
+                    answer = ("The selected answer model cannot read images. Select a vision-capable answer model to ask about this image."
+                              if 'cannot inspect images' in evidence.warning else
+                              "I couldn’t find evidence for that in the selected sources. Try a more specific question or add a source that covers it.")
                     markdown.set_content(answer)
                 elif not providers.configured():
-                    raise ValueError("Set GEMINI_API_KEY in the project .env and restart the server to get a source-grounded answer.")
+                    raise ValueError("Configure the selected provider's API key in .env and restart the server to get an answer.")
                 else:
                     extra = tool_run.answer_instruction() if tool_run else ''
+                    from ..ingestion.media import answer_images
+                    images = await asyncio.to_thread(answer_images, evidence.passages)
+                    last_paint = 0
                     async for token in providers.stream(chat.SYSTEM, chat.prompt(notebook_id, question_text, evidence, history=history) + extra,
-                                                        fast=mode.value == "fast", on_status=pending.set_text,
+                                                        fast=mode.value == "fast", on_status=pending.set_text, images=images,
                                                         **({'max_output_tokens': 12000} if tool_run and tool_run.deep else {})):
                         answer += token
                         if not first_token:
                             first_token = True
-                            skeleton.visible = False
-                        markdown.set_content(re.sub(r'\[\[tool:[a-z_]+\]\]', '', answer))
-                        scroll_end()
-                        await asyncio.sleep(0)
+                            logging.getLogger(__name__).info('Answer first_text_s=%.3f', time.perf_counter() - pending.started)
+                        now = time.perf_counter()
+                        if now - last_paint >= .06:
+                            markdown.set_content(re.sub(r'\[\[tool:[a-z_]+\]\]', '', answer))
+                            scroll_end()
+                            last_paint = now
+                            await asyncio.sleep(0)
+                    markdown.set_content(re.sub(r'\[\[tool:[a-z_]+\]\]', '', answer))
                 answer = chat.validate_citations(answer, evidence)
-                if web_request and research.references_documents(question_text) and chat.missing_comparison_citations(answer, evidence):
+                if web_request and research.wants_comparison(question_text) and chat.missing_comparison_citations(answer, evidence):
                     pending.set_text('Checking document and website citations…')
                     answer = ''
                     repaired = await providers.complete(
@@ -313,7 +339,7 @@ def chat_panel(book: dict):
                         + '\n\nWrite the requested comparison of notebook text versus websites. '
                         'Cite at least one relevant NOTEBOOK DOCUMENT and at least one WEBSITE. '
                         'Distinguish agreements and differences. Do not substitute a comparison of unrelated topics.',
-                        fast=mode.value == 'fast')
+                        fast=mode.value == 'fast', images=images)
                     answer = chat.validate_citations(repaired, evidence)
                     if chat.missing_comparison_citations(answer, evidence):
                         answer = ''
@@ -322,12 +348,13 @@ def chat_panel(book: dict):
                     raise ValueError("The model returned no answer. Try again or choose another model.")
                 citations = chat.cited_passages(answer, evidence)
                 if tool_run:
-                    agent.commit_answer(notebook_id, tool_run, answer, citations,
+                    assistant_id = agent.commit_answer(notebook_id, tool_run, answer, citations,
                                         user_id=user_id if is_revision else None, question=question_text)
                 elif is_revision:
-                    db.replace_turn(notebook_id, user_id, question_text, answer, citations)
+                    assistant_id = db.replace_turn(notebook_id, user_id, question_text, answer, citations)
                 else:
-                    db.add_message(notebook_id, "assistant", answer, citations)
+                    assistant_id = db.add_message(notebook_id, "assistant", answer, citations)
+                db.execute('INSERT OR REPLACE INTO message_runs VALUES (?,?)', (assistant_id, json.dumps(pending.snapshot())))
                 status.set_text("")
             except asyncio.CancelledError:
                 if answer and evidence and not is_revision:
@@ -343,7 +370,7 @@ def chat_panel(book: dict):
                 status.set_text(error_text(exc) + (' Your original conversation is kept.' if is_revision else ''))
                 retry_button.visible = True
                 other_model_button.set_text('Try Main model' if mode.value == 'fast' else 'Try Fast model')
-                other_model_button.visible = True
+                other_model_button.visible = db.settings()['provider'] != 'RunInfra'
             finally:
                 state["busy"], state["task"], state["revision"] = False, None, None
                 mode.enable()
@@ -366,7 +393,7 @@ def chat_panel(book: dict):
 
 def welcome(book, ask):
     sources = db.sources(book["id"])
-    ready = [source for source in sources if source["status"] == "ready"]
+    ready = [source for source in sources if source["status"] in {"ready", "indexing"}]
     with ui.column().classes("chat-welcome w-full"):
         with ui.element("div").classes("welcome-symbol"):
             ui.icon(book.get("icon", "auto_stories"), size="28px")
@@ -414,16 +441,15 @@ def message_view(item, notebook_id, *, on_edit, on_retry, busy=False, can_retry=
         number = citation["number"]
         text = re.sub(rf"\[{number}\](?!\()", lambda match: f"[{number}]({chat.citation_target(citation)})", text)
     with ui.column().classes("assistant-message w-full"):
-        if any(citation.get('kind') == 'web' for citation in citations):
-            mixed = any(citation.get('kind') != 'web' for citation in citations)
-            ui.label('Agent research · documents + web' if mixed else 'Agent research · website citations').classes('text-xs muted')
+        saved_progress(db.one('SELECT content FROM message_runs WHERE message_id=?', (item['id'],)))
         from .data_artifacts import message_results
         message_results(item['id'], text, answer_content)
         if citations:
-            with ui.row().classes("citation-chips w-full"):
-                for citation in citations:
-                    origin = 'Web' if citation.get('kind') == 'web' else 'Document'
-                    ui.link(f"{citation['number']} · {origin} · {citation['name']}", chat.citation_target(citation), new_tab=True).classes("citation-chip").tooltip(citation.get('url') or citation["name"])
+            with ui.expansion(f'Sources · {len(citations)}', value=False).classes('citation-toggle w-full').props('dense'):
+                with ui.row().classes("citation-chips w-full"):
+                    for citation in citations:
+                        origin = 'Web' if citation.get('kind') == 'web' else 'Document'
+                        ui.link(f"{citation['number']} · {origin} · {citation['name']}", chat.citation_target(citation), new_tab=True).classes("citation-chip").tooltip(citation.get('url') or citation["name"])
         with ui.row().classes("message-actions"):
             ui.button(icon="content_copy", on_click=lambda: ui.clipboard.write(item["text"])).props('flat dense round size=sm aria-label="Copy answer"').classes("muted").tooltip("Copy answer")
             retry = ui.button(icon="refresh", on_click=on_retry).props('flat dense round size=sm aria-label="Retry answer"').classes("muted").tooltip("Retry answer from this question")
@@ -486,15 +512,18 @@ def delete_notebook_dialog(book):
         ui.label("All its sources, conversations, and saved study materials will be removed.").classes("muted")
 
         async def remove():
-            from ..ingestion.jobs import delete_source
+            from ..ingestion.jobs import delete_notebook
             try:
-                for source in db.sources(book["id"]):
-                    await asyncio.to_thread(delete_source, source["id"])
-                db.execute("DELETE FROM notebooks WHERE id=?", (book["id"],))
+                delete_button.disable()
+                delete_button.props('loading')
+                await asyncio.to_thread(delete_notebook, book["id"])
+                dialog.close()
                 ui.navigate.to("/")
             except Exception as exc:
                 error_message(exc)
+                delete_button.enable()
+                delete_button.props(remove='loading')
         with ui.row().classes("w-full justify-end"):
             ui.button("Cancel", on_click=dialog.close).props("flat")
-            ui.button("Delete notebook", on_click=remove).props("color=negative")
+            delete_button = ui.button("Delete notebook", on_click=remove).props("color=negative")
     dialog.open()

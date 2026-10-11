@@ -16,6 +16,9 @@ def benchmark_page():
         rag_path = Path(__file__).resolve().parents[1] / 'assets/rag-evaluation.json'
         if rag_path.exists():
             rag = json.loads(rag_path.read_text(encoding='utf-8'))
+            if rag.get('embedding_model') != 'google/embeddinggemma-2':
+                ui.label('Historical conversation evaluation from before the Gemma migration; '
+                         'rerun benchmarks/rag.py for current results.').classes('muted')
             summary = rag['summary']
             ui.label('Conversation RAG evaluation').classes('text-2xl')
             ui.label('Evaluation gates passed' if rag['passed'] else 'Evaluation gates failed — judgments need review').classes('text-sm muted')
@@ -70,11 +73,15 @@ def benchmark_page():
             ui.label("No benchmark results yet. Run python benchmarks/retrieval.py from the project folder.")
             return
         data = json.loads(path.read_text(encoding="utf-8"))
+        if data.get('embedding_model') != 'google/embeddinggemma-2':
+            ui.label('Historical retrieval measurements from before the EmbeddingGemma 2 migration. '
+                     'Run benchmarks/retrieval.py to measure the current pipeline.').classes('muted')
         results = data["results"]
         names = [row["name"] for row in results]
         with ui.element('div').classes('w-full gap-4').style('display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))'):
             for value, label in [(data["queries"], "LABELED QUESTIONS"), (data["passages"], "PUBLIC PASSAGES"),
-                                 ("BGE + MiniLM", "LOCAL CPU MODELS")]:
+                                 ('EmbeddingGemma 2' if data.get('embedding_model') == 'google/embeddinggemma-2'
+                                  else 'Historical run', "RETRIEVAL MODEL")]:
                 with ui.card().classes("panel p-5"):
                     ui.label(str(value)).classes("text-2xl")
                     ui.label(label).classes("eyebrow mt-2")

@@ -11,7 +11,7 @@ from .chat import fit_evidence
 from .ingestion import discovery
 from .ingestion.web_reader import normalize_url, read_page
 from .retrieval.search import Evidence, query_terms, selected_sources
-from .retrieval.workflow import ResearchWorkflow, contextual_query
+from .retrieval.workflow import ResearchWorkflow, contextual_query, is_overview, source_evidence
 
 MAX_SEARCHES = 4
 MAX_DOCUMENT_SEARCHES = 3
@@ -48,19 +48,21 @@ def wants_web(question: str) -> bool:
         question, re.I))
 
 
-def use_web(question: str, mode='auto', history=()) -> bool:
+def use_web(question: str, mode='auto', history=(), *, has_sources=False) -> bool:
     if re.search(r"\b(?:don't|do not|never|without|no)\b.{0,35}\b(?:web|online|internet|search)\b", question, re.I):
         return False
-    if mode != 'auto':
-        return mode == 'web'
+    if mode == 'sources':
+        return False
     if wants_web(question):
         return True
+    if has_sources and (is_overview(question) or references_documents(question)):
+        return False
     if re.search(r"\b(?:don't|do not|without|only|my sources)\b", question, re.I):
         return False
     previous = next((item for item in reversed(history) if item['role'] == 'assistant'), None)
     if previous and re.search(r'\b(it|that|this|these|those|more|they|them)\b', question, re.I):
         return any(item.get('kind') == 'web' for item in json.loads(previous.get('citations', '[]')))
-    return False
+    return mode == 'web' and not has_sources
 
 
 def excerpt(text: str, query: str, limit=6500) -> str:
@@ -87,6 +89,11 @@ async def decide(state: dict) -> dict:
 def references_documents(question: str) -> bool:
     return bool(re.search(r'\b(?:our|my|the|uploaded|attached|selected|provided)\b.{0,35}\b(?:text|book|source|document|pdf|notes|chapter)|\b(?:notebook|uploaded|attached)\b',
                           question, re.I))
+
+
+def wants_comparison(question):
+    return bool(re.search(r'\b(compare|comparison|contrast|versus|vs|differ|agreement)\b', question, re.I)
+                and references_documents(question))
 
 
 async def retrieve_documents(notebook_id: str, query: str) -> Evidence:
@@ -116,9 +123,99 @@ async def search_web(query: str, on_status) -> tuple[list[dict], list[str]]:
     return [], errors
 
 
+QUICK_SEARCH_TIMEOUT = 8
+QUICK_READ_TIMEOUT = 10
+
+
+async def quick_research(notebook_id, question, history=(), on_status=lambda text: None):
+    """Search once, read a bounded batch, return evidence. Zero LLM planning turns."""
+    started = time.perf_counter()
+    topic = contextual_query(question, list(history))
+    inventory = selected_sources(notebook_id)
+    needs_docs = bool(inventory and (references_documents(question) or wants_comparison(question)))
+    if needs_docs:
+        topic = ' '.join(s['name'] for s in inventory[:2]) + ' ' + topic
+    query = ' '.join(t for t in query_terms(topic) if t not in FILLER)[:260] or question[:260]
+    errors, trace, pages, searches = [], [], [], []
+
+    def report(message):
+        trace.append(message)
+        on_status(message)
+
+    async def documents():
+        if not needs_docs:
+            return Evidence([], 'Documents', 0)
+        report('Reading your selected sources')
+        try:
+            local_question = re.sub(r'https?://[^\s<>]+', '', question)
+            topics = [t for t in query_terms(local_question)
+                      if t not in {'compare', 'contrast', 'versus', 'vs', 'text', 'book', 'uploaded', 'selected', 'online', 'web'}]
+            return await source_evidence(notebook_id, local_question if topics else 'source overview', history)
+        except Exception:
+            errors.append('Selected source retrieval was unavailable.')
+            return Evidence([], 'Documents', 0)
+
+    async def websites():
+        candidates = [{'url': u.rstrip('.,;'), 'title': 'Provided link'}
+                      for u in re.findall(r'https?://[^\s<>]+', question)]
+        if not candidates:
+            for engine in ('DuckDuckGo', 'Multi-engine'):
+                report('Searching the web' if engine == 'DuckDuckGo' else 'Trying another search service')
+                searches.append(query)
+                try:
+                    candidates = await asyncio.wait_for(discovery.discover(query, engine), QUICK_SEARCH_TIMEOUT)
+                    if candidates:
+                        break
+                except Exception:
+                    errors.append(f'{engine} search was unavailable.')
+        chosen, seen, hosts = [], set(), set()
+        # Prefer different sites, then fill remaining slots. Never cite snippets.
+        for diverse in (True, False):
+            for item in candidates:
+                try:
+                    url = normalize_url(item['url'])
+                except (ValueError, KeyError):
+                    continue
+                host = urlparse(url).hostname
+                if url in seen or (diverse and host in hosts) or len(chosen) >= 4:
+                    continue
+                seen.add(url)
+                hosts.add(host)
+                chosen.append(url)
+        if chosen:
+            report(f'Reading {len(chosen)} web pages in parallel')
+        async def read(url):
+            try:
+                page = await asyncio.wait_for(read_page(url), QUICK_READ_TIMEOUT)
+                pages.append(page)
+                report('Read ' + str(urlparse(page['url']).hostname))
+            except Exception:
+                errors.append('A web page could not be read.')
+        await asyncio.gather(*(read(url) for url in chosen))
+
+    docs, _ = await asyncio.gather(documents(), websites())
+    documents_passages = [{**p, 'kind': 'document'} for p in docs.passages]
+    web = [{'id': 'web-' + hashlib.sha256(p['url'].encode()).hexdigest()[:16], 'kind': 'web',
+            'name': p['title'], 'url': p['url'], 'locator': p['url'], 'source_id': '',
+            'text': excerpt(p['text'], topic)} for p in pages]
+    if not web and not documents_passages:
+        raise ValueError('No readable web evidence was found. Try a specific topic or a public URL.')
+    warning = docs.warning
+    if not web:
+        warning += ' Requested web search failed; answer only from the available documents and mention that briefly.'
+    if wants_comparison(question) and not documents_passages:
+        warning += ' Requested comparison lacks selected document evidence; briefly identify this gap.'
+    return fit_evidence(Evidence(combine_evidence(documents_passages, web), 'Quick research',
+        round((time.perf_counter() - started) * 1000), warning.strip(),
+        {'route': 'quick_web', 'planner_calls': 0, 'searches': searches, 'pages_read': len(web),
+         'trace': trace, 'errors': errors, 'document_passages': len(documents_passages)}))
+
+
 async def research(notebook_id: str, question: str, history: list[dict], on_status=lambda text: None,
                    *, depth: str = 'standard') -> Evidence:
     """Let the model choose searches and reads, then return transient cited evidence."""
+    if depth == 'quick':
+        return await quick_research(notebook_id, question, history, on_status)
     started = time.monotonic()
     max_searches, max_pages, max_steps, time_budget = {
         'quick': (2, 4, 6, 75), 'deep': (10, 24, 26, 420),
@@ -132,7 +229,7 @@ async def research(notebook_id: str, question: str, history: list[dict], on_stat
     coverage = ''
     inventory = selected_sources(notebook_id)
     document_queries, documents = [], []
-    needs_documents = references_documents(question)
+    needs_documents = wants_comparison(question)
 
     def report(text):
         trace.append(text)
@@ -264,8 +361,9 @@ async def research(notebook_id: str, question: str, history: list[dict], on_stat
                  'locator': page['url'], 'text': excerpt(page['text'], topic + ' ' + ' '.join(searches)), 'source_id': ''}
                 for page in pages]
     passages = combine_evidence(documents, passages)
-    warning = 'Evidence is labeled NOTEBOOK DOCUMENT or WEBSITE. Compare their claims explicitly when requested, citing both. '
-    warning += 'Do not replace a document-versus-web comparison with a comparison of different topics. '
+    warning = ''
+    if needs_documents:
+        warning = 'Compare the requested document and website claims, citing both when available. '
     if needs_documents and not documents:
         warning += 'No matching selected notebook evidence was available. Explicitly say the requested comparison with the text could not be completed. '
     if not pages:

@@ -10,21 +10,21 @@ substitute answer made from pasted excerpts.
 1. Route the current question independently of previous conversation. A previous
    “key ideas” request must not turn a new FastAPI question into an overview.
 2. Resolve referential follow-ups against conversation; explicit new topics stand alone.
-3. Search SQLite FTS/BM25 and BGE embeddings with notebook/source filters applied before
+3. Search SQLite FTS/BM25 and EmbeddingGemma 2 embeddings with notebook/source filters applied before
    candidate selection. Resolve spaced compound names when the joined term exists in the
    selected index. Comparison requests also search their two aspects.
-4. Fuse candidate rankings, rerank a bounded shortlist with MiniLM, deduplicate identical
-   text, and fit the evidence to the prompt budget. The default rerank shortlist is 16.
-5. Abstain when no evidence is found. In reranked mode, reject a query when even its
-   strongest candidate scores below -8. This is a conservative heuristic on MiniLM logits,
+4. Fuse candidate rankings, deduplicate text/image evidence, and fit it to the prompt budget.
+   EmbeddingGemma 2 is the only retrieval model; there is no separate reranker.
+5. Abstain when no evidence is found. Filter weak dense-only candidates using cosine similarity.
+   The threshold is a retrieval heuristic,
    **not a calibrated confidence probability**. Evaluate it when changing models or domains.
 6. Stream a synthesized answer grounded in those passages. Citation numbers resolve to
    the exact evidence sent to the model, including grouped references such as `[1, 2]`.
 
-New semantic imports use the embedding model's own tokenizer, with 384-token chunks and
-48-token overlap, preferring nearby sentence boundaries. This avoids the previous mismatch
-between 600-token chunks and the embedder's 512-token limit. Old saved indexes remain readable;
-use the source's Reindex action to apply the new chunk boundaries to an existing document.
+New semantic imports use the embedding model's own tokenizer, with 512-token chunks and
+64-token overlap, preferring nearby sentence boundaries. This avoids the previous mismatch
+between chunk size and the embedding tokenizer. Older sources are queued for rebuilding
+automatically at startup; old BGE vectors are never queried with Gemma embeddings.
 Interrupted indexes from the older chunking version restart safely rather than reusing an
 incompatible ordinal checkpoint.
 
@@ -48,9 +48,10 @@ retrieval does not mean every passage is inserted into every prompt.
 .venv/Scripts/python.exe -m pytest -q
 .venv/Scripts/python.exe benchmarks/rag.py --keyword --output test-results/rag-keyword.json
 
-# Actual local embeddings + reranker, plus the existing ranking benchmark
+# Actual local EmbeddingGemma 2 embeddings, plus the existing ranking benchmark
 .venv/Scripts/python.exe benchmarks/rag.py
 .venv/Scripts/python.exe benchmarks/retrieval.py
+.venv/Scripts/python.exe benchmarks/multimodal.py
 
 # Live generation + a separate model judging claim support (provider usage applies)
 # Keys come from the project .env or process environment, never CLI arguments.
@@ -65,8 +66,8 @@ accuracy benchmark. It covers the reported follow-up, spaced names,
 pronouns, topic switches, paraphrases, two-source comparisons, limitations, and absent
 answers. Additional deselected and other-notebook canaries check scope isolation.
 
-The older benchmark has 54 questions over 40 authored passages and compares lexical,
-hybrid, and reranking configurations. Recall@8 measures labeled evidence coverage; MRR
+The ranking benchmark has 54 questions over 40 authored passages and compares keyword
+and Gemma hybrid configurations. Recall@8 measures labeled evidence coverage; MRR
 and nDCG measure ranking. [Metric definitions](https://www.sbert.net/docs/package_reference/sentence_transformer/evaluation.html).
 
 The live mode separately records answers, generation durations, citation validity,
@@ -93,6 +94,11 @@ or using API credentials. Run hybrid and live evaluations before a retrieval/mod
 Open `/benchmarks` for per-question evidence and downloadable JSON. Reports record the
 fixture hash, model names, mode, timestamp, and whether answers were actually generated.
 API-free runs must not be presented as measured answer accuracy.
+The published October 10 Gemma run is retrieval-only: recall@8 is 1.0 on both authored
+text fixtures, with both negative conversation cases rejected. Four authored raster
+diagrams were each retrieved first using native image embeddings, with no OCR. These
+development checks are not held-out real-world accuracy measurements. Dense-only
+text/image similarity cutoffs are 0.65/0.62 and require domain-specific evaluation.
 The default output is `test-results/rag-evaluation.json`, so an API-free run cannot silently
 replace the published live-answer report. Publishing to the app requires an explicit
 `--output src/local_notebook/assets/rag-evaluation.json` after reviewing the intended run.

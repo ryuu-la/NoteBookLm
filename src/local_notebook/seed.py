@@ -44,7 +44,7 @@ This is an original introductory sample, not a benchmark or a published research
 
 Retrieval-augmented generation (RAG) combines a search system with a language model. Documents are parsed into passages. An embedding model maps passages to numeric vectors. A query is embedded using the same model, and vector similarity finds semantically related passages.
 
-Keyword search complements vector search by matching exact names, codes, and technical terms. A hybrid retriever combines both rankings. Reciprocal rank fusion adds a decreasing score based on each result's position in each ranking. A cross-encoder reranker then compares the question and candidate passage together to improve relevance ordering.
+Keyword search complements vector search by matching exact names, codes, and technical terms. A hybrid retriever combines both rankings. Reciprocal rank fusion adds a decreasing score based on each result's position in each ranking. EmbeddingGemma 2 provides a shared vector space for text and images; relevant visual evidence can be attached to the answer model alongside text.
 
 The language model receives selected passages as evidence and generates an answer. Citations should link claims to their original source locations. RAG does not guarantee truth: poor parsing, missing evidence, irrelevant retrieval, or unsupported generation can still produce errors. Evaluation should measure retrieval recall and citation support separately.
 

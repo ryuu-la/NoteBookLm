@@ -3,7 +3,7 @@ import re
 
 
 class EmbeddingSplitter:
-    def __init__(self, tokenizer, size=384, overlap=48):
+    def __init__(self, tokenizer, size=512, overlap=64):
         from tokenizers import Tokenizer
         # The embedding model's tokenizer is shared with concurrent searches.
         # Clone it before disabling truncation/padding for full-document offsets.
@@ -11,6 +11,9 @@ class EmbeddingSplitter:
         self.tokenizer.no_truncation()
         self.tokenizer.no_padding()
         self.size, self.overlap = size, overlap
+
+    def token_count(self, text):
+        return len(self.tokenizer.encode(text, add_special_tokens=False).ids)
 
     def split_text(self, text):
         offsets = self.tokenizer.encode(text, add_special_tokens=False).offsets
@@ -36,7 +39,14 @@ class EmbeddingSplitter:
 
 def make_splitter(semantic):
     if semantic:
+        from ..config import MODEL_CACHE, EMBED_MODEL, EMBED_REVISION
+        from tokenizers import Tokenizer
+        tokenizer_path = (MODEL_CACHE / ('models--' + EMBED_MODEL.replace('/', '--'))
+                          / 'snapshots' / EMBED_REVISION / 'tokenizer.json')
+        if tokenizer_path.exists():
+            # Reading the document must not wait for hundreds of MB of model weights.
+            return EmbeddingSplitter(Tokenizer.from_file(str(tokenizer_path)))
         from ..retrieval.vectors import embedding_model
-        return EmbeddingSplitter(embedding_model().model.tokenizer)
+        return EmbeddingSplitter(embedding_model().tokenizer)
     from llama_index.core.node_parser import SentenceSplitter
     return SentenceSplitter(chunk_size=600, chunk_overlap=70)

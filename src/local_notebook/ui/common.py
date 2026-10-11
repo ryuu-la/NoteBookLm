@@ -9,7 +9,7 @@ from ..config import STYLES
 def theme():
     ui.context.client.folio_dark = ui.dark_mode(db.settings().get('theme', 'dark') != 'light')
     ui.colors(primary="#a8c7fa", secondary="#c2b5ea", accent="#c2b5ea", dark="#1b1d20", positive="#a8d5ba", negative="#f2aaa5")
-    for filename in ("base.css", "home.css", "workspace.css", "mindmap.css", "light.css"):
+    for filename in ("base.css", "home.css", "workspace.css", "mindmap.css", "light.css", "polish.css"):
         ui.add_css((STYLES / filename).read_text(encoding="utf-8"))
 
 

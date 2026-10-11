@@ -1,11 +1,11 @@
 from nicegui import events, run, ui
 
 from .. import storage as db
-from ..config import MAX_UPLOAD
+from ..config import MAX_UPLOAD, TEXT_ONLY
 from ..ingestion import jobs
-from ..ingestion.parsers import SUPPORTED
+from ..ingestion.parsers import SUPPORTED, IMAGE_TYPES
 from ..ingestion.web import fetch
-from .common import empty, error_message, filename_label, source_icon
+from .common import empty, error_message, error_text, filename_label, source_icon
 
 
 def add_sources_dialog(notebook_id: str):
@@ -31,8 +31,8 @@ def add_sources_dialog(notebook_id: str):
                 ui.upload(on_upload=uploaded, multiple=True, auto_upload=True, max_file_size=MAX_UPLOAD,
                           on_rejected=lambda: ui.notify("File exceeds the 150 MB limit", type="negative"),
                           label="Drop your sources here, or browse").props(
-                              f"accept={','.join(sorted(SUPPORTED))} flat bordered").classes("source-upload w-full")
-                ui.label("PDF, Word, slides, spreadsheets, CSV, text, and images · 150 MB per file").classes("text-xs muted mt-3")
+                              f"accept={','.join(sorted(SUPPORTED - IMAGE_TYPES if TEXT_ONLY else SUPPORTED))} flat bordered").classes("source-upload w-full")
+                ui.label("PDF, Word, slides, spreadsheets, CSV, and text · 150 MB per file").classes("text-xs muted mt-3")
                 ui.label("Uploads are indexed in the background. Follow their progress in Sources.").classes("text-xs muted mt-2")
                 ui.button("Done", on_click=dialog.close).props("flat").classes("mt-3")
             with ui.tab_panel(web_tab).classes("p-0"):
@@ -43,6 +43,7 @@ def add_sources_dialog(notebook_id: str):
                     import_button.disable()
                     import_button.props("loading")
                     status.set_text("Reading the page…")
+                    paste_button.visible = False
                     try:
                         name, data, final_url = await run.io_bound(fetch, url.value.strip())
                         await run.io_bound(jobs.add_file, notebook_id, name, data, final_url)
@@ -50,12 +51,16 @@ def add_sources_dialog(notebook_id: str):
                         dialog.close()
                     except Exception as exc:
                         error_message(exc)
-                        status.set_text("Try a public article URL, or paste the text in the next tab.")
+                        status.set_text(error_text(exc))
+                        paste_button.visible = True
                     finally:
                         import_button.enable()
                         import_button.props(remove="loading")
 
                 import_button = ui.button("Add website", icon="add_link", on_click=import_url).classes("primary-btn mt-4")
+                paste_button = ui.button('Paste article text', icon='content_paste',
+                                         on_click=lambda: tabs.set_value(text_tab)).props('flat')
+                paste_button.visible = False
             with ui.tab_panel(text_tab).classes("p-0"):
                 title = ui.input("Source title", placeholder="Lecture notes").props("outlined").classes("w-full")
                 text = ui.textarea("Your text").props("outlined rows=8").classes("w-full")
@@ -85,15 +90,17 @@ def source_preview(source: dict):
             ui.link("Open original website", source["url"], new_tab=True).classes("text-sm")
         else:
             ui.link("Open original file", f"/original/{source['id']}", new_tab=True).classes("text-sm")
-        timing = f" · Indexed in {source['elapsed_seconds']:.1f}s" if source.get("elapsed_seconds") else ""
-        ui.label(f"{source['chunks']:,} searchable passages" + timing).classes("muted text-xs")
-        chunks = db.rows("SELECT * FROM chunks WHERE source_id=? ORDER BY ordinal LIMIT 80", (source["id"],))
+        ui.label('Ready' if source['status'] == 'ready' else 'Indexing…').classes("muted text-xs")
+        chunks = db.rows("SELECT * FROM chunks WHERE source_id=? AND (?=0 OR image='') ORDER BY ordinal LIMIT 80",
+                        (source["id"], int(TEXT_ONLY)))
         with ui.scroll_area().classes("w-full h-96"):
             for chunk in chunks:
                 ui.label(chunk["locator"]).classes("eyebrow mt-4 mb-2")
+                if chunk.get('image'):
+                    ui.image(f"/image/{chunk['id']}").classes('w-full')
                 ui.label(chunk["text"]).classes("whitespace-pre-wrap leading-relaxed text-sm")
         if source["chunks"] > 80:
-            ui.label("Preview shows the first 80 passages. Search chat to find evidence throughout the file.").classes("muted text-xs")
+            ui.label("Preview shortened. Ask a question to search the whole document.").classes("muted text-xs")
     dialog.open()
 
 
@@ -174,14 +181,14 @@ def source_panel(notebook_id: str, on_collapse=None):
                 label, bar, detail = controls[source["id"]]
                 status, percent = source["status"], source["progress"]
                 if status == "ready":
-                    label.set_text(f"{source['chunks']} passage{'s' if source['chunks'] != 1 else ''} · indexed")
+                    label.set_text("Ready")
                 else:
-                    label.set_text({"queued": "Waiting to index", "parsing": "Reading document", "indexing": "Building search index", "error": "Needs attention", "cancelled": "Import cancelled"}.get(status, status) + (f" · {percent}%" if status in {"parsing", "indexing"} and percent else ""))
+                    label.set_text({"queued": "Waiting…", "parsing": "Indexing…", "indexing": "Indexing…", "error": "Needs attention", "cancelled": "Cancelled"}.get(status, status) + (f" {percent}%" if status in {"parsing", "indexing"} and percent else ""))
                 bar.visible = status in {"queued", "parsing", "indexing"}
                 bar.set_value(percent / 100)
                 bar.props("indeterminate" if not percent else "", remove="indeterminate" if percent else "")
-                detail.set_text(source["error"] if status == "error" else (source.get("detail") or ""))
-                detail.visible = status in {"parsing", "indexing", "error"}
+                detail.set_text(source["error"] if status == "error" else "")
+                detail.visible = status == "error"
 
         with ui.element("div").classes("source-list"):
             listing()
@@ -205,7 +212,7 @@ def source_panel(notebook_id: str, on_collapse=None):
 def remove_dialog(source):
     with ui.dialog() as dialog, ui.card().classes("modal-card"):
         ui.label("Remove this source?").classes("text-xl")
-        ui.label("The original and search passages will be removed. Saved notes and answers may still quote this source.").classes("muted")
+        ui.label("This source will be removed. Saved notes and answers may still quote it.").classes("muted")
 
         async def remove():
             try:

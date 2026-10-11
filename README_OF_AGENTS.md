@@ -42,7 +42,7 @@ from this repository's `pyproject.toml`, `requirements-lock-windows.txt`,
 | What | Local, NotebookLM-style study app: upload sources → chat with citations → Studio (mind maps, quizzes, reports, notes, data analytics, spreadsheets, deep research) |
 | Language | Python only |
 | UI + backend | **[NiceGUI](https://nicegui.io) ≥3,<4** — one single process serves both the web UI and the backend. There is **no separate frontend/backend** to start and **no Node.js/npm** step. |
-| Retrieval | LlamaIndex chunking, `BAAI/bge-small-en-v1.5` local embeddings (FastEmbed), LanceDB vectors, SQLite FTS5/BM25, reciprocal-rank fusion, MiniLM cross-encoder reranker |
+| Retrieval | LlamaIndex chunking, `google/embeddinggemma-2` local text/image embeddings (Sentence Transformers), LanceDB vectors, SQLite FTS5/BM25, reciprocal-rank fusion |
 | LLM | Google Gemini (needs your own API key) **or** any OpenAI-compatible endpoint (e.g. Ollama/LM Studio) |
 | Storage | Fully local, in `<project>/.data/` |
 | Default URL | http://127.0.0.1:8080 |
@@ -61,9 +61,9 @@ from this repository's `pyproject.toml`, `requirements-lock-windows.txt`,
 | **pip** | Bundled with Python (upgrade it: `python -m pip install -U pip`) |
 | **venv** | Bundled with Python (on Debian/Ubuntu install `python3-venv`) |
 | **Git** | Only needed to clone the repository |
-| **Disk space** | ~2–3 GB free (virtualenv + ~100–200 MB embedding/reranker models + your data) |
+| **Disk space** | Several GB free (PyTorch runtime + EmbeddingGemma 2 checkpoint + your data) |
 | **RAM** | 4 GB minimum, 8 GB+ recommended |
-| **Internet** | Needed once to install packages and download the embedding/reranker models, and afterwards for Gemini / web search features |
+| **Internet** | Needed once to install packages and download the EmbeddingGemma 2 models, and afterwards for Gemini / web search features |
 | **An LLM** | A `GEMINI_API_KEY` **or** a local/remote OpenAI-compatible server. Without one the app runs, but chat/Studio generation is disabled and the app tells you to configure `.env`. |
 | **Browser** | Any modern browser to open the UI (Chrome/Edge/Firefox) |
 
@@ -73,7 +73,7 @@ From `pyproject.toml`:
 
 ```
 nicegui>=3.0,<4          llama-index-core>=0.12,<0.15   lancedb>=0.20,<0.30
-fastembed>=0.6,<0.9      google-genai>=1.0,<3           httpx>=0.28,<1
+sentence-transformers[image]==6.1.0      google-genai>=1.0,<3           httpx>=0.28,<1
 pypdf>=5,<7              pypdfium2>=4,<6                python-docx>=1.1,<2
 python-pptx>=1,<2        openpyxl>=3.1,<4               beautifulsoup4>=4.12,<5
 fpdf2>=2.8,<3            python-dotenv>=1,<2            defusedxml>=0.7,<1
@@ -86,7 +86,7 @@ Optional extras:
 | --- | --- | --- |
 | `ocr` | `rapidocr-onnxruntime>=1.4` | OCR for scanned PDFs / images (**recommended**) |
 | `dev` | `pytest`, `ruff`, `psutil`, `playwright`, `matplotlib` | Tests, lint, browser checks, benchmark plots |
-| `advanced` | `docling`, `sentence-transformers` | Reserved for future adapters — **not used** by the default pipeline; skip it |
+| `advanced` | `docling` | Reserved for future adapters — **not used** by the default pipeline; skip it |
 
 ### 2.3 Optional system software
 
@@ -153,14 +153,14 @@ python -m venv .venv
 `requirements-lock-windows.txt` is the exact verified Windows dependency
 snapshot. **Use it on Windows only.**
 
-### 4.4 Download the local retrieval models (one-time, ~100–200 MB)
+### 4.4 Download EmbeddingGemma 2 (one-time, allow several GB for model and runtime)
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\download_models.py
 ```
 
-Expected output ends with lines like `Embedding dimensions: 384` and
-`Reranker check: 1`. Models are cached under `.data\models\`.
+Expected output ends with lines like `Embedding dimensions: 768` and
+`EmbeddingGemma 2 ready for local text and image retrieval (audio disabled).`. Models are cached under `.data\models\`.
 (If you skip this step the models are downloaded lazily on first use, which
 makes the first import/question slow.)
 
@@ -267,7 +267,7 @@ Open **http://127.0.0.1:8080**.
 | --- | --- | --- |
 | `NOTEBOOK_PORT` | `8080` | HTTP port (host is always `127.0.0.1`) |
 | `NOTEBOOK_DATA_DIR` | `<PROJECT>/.data` | Where the DB, vectors, uploads, logs live |
-| `NOTEBOOK_MODEL_DIR` | `<DATA>/models` | Embedding/reranker model cache |
+| `NOTEBOOK_MODEL_DIR` | `<DATA>/models` | EmbeddingGemma 2 model cache |
 | `NOTEBOOK_EMBED_THREADS` | `min(4, cpu/2)` (1–8) | CPU threads used for embeddings |
 | `NOTEBOOK_NO_SAMPLE` | unset | `1` = do not seed the sample notebook |
 | `NOTEBOOK_OFFLINE` | unset | `1` = force "no model configured" (no cloud calls) |
@@ -426,7 +426,7 @@ deterministic fixtures, no live provider):
 │  ├─ providers.py                # Gemini + OpenAI-compatible adapters
 │  ├─ chat.py · agent.py          # answers, agent/tool orchestration
 │  ├─ studio.py · data_tools.py   # mind maps/quizzes/reports · analytics & spreadsheets
-│  ├─ research.py · retrieval/    # web research · embeddings, vectors, rerank, workflow
+│  ├─ research.py · retrieval/    # web research · embeddings, vectors, fusion, workflow
 │  ├─ ingestion/                  # parsers, OCR, legacy Office conversion, job queue
 │  ├─ storage.py · seed.py        # SQLite layer · sample notebook
 │  └─ ui/                         # NiceGUI pages, components, mindmap.js, styles/*.css
@@ -475,7 +475,7 @@ cp .env.example .env               # then put your GEMINI_API_KEY in .env
 - [ ] Python 3.11–3.13 confirmed (`python --version`)
 - [ ] `.venv` created inside `<PROJECT>` and dependencies installed with no errors
 - [ ] `pip check` reports no broken requirements
-- [ ] `scripts/download_models.py` printed the embedding + reranker lines
+- [ ] `scripts/download_models.py` printed the EmbeddingGemma 2 readiness lines
 - [ ] `.env` exists (copied from `.env.example`), key filled in by the **user**, and **not** tracked by Git
 - [ ] `curl http://127.0.0.1:8080/health` returns `"status":"ok"`
 - [ ] `pytest -q` and `scripts/check_secrets.py` pass

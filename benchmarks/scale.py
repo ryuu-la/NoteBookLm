@@ -20,6 +20,7 @@ root = Path(__file__).resolve().parents[1]
 run_dir = root / "test-results" / f"scale-{args.pages}-{'hybrid' if args.semantic else 'lexical'}-{time.time_ns()}"
 run_dir.mkdir(parents=True, exist_ok=True)
 os.environ["NOTEBOOK_DATA_DIR"] = str(run_dir / "data")
+os.environ["NOTEBOOK_MODEL_DIR"] = str(root / ".data" / "models")
 
 from fpdf import FPDF
 from local_notebook import storage as db
@@ -30,10 +31,9 @@ from local_notebook.retrieval import vectors
 from local_notebook.retrieval.search import retrieve
 
 db.initialize()
-db.save_settings({"semantic": args.semantic, "rerank": False})
+db.save_settings({"semantic": args.semantic})
 if args.semantic:
-    from fastembed import TextEmbedding
-    vectors._model = TextEmbedding("BAAI/bge-small-en-v1.5", cache_dir=str(root / ".data" / "models"), threads=EMBED_THREADS)
+    vectors.embedding_model()
 book = db.create_notebook(f"Synthetic benchmark {args.pages}")
 pdf_path = run_dir / "corpus.pdf"
 document = FPDF()

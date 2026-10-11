@@ -43,6 +43,15 @@ class Provider(BaseHTTPRequestHandler):
         else:
             result = fixture()
         content = json.dumps(result)
+        kind = 'quiz' if 'questions' in result else 'mindmap'
+        # Reproduce the actual failure once for each generator: an unfinished
+        # JSON string followed by the provider's token-limit finish event.
+        seen = getattr(self.server, 'attempts', {})
+        self.server.attempts = seen
+        seen[kind] = seen.get(kind, 0) + 1
+        truncated = seen[kind] == 1
+        if truncated:
+            content = content[:len(content) // 2]
         # Send a useful first field, pause, then finish the structured document.
         split = content.index('description') if 'root' in result else content.index('options')
         self.send_response(200)
@@ -56,10 +65,129 @@ class Provider(BaseHTTPRequestHandler):
                 event = {"choices": [{"delta": {"content": part}}]}
                 self.wfile.write(('data: ' + json.dumps(event) + '\n\n').encode())
                 self.wfile.flush()
+            self.wfile.write(('data: ' + json.dumps({'choices': [{'delta': {}, 'finish_reason': 'length' if truncated else 'stop'}]}) + '\n\n').encode())
             self.wfile.write(b'data: [DONE]\n\n')
             self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
             pass
+
+
+def canvas_gestures(page, checks, output):
+    viewport = page.locator('.map-viewport')
+    root = page.locator('.map-node[data-node-id="0"]')
+    world = page.locator('.map-world')
+
+    def drag(x, y, dx, dy):
+        page.mouse.move(x, y)
+        page.mouse.down()
+        page.mouse.move(x + dx, y + dy, steps=12)
+        page.mouse.up()
+
+    def at(selector, x, y):
+        page.wait_for_function('''({selector,x,y}) => {
+            const r = document.querySelector(selector).getBoundingClientRect();
+            return Math.abs(r.x-x)<3 && Math.abs(r.y-y)<3;
+        }''', arg={'selector': selector, 'x': x, 'y': y})
+
+    page.get_by_role('button', name='Collapse all', exact=True).click()
+    expect(page.locator('.map-node')).to_have_count(1)
+    box, before = viewport.bounding_box(), root.bounding_box()
+    drag(box['x'] + 45, box['y'] + 45, 130, 90)
+    at('.map-node[data-node-id="0"]', before['x'] + 130, before['y'] + 90)
+    assert viewport.evaluate('el => el.scrollLeft === 0 && el.scrollTop === 0')
+    checks.append('collapsed single-topic map pans freely without scrollbars')
+
+    page.get_by_role('button', name='Fit map', exact=True).click()
+    before = root.bounding_box()
+    camera = world.evaluate('el => getComputedStyle(el).transform')
+    drag(before['x'] + 60, before['y'] + 30, -150, -85)
+    at('.map-node[data-node-id="0"]', before['x'] - 150, before['y'] - 85)
+    assert world.evaluate('el => getComputedStyle(el).transform') == camera
+    expect(page.locator('.map-detail')).to_have_count(0)
+    checks.append('topic dragging moves the card independently without opening details')
+
+    page.get_by_role('button', name='Reset layout', exact=True).click()
+    page.get_by_role('button', name='Expand Machine learning', exact=True).click()
+    page.get_by_role('button', name='Fit map', exact=True).click()
+    branch = page.locator('.map-node[data-node-id="0.0"]')
+    before = branch.bounding_box()
+    root_before = root.bounding_box()
+    path = page.locator('.map-world > path').first.get_attribute('d')
+    drag(before['x'] + 60, before['y'] + 25, 95, -20)
+    at('.map-node[data-node-id="0.0"]', before['x'] + 95, before['y'] - 20)
+    at('.map-node[data-node-id="0"]', root_before['x'], root_before['y'])
+    expect(page.locator('.map-world > path').first).not_to_have_attribute('d', path)
+    checks.append('dragged topic connections follow their endpoint and other topics stay put')
+
+    # The world point under the mouse stays fixed while the wheel zooms.
+    before, box = root.bounding_box(), viewport.bounding_box()
+    old_zoom = int(page.locator('.map-zoom').inner_text().rstrip('%')) / 100
+    x, y = before['x'] + 60, before['y'] + 30
+    page.mouse.move(x, y)
+    page.mouse.wheel(0, -150)
+    expect(page.locator('.map-zoom')).not_to_have_text(f'{old_zoom * 100:.0f}%')
+    after = root.bounding_box()
+    ratio = after['width'] / before['width']
+    assert abs((x - after['x']) / ratio - (x - before['x'])) < 2
+    assert abs((y - after['y']) / ratio - (y - before['y'])) < 2
+    checks.append('wheel zoom stays anchored under the pointer')
+
+    page.get_by_role('button', name='Fit map', exact=True).click()
+    before = branch.bounding_box()
+    page.get_by_role('button', name='Inspect topic Supervised learning', exact=True).focus()
+    page.keyboard.press('Shift+ArrowRight')
+    at('.map-node[data-node-id="0.0"]', before['x'] + 32, before['y'])
+    viewport.focus()
+    before = root.bounding_box()
+    page.keyboard.press('ArrowLeft')
+    at('.map-node[data-node-id="0"]', before['x'] - 32, before['y'])
+    checks.append('keyboard panning and individual topic nudging')
+
+    # Resizing preserves the user's view rather than snapping it back to a corner.
+    before, box = root.bounding_box(), viewport.bounding_box()
+    offset = before['x'] - (box['x'] + box['width'] / 2)
+    page.set_viewport_size({'width': 1124, 'height': 623})
+    page.wait_for_function('''offset => {
+        const r=document.querySelector('.map-node[data-node-id="0"]').getBoundingClientRect();
+        const v=document.querySelector('.map-viewport').getBoundingClientRect();
+        return Math.abs(r.x-(v.x+v.width/2)-offset)<3;
+    }''', arg=offset)
+    checks.append('viewport resizing preserves the panned view')
+
+    page.set_viewport_size({'width': 390, 'height': 844})
+    page.get_by_role('button', name='Collapse all', exact=True).click()
+    page.get_by_role('button', name='Reset layout', exact=True).click()
+    touch = page.context.new_cdp_session(page)
+    touch.send('Emulation.setTouchEmulationEnabled', {'enabled': True, 'maxTouchPoints': 2})
+    box, before = viewport.bounding_box(), root.bounding_box()
+    x, y = box['x'] + 45, box['y'] + 70
+    touch.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y, 'id': 1}]})
+    touch.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x + 65, 'y': y + 55, 'id': 1}]})
+    touch.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+    at('.map-node[data-node-id="0"]', before['x'] + 65, before['y'] + 55)
+    page.get_by_role('button', name='Fit map', exact=True).click()
+    x, y = box['x'] + box['width'] / 2, box['y'] + box['height'] / 2
+    before = root.bounding_box()
+    touch.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [
+        {'x': x - 45, 'y': y, 'id': 1}, {'x': x + 45, 'y': y, 'id': 2}]})
+    touch.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [
+        {'x': x - 75, 'y': y, 'id': 1}, {'x': x + 75, 'y': y, 'id': 2}]})
+    touch.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+    expect(page.locator('.map-zoom')).to_have_text('167%')
+    after = root.bounding_box()
+    assert abs((x - after['x']) / (after['width'] / before['width']) - (x - before['x'])) < 3
+    expect(page.locator('.map-detail')).to_have_count(0)
+    assert viewport.evaluate('el => getComputedStyle(el).touchAction') == 'none'
+    checks.append('mobile single-finger pan and two-finger pinch zoom')
+    page.screenshot(path=str(output / 'mobile-free-canvas.png'))
+    touch.send('Emulation.setTouchEmulationEnabled', {'enabled': False})
+    touch.detach()
+    page.set_viewport_size({'width': 1440, 'height': 900})
+    page.get_by_role('button', name='Reset layout', exact=True).click()
+    page.get_by_role('button', name='Expand Machine learning', exact=True).click()
+    expect(page.locator('.map-node')).to_have_count(5)
+    page.get_by_role('button', name='Fit map', exact=True).click()
+    page.screenshot(path=str(output / 'free-canvas.png'))
 
 
 def main():
@@ -76,7 +204,7 @@ def main():
     provider.requests, provider.first_sent = [], None
     Thread(target=provider.serve_forever, daemon=True).start()
     db.save_settings({'provider': 'Local / compatible', 'endpoint': f'http://127.0.0.1:{provider.server_port}/v1',
-                      'model': 'local-fixture', 'fast_model': 'local-fixture', 'semantic': False, 'rerank': False})
+                      'model': 'local-fixture', 'fast_model': 'local-fixture', 'semantic': False})
     book = db.create_notebook('Machine learning')
     sid = jobs.add_file(book, 'Learning notes.txt', b'Machine learning includes supervised and unsupervised learning. Validation measures generalization. Feature engineering transforms data into useful representations.')
     jobs.ingest(db.one('SELECT * FROM sources WHERE id=?', (sid,)))
@@ -100,6 +228,7 @@ def main():
                 page.on('pageerror', lambda error: errors.append(str(error)))
                 page.goto(f'http://127.0.0.1:8084/notebook/{book}')
                 page.wait_for_function('window.socket?.connected === true')
+                page.wait_for_timeout(500)  # Let the persisted sidebar layout settle.
                 page.get_by_role('button', name='Toggle studio', exact=True).click()
                 page.get_by_role('button', name=fixture()['title'], exact=True).click()
                 expect(page.locator('.map-node')).to_have_count(5)
@@ -133,15 +262,16 @@ def main():
                 expect(page.locator('.map-node')).to_have_count(5)
                 page.get_by_role('button', name='Zoom in', exact=True).click()
                 expect(page.locator('.map-zoom')).to_have_text('115%')
-                page.get_by_role('button', name='Fit width', exact=True).click()
+                page.get_by_role('button', name='Fit map', exact=True).click()
+                canvas_gestures(page, checks, output)
                 for width, height in [(1440, 900), (1124, 623), (390, 844)]:
                     page.set_viewport_size({'width': width, 'height': height})
-                    page.get_by_role('button', name='Fit width', exact=True).click()
+                    page.get_by_role('button', name='Fit map', exact=True).click()
                     box = page.locator('.map-viewport').bounding_box()
                     assert box['height'] >= height * .8 and box['y'] + box['height'] < height
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                     page.screenshot(path=str(output / f'map-{width}.png'))
-                checks.extend(['collapse all and keyboard re-expansion', 'zoom and fit width', 'canvas occupies at least 80% of desktop laptop and mobile screens', 'topic details close without resizing canvas'])
+                checks.extend(['collapse all and keyboard re-expansion', 'zoom and fit map', 'canvas occupies at least 80% of desktop laptop and mobile screens', 'topic details close without resizing canvas'])
                 page.get_by_role('button', name='Export mind map', exact=True).click()
                 expect(page.get_by_role('menuitem', name='Export PDF', exact=True)).to_be_visible()
                 expect(page.get_by_role('menuitem', name='Markdown', exact=True)).to_be_visible()
@@ -164,6 +294,24 @@ def main():
                     timings.append({'kind': tile, 'first_chunk_to_preview_ms': round(lag * 1000)})
                     page.get_by_role('button', name='Close dialog', exact=True).click()
                 checks.extend(['quiz preview before completion', 'map preview before completion', 'focus topic reaches model prompt'])
+                assert provider.attempts == {'quiz': 2, 'mindmap': 2}, provider.attempts
+                checks.append('incomplete quiz and mind map recover, save and open automatically')
+                if '--live-results' in sys.argv:
+                    for kind in ('mindmap', 'quiz'):
+                        result = json.loads((root / 'test-results' / 'studio-live' / f'{kind}.json').read_text(encoding='utf-8'))
+                        citations = result.pop('citations')
+                        title = 'Live DeepSeek ' + kind
+                        db.save_artifact(book, kind, title, json.dumps(result), citations)
+                        page.get_by_role('button', name=title, exact=True).click(timeout=10000)
+                        if kind == 'mindmap':
+                            expect(page.get_by_role('button', name='Export mind map', exact=True)).to_be_visible()
+                            page.get_by_role('button', name='Expand all', exact=True).click()
+                            assert page.locator('.map-node').count() > 5
+                        else:
+                            expect(page.locator('.quiz-question')).to_have_count(len(result['questions']))
+                        page.screenshot(path=str(output / f'live-{kind}.png'))
+                        page.get_by_role('button', name='Close dialog', exact=True).click()
+                    checks.append('real DeepSeek outputs saved and opened as interactive map and quiz')
                 assert not errors, errors
                 browser.close()
             result = {'passed': checks, 'timings': timings, 'javascript_errors': errors}

@@ -23,6 +23,7 @@ os.environ['NOTEBOOK_MODEL_DIR'] = str(ROOT / '.data' / 'models')
 
 from rag_cases import CASES, TOPICS, seed  # noqa: E402
 from local_notebook import chat, providers, storage as db  # noqa: E402
+from local_notebook.config import EMBED_MODEL, EMBED_REVISION, EMBED_DIM  # noqa: E402
 from local_notebook.evaluation import AnswerJudgment, JUDGE_SYSTEM, audit_judgment, require_retrieval_mode, retrieval_metrics  # noqa: E402
 from local_notebook.ingestion import jobs  # noqa: E402
 from local_notebook.retrieval.search import coverage, retrieve  # noqa: E402
@@ -39,7 +40,7 @@ async def run(args):
         # This is an isolated evaluation process; never change the user's .env file.
         os.environ['GEMINI_MAIN_MODEL'] = args.model
     db.initialize()
-    db.save_settings({'semantic': not args.keyword, 'rerank': not args.keyword,
+    db.save_settings({'semantic': not args.keyword,
                       'provider': args.provider, 'model': args.model, 'fast_model': args.model,
                       'endpoint': args.endpoint})
     if args.answers and not providers.configured():
@@ -68,13 +69,13 @@ async def run(args):
     cases = []
     for case in CASES:
         evidence = await ResearchWorkflow(timeout=180).run(notebook_id=book, query=case['question'], history=case['history'])
-        require_retrieval_mode(evidence, semantic=not args.keyword, rerank=not args.keyword)
+        require_retrieval_mode(evidence, semantic=not args.keyword)
         found = [p['locator'] for p in evidence.passages]
         sample = {**case, 'retrieved': found, 'diagnostics': evidence.diagnostics,
                   'latency_ms': evidence.elapsed_ms, **retrieval_metrics(found, case['relevant']),
                   'scope_pass': all(p['notebook_id'] == book and 'PRIVATE CANARY' not in p['text'] for p in evidence.passages),
                   'route_pass': evidence.diagnostics.get('route') == 'targeted',
-                  'top_score': evidence.passages[0].get('relevance_score') if evidence.passages else None}
+                  'top_score': evidence.passages[0].get('semantic_score') if evidence.passages else None}
         if args.answers:
             generation_started = time.perf_counter()
             answer = await complete(chat.SYSTEM, chat.prompt(book, case['question'], evidence, history=case['history']))
@@ -111,7 +112,7 @@ async def run(args):
                    overview_sources=overview_sources, p50_ms=statistics.median(c['latency_ms'] for c in cases),
                    p95_ms=sorted(c['latency_ms'] for c in cases)[math.ceil(.95 * len(cases)) - 1])
     # CI keyword mode checks routing, isolation, negative queries, and an aggregate
-    # recall floor. It does not stand in for the semantic/reranker run.
+    # recall floor. It does not stand in for the semantic run.
     passed = (summary['scope_pass'] and summary['route_pass'] and overview_sources == 2
               and summary['recall_at_8'] >= .9 and summary['abstention_accuracy'] == 1
               and all(c['recall_at_8'] > 0 for c in cases if c['relevant']))
@@ -132,7 +133,9 @@ async def run(args):
                   and all(not j['invalid_citations'] for j in judged)
                   and all(c['answer_evaluation']['citation_count'] > 0 for c in cases if c['relevant']))
     report = {'created_at': datetime.now(timezone.utc).isoformat(), 'passages': count, 'queries': len(cases),
-              'mode': 'Keyword' if args.keyword else 'Hybrid + reranker', 'answers_evaluated': args.answers,
+              'mode': 'Keyword' if args.keyword else 'EmbeddingGemma 2 + keyword', 'answers_evaluated': args.answers,
+              'embedding_model': EMBED_MODEL if not args.keyword else None,
+              'embedding_revision': EMBED_REVISION if not args.keyword else None, 'embedding_dimensions': EMBED_DIM,
               'model': args.model if args.answers else None, 'judge_model': (args.judge_model or args.model) if args.answers else None,
               'self_judged': args.answers and (args.judge_model or args.model) == args.model,
               'model_abstention_evaluated': args.answers,

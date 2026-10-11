@@ -56,7 +56,7 @@ def main():
     provider = ThreadingHTTPServer(("127.0.0.1", 0), DelayedProvider)
     provider.behavior, provider.requests = "normal", []
     Thread(target=provider.serve_forever, daemon=True).start()
-    db.save_settings({"semantic": False, "rerank": False, "provider": "Local / compatible",
+    db.save_settings({"semantic": False, "provider": "Local / compatible",
                       "model": "delayed-fixture", "fast_model": "delayed-fixture",
                       "endpoint": f"http://127.0.0.1:{provider.server_port}/v1"})
     book = db.create_notebook("Streaming regression fixture")

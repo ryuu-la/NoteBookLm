@@ -39,6 +39,8 @@ body.body--light { color-scheme:light; --page:#fff; --panel:#f7f8fa; --inset:#f1
 .body--light .map-viewport { background-color:#f7f9fc; background-image:radial-gradient(#33445522 1px,transparent 1px); }
 .body--light .map-node { background:#fff; }
 .body--light .map-node-label { color:#202631; }
+.body--light .map-node-label small { color:#52647f; }
+.body--light .map-gesture-hint { color:#52647f; }
 .body--light .map-toolbar button { background:#eef2f8; color:#202631; border-color:var(--line); }
 .body--light .quiz-correct { color:#24663b; }
 .body--light :is(.quiz-incorrect,.source-error) { color:#b3261e; }

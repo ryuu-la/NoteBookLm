@@ -1,24 +1,22 @@
-Retrieval benchmark · September 2026
+Retrieval benchmark · October 2026
 ===================================
 
-The benchmark runs the actual SQLite FTS5, BGE-small embedding, LanceDB, reciprocal rank fusion, and MiniLM reranking pipeline. No language-model API participates in this measurement. The UI at `/benchmarks` reads the committed result and offers the complete JSON for download.
+The current benchmark runs SQLite FTS5, EmbeddingGemma 2, LanceDB, and reciprocal rank fusion. Older reports below may refer to the removed BGE/MiniLM pipeline; their measurements are historical. No language-model API participates in this measurement. The UI at `/benchmarks` reads the committed result and offers the complete JSON for download.
 
 ![Quality and latency](images/retrieval-benchmark.png)
 
 <!-- retrieval-results:start -->
-Measured 2026-09-29 · 54 questions · 40 authored passages · 3 repetition(s) per configuration.
+Measured 2026-10-10 · 54 questions · 40 authored passages · 3 repetition(s) per configuration.
 
 | Configuration | Recall@8 | MRR@8 | nDCG@8 | Median | p95 |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword | 0.9907 | 0.9182 | 0.9343 | 13 ms | 17 ms |
-| Hybrid | 1.0000 | 0.9722 | 0.9767 | 22 ms | 35 ms |
-| Hybrid + 40 reranked | 1.0000 | 1.0000 | 0.9977 | 502 ms | 551 ms |
-| Hybrid + 16 reranked | 1.0000 | 1.0000 | 0.9977 | 220.5 ms | 242 ms |
+| Keyword | 0.9907 | 0.9182 | 0.9343 | 11 ms | 14 ms |
+| EmbeddingGemma 2 + keyword | 1.0000 | 0.9630 | 0.9684 | 63 ms | 144 ms |
 
 Generated from [raw query results](../src/local_notebook/assets/retrieval-benchmark.json). Latencies cover warm retrieval only, excluding answer generation.
 <!-- retrieval-results:end -->
 
-The 40- and 16-candidate configurations are shortlist comparisons on the same engine. Repeated timings describe this machine and fixture, not guaranteed speedups on other collections. The previous single-pass result is retained in [benchmark history](benchmark-history/retrieval-2026-09-28.json).
+Current runs compare keyword retrieval with Gemma hybrid retrieval. Repeated timings describe this machine and fixture, not guaranteed speedups on other collections. A previous run of the removed pipeline is retained in [benchmark history](benchmark-history/retrieval-2026-09-28.json).
 
 Protocol
 --------
@@ -28,8 +26,8 @@ Protocol
 - Each configuration searches the same isolated index. Current runs repeat each configuration three times, randomizing configuration and question order with a recorded seed. Model sessions are warmed with a different question; query-embedding caches are cleared before every configuration/repetition. Measured questions are unique within each repetition. Quantiles aggregate all samples, and the JSON also records repetition medians. This controls some order effects but is not a confidence interval across independent machines or processes.
 - Recall@8 is the fraction of labeled passages found in the first eight results. MRR@8 is the reciprocal rank of the first relevant passage. nDCG@8 evaluates placement of all relevant passages with binary relevance and logarithmic rank discounts. Scores are macro-averaged over questions.
 - Median and nearest-rank p95 cover retrieval only. Indexing, initial model loading, network requests, generation, and browser rendering are excluded. The JSON includes warmup time separately.
-- Both reranker configurations use the optimized engine; this is a shortlist ablation, not a historical software-version comparison. Their cross-encoder batches contain eight passages.
-- Python 3.11.9, Windows, 12 logical CPUs, approximately 16 GB RAM; embedding thread count is recorded in current reports; the reranker uses two inference threads. Historical reports may omit these settings. All query rankings, timings, platform details, and the fixture SHA-256 are in the result file.
+- Current runs compare keyword retrieval with Gemma hybrid retrieval. Older reranking configurations belong to the historical pipeline.
+- Python 3.11.9, Windows, 12 logical CPUs, approximately 16 GB RAM; embedding thread count is recorded in current reports; Gemma uses the configured embedding thread count. Historical reports may omit these settings. All query rankings, timings, platform details, and the fixture SHA-256 are in the result file.
 
 Limits
 ------
@@ -48,7 +46,7 @@ Reproduce
 .\.venv\Scripts\python.exe benchmarks\publish.py --check
 ```
 
-Run after installing the project development extra and downloading the local embedding/reranker models. The runner uses a fresh `test-results` directory and refuses to report degraded keyword fallback as hybrid results. It replaces `src/local_notebook/assets/retrieval-benchmark.json`; the plotter creates PNG and SVG figures in `docs/images`, and the publisher updates the measured table above. CI checks metric arithmetic, the table, and chart provenance against the report. A rerun on another machine will have different timings.
+Run after installing the project development extra and downloading the local EmbeddingGemma 2 checkpoint. The runner uses a fresh `test-results` directory and refuses to report degraded keyword fallback as hybrid results. It replaces `src/local_notebook/assets/retrieval-benchmark.json`; the plotter creates PNG and SVG figures in `docs/images`, and the publisher updates the measured table above. CI checks metric arithmetic, the table, and chart provenance against the report. A rerun on another machine will have different timings.
 
 Additional measured improvements
 --------------------------------

@@ -40,6 +40,23 @@ def test_references_inherit_topic_but_named_topics_do_not():
     assert is_overview('What are the key ideas in these sources?')
 
 
+@pytest.mark.parametrize('question', ['WAT IS THIS PDF ABOUT ! ??', 'What is this document about?',
+                                      'What are these files about?'])
+def test_document_description_routes_to_overview(question):
+    assert is_overview(question)
+
+
+def test_extracted_text_can_be_queried_while_semantic_index_builds(indexed):
+    book, source = indexed
+    db.execute("UPDATE sources SET status='indexing' WHERE id=?", (source,))
+    result = retrieve(book, 'photosynthesis')
+    assert result.passages and 'still in progress' in result.warning
+    result = coverage(book)
+    assert result.passages and 'still in progress' in result.warning
+    db.execute("UPDATE sources SET status='parsing' WHERE id=?", (source,))
+    assert not coverage(book).passages
+
+
 def test_overview_includes_small_later_source_and_real_ordinals(library):
     for name, ordinals in [('big', [2, 50, 101, 200, 900]), ('small', [33])]:
         sid = jobs.add_file(library, name + '.txt', name.encode())
@@ -64,10 +81,9 @@ def test_context_skips_oversize_but_preserves_exact_citation_mapping():
 
 
 def test_weak_semantic_neighbors_do_not_force_an_answer(indexed, monkeypatch):
-    db.save_settings({'semantic': True, 'rerank': True})
+    db.save_settings({'semantic': True})
     rows = db.rows('SELECT id FROM chunks')
-    monkeypatch.setattr(vectors, 'search', lambda *args: [r['id'] for r in rows])
-    monkeypatch.setattr(vectors, 'rerank', lambda q, ps: [{**p, 'relevance_score': -11} for p in ps])
+    monkeypatch.setattr(vectors, 'search', lambda *args: [{'id': r['id'], 'semantic_score': .1} for r in rows])
     assert not retrieve(indexed[0], 'Neptune orbital period').passages
 
 
@@ -118,7 +134,7 @@ def test_positive_verdict_with_unsupported_claim_requires_review():
 @pytest.mark.parametrize('mode,warning', [
     ('Keyword search', 'Semantic search is unavailable.'),
     ('Keyword search', ''),
-    ('Hybrid retrieval', 'Reranker unavailable.'),
+    ('Hybrid retrieval', 'Semantic search is unavailable.'),
     ('No indexed sources', ''),
 ])
 def test_benchmarks_refuse_silent_or_reported_fallback(mode, warning):
@@ -127,7 +143,7 @@ def test_benchmarks_refuse_silent_or_reported_fallback(mode, warning):
 
 
 def test_benchmark_allows_clean_hybrid_rejection():
-    require_retrieval_mode(Evidence([], 'Hybrid retrieval + reranker', 1), semantic=True, rerank=True)
+    require_retrieval_mode(Evidence([], 'Hybrid retrieval', 1), semantic=True)
 
 
 def test_ranking_metrics_count_unique_evidence_and_negatives():

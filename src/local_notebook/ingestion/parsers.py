@@ -14,10 +14,12 @@ class Block:
     text: str
     locator: str
     progress: float = 0.0
+    image: dict | None = None
 
 
 SUPPORTED = {".pdf", ".docx", ".pptx", ".xlsx", ".csv", ".tsv", ".txt", ".md",
              ".html", ".htm", ".json", ".png", ".jpg", ".jpeg", ".tiff", ".doc", ".ppt", ".xls"}
+IMAGE_TYPES = {'.png', '.jpg', '.jpeg', '.tiff'}
 
 
 def validate_archive(path: Path) -> None:
@@ -28,11 +30,11 @@ def validate_archive(path: Path) -> None:
                 raise ValueError("The expanded document is too large to process safely.")
 
 
-def parse(path: Path):
+def parse(path: Path, *, visual=False, ocr=True):
     extension = path.suffix.lower()
     validate_archive(path)
     if extension == ".pdf":
-        yield from pdf_blocks(path)
+        yield from pdf_blocks(path, visual=visual, ocr=ocr)
     elif extension == ".docx":
         from docx import Document
         document = Document(path)
@@ -43,6 +45,12 @@ def parse(path: Path):
         for number, table in enumerate(document.tables, 1):
             yield Block("\n".join(" | ".join(cell.text for cell in row.cells) for row in table.rows),
                         f"Table {number}", (len(document.paragraphs) + number) / total)
+        if visual:
+            with ZipFile(path) as archive:
+                members = [name for name in archive.namelist() if name.startswith('word/media/')
+                           and Path(name).suffix.lower() in {'.png', '.jpg', '.jpeg', '.tiff'}]
+            for number, member in enumerate(members, 1):
+                yield Block('', f"Embedded image {number}", 1, {"path": str(path), "member": member})
     elif extension == ".pptx":
         from pptx import Presentation
         slides = Presentation(path).slides
@@ -54,6 +62,11 @@ def parse(path: Path):
             if slide.has_notes_slide:
                 texts.append(slide.notes_slide.notes_text_frame.text)
             yield Block("\n".join(texts), f"Slide {number}", number / max(1, len(slides)))
+            if visual:
+                for shape_number, shape in enumerate(slide.shapes):
+                    if shape.shape_type == 13:  # A picture, including its source pixels.
+                        yield Block('', f"Slide {number} · image {shape_number + 1}", number / max(1, len(slides)),
+                                    {"path": str(path), "slide": number - 1, "shape": shape_number})
     elif extension == ".xlsx":
         from openpyxl import load_workbook
         book = load_workbook(path, read_only=True, data_only=True)
@@ -66,10 +79,19 @@ def parse(path: Path):
         with path.open(encoding="utf-8-sig", errors="replace", newline="") as handle:
             yield from row_blocks(csv.reader(handle, delimiter="\t" if extension == ".tsv" else ","), "Rows")
     elif extension in {".png", ".jpg", ".jpeg", ".tiff"}:
-        yield Block(ocr_image(str(path)), "Image")
+        if visual:
+            from PIL import Image
+            with Image.open(path) as image:
+                frames = getattr(image, 'n_frames', 1)
+            for frame in range(frames):
+                yield Block('', f"Image {frame + 1}" if frames > 1 else "Image", (frame + 1) / frames,
+                            {"path": str(path), "frame": frame})
+            # OCR is optional; visual indexing works without a second model.
+        elif ocr:
+            yield Block(ocr_image(str(path)), "Image")
     elif extension in {".doc", ".ppt", ".xls"}:
         from .legacy import convert
-        yield from parse(convert(path))
+        yield from parse(convert(path), visual=visual, ocr=ocr)
     elif extension in SUPPORTED:
         if extension in {".html", ".htm", ".json"}:
             text = path.read_text(encoding="utf-8-sig", errors="replace")
@@ -97,18 +119,18 @@ def parse(path: Path):
         raise ValueError(f"Unsupported file type: {extension}")
 
 
-def pdf_blocks(path: Path):
+def pdf_blocks(path: Path, *, visual=False, ocr=True):
     """Native PDF text extraction, retaining the Python reader as a fallback."""
     try:
         import pypdfium2 as pdfium
     except ImportError:
-        yield from pdf_blocks_python(path)
+        yield from pdf_blocks_python(path, visual=visual, ocr=ocr)
         return
     try:
         document = pdfium.PdfDocument(path)
     except pdfium.PdfiumError:
         # The fallback also reports encrypted documents with an actionable error.
-        yield from pdf_blocks_python(path)
+        yield from pdf_blocks_python(path, visual=visual, ocr=ocr)
         return
     with document:
         total = len(document)
@@ -116,16 +138,24 @@ def pdf_blocks(path: Path):
             with closing(document[number]) as page:
                 with closing(page.get_textpage()) as textpage:
                     text = textpage.get_text_bounded().replace("\r\n", "\n")
-                if len(text.strip()) < 20 and any(page.get_objects(filter=[pdfium.raw.FPDF_PAGEOBJ_IMAGE])):
+                has_image = (visual or ocr) and any(page.get_objects(filter=[pdfium.raw.FPDF_PAGEOBJ_IMAGE]))
+                # Page borders and heading underlines should not turn every text
+                # page into an expensive visual embedding. Retain complex figures.
+                has_visual = visual and (has_image or sum(1 for _ in page.get_objects(
+                    filter=[pdfium.raw.FPDF_PAGEOBJ_PATH])) >= 8)
+                if ocr and not visual and len(text.strip()) < 20 and has_image:
                     bitmap = page.render(scale=1.5)
                     try:
                         text = ocr_image(bitmap.to_numpy())
                     finally:
                         bitmap.close()
             yield Block(text, f"Page {number + 1}", (number + 1) / total)
+            if visual and has_visual:
+                yield Block('', f"Page {number + 1}", (number + 1) / total,
+                            {"path": str(path), "page": number})
 
 
-def pdf_blocks_python(path: Path):
+def pdf_blocks_python(path: Path, *, visual=False, ocr=True):
     from pypdf import PdfReader
     reader = PdfReader(path)
     if reader.is_encrypted and not reader.decrypt(""):
@@ -133,9 +163,11 @@ def pdf_blocks_python(path: Path):
     total = len(reader.pages)
     for number, page in enumerate(reader.pages, 1):
         text = page.extract_text() or ""
-        if len(text.strip()) < 20 and page.images:
+        if ocr and not visual and len(text.strip()) < 20 and page.images:
             text = ocr_pdf_page(path, number - 1)
         yield Block(text, f"Page {number}", number / total)
+        if visual and page.images:
+            yield Block('', f"Page {number}", number / total, {"path": str(path), "page": number - 1})
 
 
 def row_blocks(rows, label: str):

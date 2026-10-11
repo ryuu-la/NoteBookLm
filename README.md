@@ -12,10 +12,11 @@ What works
 
 - Notebook creation, search, grid/list views, renaming, deletion, and restart persistence.
 - A charcoal Sources → Chat → Studio workspace with collapsible sidebars, remembered layouts, mobile panel tabs, source search, and reduced-motion support.
-- Stage-based indexing progress with passage counts, elapsed time, cancellation, and animated generation feedback.
-- PDF, DOCX, PPTX, XLSX, CSV, TSV, TXT, Markdown, HTML, JSON, and image ingestion. OCR is available for scans; legacy Office files use an optional LibreOffice conversion adapter.
+- Simple Indexing/Ready status, cancellation, and animated generation feedback.
+- Text-only PDF, DOCX, PPTX, XLSX, CSV, TSV, TXT, Markdown, HTML, and JSON ingestion. Images and OCR are currently disabled; PDFs must contain selectable text. Legacy Office files use an optional LibreOffice conversion adapter.
 - Public website/PDF imports, pasted text, browser-based discovery, and optional integrated Wikipedia/Gemini search.
-- LlamaIndex sentence chunking and a typed retrieval workflow; local BGE embeddings, LanceDB vectors, SQLite FTS5/BM25, reciprocal rank fusion, and a MiniLM cross-encoder reranker.
+- Tokenizer-aware text chunking; local EmbeddingGemma 2 text embeddings (vision/audio disabled), LanceDB vectors, SQLite FTS5/BM25, and reciprocal rank fusion.
+- Optimized full-precision CPU inference, cached model compilation, indexing batches grouped by actual token count, and reuse of existing embeddings for duplicate documents.
 - Streaming Gemini chat, selected-source filtering, clickable evidence locations, stop generation, and saved conversations. Without a model connection, the app explains how to configure .env; it never substitutes excerpts for an answer.
 - Structured, validated mind maps and quizzes; quiz scoring with explanations; source-grounded reports.
 - Agent-callable Studio tools: Data Analytics, Spreadsheet, and Deep Research, with inline charts/tables, Excel/CSV downloads, and saved results.
@@ -40,16 +41,16 @@ Open **http://127.0.0.1:8080**. If it is already running, open that address dire
 
 Use the sun/moon button in the header to switch between dark and white themes; the choice is saved locally. Notebook cards have a trash button with a confirmation before deletion.
 
-Choose **Agent** beside the answer model, or ask to search online in **Auto** mode. The agent retrieves selected notebook documents, chooses web searches, reads promising pages, follows links, and refines document or web queries when evidence is missing. Comparisons with “our text” use document and website evidence together, with labeled citations for each. Context space is reserved for both, and a citation check retries comparisons that omit one side. Unselected documents remain excluded. Search uses DuckDuckGo with multi-engine fallbacks. **Web pages are read in memory, never imported or indexed by the agent.** Explicit Add sources → Website imports remain available separately.
+**Agent** and **Auto** use selected sources for ordinary questions. Broad requests such as "create a proper learning guide here" sample the selected sources directly, without web searches, query-planning calls, or narrow keyword matching. Ask explicitly to search online for web evidence; genuine follow-ups to web answers can also reuse that route. **Sources** mode never searches the web. Explicit document-versus-web comparisons retrieve both and check their citations; other answers do not receive comparison instructions. Unselected documents remain excluded. **Web pages are read in memory, never imported or indexed by the agent.**
 
-The expandable Agent activity shows document retrieval, web searches and reads; Stop cancels the run. Quick search uses up to two searches, four page reads, six decisions, and 75 seconds per research task. It cannot read every website, private pages, or sites that block access. Missing evidence is disclosed rather than presented as a completed comparison. **Sources** mode uses only selected notebook sources; **Auto** chooses the agent for online requests and referential follow-ups to web answers. Comparison tables preserve readable label widths and scroll horizontally on narrow screens.
+A compact progress line shows the current action. Expand it for factual steps such as reading sources or building a chart; it is not a private reasoning transcript. Completed answers retain a collapsed activity summary and elapsed time. Quick web research makes no LLM planning calls: one search (an alternative engine only if needed), then up to four page reads concurrently. Each search has an eight-second deadline and each page a ten-second deadline. Requested document retrieval runs alongside web I/O. Stop cancels the async run. Failed pages are excluded from evidence. Deep Research retains the longer search/refine loop for explicit research requests.
 
 Agentic Studio
 --------------
 
 Every Studio tool dialog has a minimize button in its top-right corner. Minimized jobs continue while you use the notebook, with status entries in Studio to restore or cancel them. Completed jobs stay minimized until you open them; their outputs are saved normally. Keep the notebook page open while jobs run (these are page-session tasks, not durable jobs across reloads or server restarts).
 
-Open **Studio → Data Analytics, Spreadsheet, or Deep Research**, or ask in chat: “Quick search Avatar cast and production details, chart its box-office revenue, and create a spreadsheet.” A small model-driven planner selects tools and splits independent research questions. Up to two quick research tasks (three for deep research) run concurrently. Data tools share one prepared dataset, so charts and spreadsheets use the same values. Fast/Main selects the answer model, not research depth.
+Open the tools in **Studio**, or ask in chat: "Quick search Avatar cast and production details, chart its box-office revenue, and create a spreadsheet." Explicit tools are routed directly without an extra model planning call. Independent mind-map and data generation run concurrently; a weekly chart waits for the weekly map it summarizes. Charts and spreadsheets share one prepared dataset. Only Deep Research pays for a topic planner and parallel research branches. Compatible API connections are pooled, and streaming UI updates are batched to avoid re-rendering for every token.
 
 - **Data Analytics:** tables, bar/line/pie charts, grouped sum/mean/count/min/max, and calculated summaries. CSV/TSV/XLSX calculations read the original selected tables rather than sampled retrieval passages. The first row is treated as headers; blank numeric cells are excluded from numerical aggregates. XLSX formulas use saved cached values. Other documents and websites use quoted, cited extracted rows, clearly marked as incomplete datasets.
 - **Spreadsheet:** formatted Excel with Data, Summary, and Sources sheets, plus supporting quotes when extracted from evidence; CSV download is also available. Raw data strings cannot become spreadsheet formulas. The first version selects one table per request; it does not implement joins, arbitrary Python, pivot tables, or unrestricted transformations.
@@ -73,7 +74,7 @@ python -m venv .venv
 
 On Linux/macOS, use `.venv/bin/python` instead. PDF export needs DejaVu Sans on Linux or the installed Segoe UI font on Windows. The exact verified Windows dependency snapshot is in `requirements-lock-windows.txt`; use that file only on Windows, then install this package with `pip install -e . --no-deps`.
 
-First model setup downloads approximately 100–200 MB of embedding/reranker assets, depending on packaging and cache behavior. Subsequent retrieval runs locally. OCR has an optional package installation; LibreOffice is needed only for old `.doc`, `.ppt`, and `.xls` files. An `advanced` extra reserves Docling/sentence-transformers for future adapters; those packages are not used by the current default pipeline.
+First setup downloads the EmbeddingGemma 2 checkpoint and PyTorch runtime; allow several GB of disk space. Retrieval runs locally with the text and vision encoders, with audio disabled. Semantic imports index images and visual PDF pages directly, without requiring OCR. Optional OCR remains available for keyword-only scanned imports. LibreOffice is needed for old `.doc`, `.ppt`, and `.xls` files. The `advanced` extra reserves Docling for future adapters.
 
 Connect a model
 ---------------
@@ -91,7 +92,7 @@ Connect a model
 
 The project `.env` is loaded at startup, regardless of the working directory. Values in the project file take precedence over inherited process variables, including a blank key. This prevents a previous environment key from silently taking over your new setup. Only the two Gemini model IDs above are allowed. Gemini settings in the database cannot override them. A transient failure can retry the selected model once before any text arrives; it never switches models automatically. There is no key-entry dialog or credential-store fallback. `.env` is ignored by Git; `.env.example` contains no secret.
 
-Gemini chat defaults to **Fast** (your Flash-Lite model); switch to **Main** in the composer when you want Flash. Studio also defaults to the fast model. Settings exposes Gemini thinking effort and a 16- or 40-candidate reranking shortlist. Higher effort and broader reranking take longer. Model service load can still delay the first token.
+Gemini chat defaults to **Fast** (your Flash-Lite model); switch to **Main** in the composer when you want Flash. Studio also defaults to the fast model. Settings exposes Gemini thinking effort. Retrieval uses one EmbeddingGemma 2 model with keyword fusion; there is no separate reranker. Higher generation effort takes longer. Model service load can still delay the first token.
 
 For a local OpenAI-compatible server, select **Local / compatible**, set its base URL (for example `http://localhost:11434/v1`), and enter a model installed on that server. If authentication is required, set `NOTEBOOK_API_KEY` in `.env` and restart. A remote endpoint must use HTTPS. Compatibility depends on the endpoint's streaming and JSON-output support; the adapter has been checked against a local SSE contract fixture, not every model vendor.
 
@@ -111,12 +112,12 @@ Verification
 
 The chat RAG workflow now has a separate [conversation and answer evaluation suite](docs/RAG_EVALUATION.md), including follow-ups, topic switches, full-index lookup, source isolation, unanswerable questions, and live citation/claim checks. Open `/benchmarks` for per-case results. Missing model access no longer substitutes pasted source excerpts for an answer.
 
-The September UI/indexing refresh reduced the isolated 1,000-page ingestion fixture from **14.57 s to 8.68 s**. See the [UI changes, benchmark comparison, and validation scope](docs/UI_REFRESH.md).
+The September UI/indexing refresh reduced the isolated 1,000-page ingestion fixture from **14.57 s to 8.68 s**. These historical fixture timings do **not** measure a full EmbeddingGemma 2 import. Dense books require substantially more CPU work to embed their text. See the [UI changes, benchmark comparison, and validation scope](docs/UI_REFRESH.md).
 
-- **47 automated tests** passed locally, covering parsing/OCR, isolation, citations, recovery, embedding reuse, candidate budgets, source overviews, PDF export, SSE parsing, and local origin checks.
+- **163 automated tests** passed locally, covering parsing/OCR, isolation, citations, migration, image provenance, recovery, embedding reuse, source overviews, PDF export, streaming, and local origin checks.
 - An isolated headless Edge run passed **17 browser checks with a real Gemini connection**. Fast chat became visible in **2.40 s**; a small mind map took **3.48 s**, a two-question quiz **2.42 s**, and a short report **2.92 s**. These are single-run observations, not service guarantees.
 - Four deterministic browser checks verified a visible waiting state, partial streaming before completion, stopping chat, and cancelling Studio without saving an artifact.
-- A **10,000-page synthetic digital PDF** exercises ingestion and cached reindexing, followed by five exact-record probes with the reranker off. See the [generated measurement table and raw results](docs/VERIFICATION.md#10000-page-benchmark) for the current timings, memory, and probe outcomes.
+- A **10,000-page synthetic digital PDF** exercises ingestion and cached reindexing, followed by five exact-record probes with the reranker off. See the [generated measurement table and raw results](docs/VERIFICATION.md#10000-page-benchmark) for historical timings, memory, and probe outcomes; those pre-migration measurements do not describe Gemma performance.
 - Live Flash and Flash-Lite connections and a public URL import were verified.
 
 These are scoped measurements, not broad accuracy or production-readiness claims. The synthetic benchmark uses short, simple pages and excludes OCR and complex layouts. See [verification details](docs/VERIFICATION.md).
@@ -143,7 +144,7 @@ See the [architecture diagrams and runtime flows](docs/ARCHITECTURE.md) and [upd
 Retrieval quality and speed
 ---------------------------
 
-Open **Retrieval benchmarks** in the top bar, or visit `/benchmarks`. Compare keyword, hybrid, and two reranking budgets on **54 labeled questions over 40 authored passages**. The [measured results table](docs/RETRIEVAL_BENCHMARK.md) and chart are generated from the same saved JSON. Current runs use three repetitions with randomized configuration and question order; this remains a small development fixture.
+Open **Retrieval benchmarks** in the top bar, or visit `/benchmarks`. Compare keyword search with EmbeddingGemma 2 hybrid retrieval on **54 labeled questions over 40 authored passages**. Reports identify the model used; older reports are historical measurements. The [measured results table](docs/RETRIEVAL_BENCHMARK.md) and chart are generated from the same saved JSON. Current runs use three repetitions with randomized configuration and question order; this remains a small development fixture.
 
 ![Retrieval benchmark](docs/images/retrieval-benchmark.png)
 
@@ -154,6 +155,8 @@ This small developer-authored fixture measures finding labeled evidence, **not p
 Data and configuration
 ----------------------
 
+EmbeddingGemma 2 is the only retrieval model (`google/embeddinggemma-2`, pinned revision, 768 dimensions). Text is split using its tokenizer into 512-token passages with 64-token overlap. On restart, existing ready sources using an older index are queued for rebuilding from their originals; chats and stored citation snapshots are preserved. Images selected as evidence are sent to your configured answer provider, which must support image input. Up to four retrieved images are attached per answer.
+
 Runtime data lives under `.data/`, which is excluded from Git. It contains SQLite metadata, originals, search indexes, model caches, and logs. `NOTEBOOK_DATA_DIR`, `NOTEBOOK_MODEL_DIR`, and `NOTEBOOK_PORT` override the defaults. `NOTEBOOK_EMBED_THREADS` controls local embedding CPU threads (1–8; defaults to at most 4). `NOTEBOOK_NO_SAMPLE=1` disables first-run samples. `NOTEBOOK_OFFLINE=1` disables model generation for testing; chat asks for a model connection rather than returning raw excerpts.
 
 To back up, stop the app and copy the whole data directory. Restore it while the app is stopped. Credential-store keys are outside that directory. The server binds only to loopback and checks HTTP and WebSocket host/origin boundaries. This is a single-user local app, not a shared hosted service.
@@ -163,9 +166,18 @@ Known boundaries
 
 - Integrated Wikipedia search was blocked by the upstream endpoint in this environment. Gemini search returned a provider quota error. Browser search and direct public URL import remain available; neither bypasses paywalls or private documents.
 - Broad Studio overviews sample sections within a bounded context. They explicitly warn when not every passage is covered. Full-corpus hierarchical summarization is future work.
-- The default compact embedding/reranking models prioritize CPU use and English. Multilingual retrieval quality has not been benchmarked.
+- EmbeddingGemma 2 runs in float32 on CPU or bfloat16 on supported GPUs. Multilingual and visual retrieval quality must be measured on your own material; an embedding similarity score is not proof that a passage answers a question.
 - Parsing is best effort. Complex formulas, merged cells, chart semantics, handwritten scans, unsupported encodings, and proprietary formats may need a different source export. Spreadsheet extraction preserves row/sheet context; it is not a spreadsheet calculation engine.
 - No audio/video overview generator, login-based Google Drive import, collaboration, or deployment service is included.
 - Citation IDs and locations are validated, but this does not prove every generated claim is entailed. Verify important answers against original evidence.
 
 Read the [architecture](docs/ARCHITECTURE.md), [demo and résumé guide](docs/RESUME_GUIDE.md), and [contribution notes](CONTRIBUTING.md). Licensed under [MIT](LICENSE). Independent project; not affiliated with Google or NotebookLM.
+
+RunInfra provider
+----------------
+
+Set `RUNINFRA_API_KEY` in the project `.env`, restart Folio, and select **Settings → Model provider → RunInfra**. Choose GLM 5.3 Flash (`glm-5-3-flash`), Qwen 3.8 27B (`Qwen/Qwen3.8-27B`), or DeepSeek V4.1 Flash (`deepseek-ai/DeepSeek-V4.1-Flash`) in Settings or directly in the chat composer. RunInfra uses one selected model for chat, planning, and Studio, without Fast/Main modes. Model switches are saved immediately from the composer and need no restart. Each request to `https://api.runinfra.ai/v1` carries a unique `X-Client-Request-Id`. Streaming and JSON tool output reuse the existing compatible client, so no extra SDK is needed. Keys stay in the environment, not the settings database. Use **Test connection** after adding your key.
+
+The light and dark themes include coordinated Studio gradients, accent borders, composer focus feedback, and short entrance/hover animations. System reduced-motion preferences disable animations and transitions.
+
+Harness checks: `python benchmarks/harness.py` measures local source retrieval and simulated web I/O without provider calls. Results are written to `test-results/harness-latency.json`; they exclude real network and model latency. `python scripts/harness_ui_check.py` checks the learning-guide regression, compact progress, streaming, and persistence with deterministic fixtures.

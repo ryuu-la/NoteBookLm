@@ -13,6 +13,7 @@ PATTERNS = [
     re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
 ]
 BLOCKED_PARTS = {".data", ".venv", "test-results", "__pycache__", ".publish"}
+KEY_NAMES = ("GEMINI_API_KEY", "NOTEBOOK_API_KEY", "RUNINFRA_API_KEY", "HF_TOKEN", "HUGGING_FACE_HUB_TOKEN")
 
 
 def main():
@@ -21,10 +22,10 @@ def main():
     args = parser.parse_args()
     root = args.repo.resolve()
     names = subprocess.check_output(["git", "-C", str(root), "ls-files", "-z"]).decode().split("\0")
-    known = [os.environ[name].encode() for name in ("GEMINI_API_KEY", "NOTEBOOK_API_KEY") if os.environ.get(name)]
+    known = [os.environ[name].encode() for name in KEY_NAMES if os.environ.get(name)]
     from dotenv import dotenv_values
     local = dotenv_values(root / ".env")
-    known.extend(value.encode() for name in ("GEMINI_API_KEY", "NOTEBOOK_API_KEY") if (value := local.get(name)))
+    known.extend(value.encode() for name in KEY_NAMES if (value := local.get(name)))
     failures, count = [], 0
     for name in filter(None, names):
         path = root / name

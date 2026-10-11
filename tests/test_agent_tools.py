@@ -97,7 +97,8 @@ def test_avatar_parallel_tools_share_data_and_use_quick_search(library, monkeypa
     monkeypatch.setattr(agent, 'source_tables', lambda book: [])
     monkeypatch.setattr(agent, 'prepare_data', prepare)
     result = asyncio.run(agent.run(library, 'Quick search Avatar cast and production; chart sales and create spreadsheet', web=True))
-    assert peak == 2 and depths == ['quick', 'quick']
+    assert peak == 1 and depths == ['quick']
+    assert result.evidence.diagnostics['planner_calls'] == 0
     assert prepared == 1 and len(result.outputs) == 2
     assert not result.deep
     user = db.add_message(library, 'user', 'Question')
@@ -129,7 +130,7 @@ def test_cancel_propagates_to_parallel_tasks(library, monkeypatch):
         with pytest.raises(asyncio.CancelledError):
             await task
     asyncio.run(scenario())
-    assert len(cancelled) == 2
+    assert len(cancelled) == 1
     assert not db.rows('SELECT * FROM artifacts')
 
 
