@@ -329,7 +329,7 @@ Set `RUNINFRA_API_KEY` in `.env`, restart, and select **Settings → Model provi
 | --- | --- |
 | GLM 5.3 Flash | `glm-5-3-flash` |
 | Qwen 3.8 27B | `Qwen/Qwen3.8-27B` |
-| DeepSeek V4.1 Flash | `deepseek-ai/DeepSeek-V4.1-Flash` |
+| DeepSeek V4.1 Flash | `deepseek-v4-1-flash-1017` |
 
 RunInfra uses `https://api.runinfra.ai/v1` and one selected model for chat,
 planning and Studio, without Fast/Main modes. Changing the selection in Settings

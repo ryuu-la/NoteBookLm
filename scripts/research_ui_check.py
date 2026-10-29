@@ -72,7 +72,7 @@ def main():
                 answer_model = page.get_by_role('combobox', name='Answer model', exact=True)
                 expect(answer_model).to_have_value('GLM 5.3 Flash', timeout=5000)
                 for label, model_id in [('Qwen 3.8 27B', 'Qwen/Qwen3.8-27B'),
-                                        ('DeepSeek V4.1 Flash', 'deepseek-ai/DeepSeek-V4.1-Flash')]:
+                                        ('DeepSeek V4.1 Flash', 'deepseek-v4-1-flash-1017')]:
                     answer_model.click()
                     page.get_by_role('option', name=label, exact=True).click()
                     expect(answer_model).to_have_value(label)

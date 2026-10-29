@@ -1,9 +1,22 @@
+import re
 from pathlib import Path
 
 from nicegui import ui
 
 from .. import storage as db
 from ..config import STYLES
+
+MARKDOWN_EXTRAS = ['fenced-code-blocks', 'tables', 'latex']
+
+
+def latex_text(text: str) -> str:
+    """Convert \\(..\\) and \\[..\\] math delimiters to $..$ and $$..$$ for the latex extra."""
+    text = re.sub(r'\\\[(.+?)\\\]', lambda m: '$$' + m[1] + '$$', text, flags=re.S)
+    return re.sub(r'\\\((.+?)\\\)', lambda m: '$' + m[1] + '$', text, flags=re.S)
+
+
+def math_markdown(content: str = ''):
+    return ui.markdown(latex_text(content), extras=MARKDOWN_EXTRAS)
 
 
 def theme():

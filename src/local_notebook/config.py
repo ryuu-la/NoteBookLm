@@ -17,7 +17,7 @@ GEMINI_MODELS = ("gemini-3.5-flash-lite", "gemini-3.8-flash")
 RUNINFRA_MODELS = {
     'glm-5-3-flash': 'GLM 5.3 Flash',
     'Qwen/Qwen3.8-27B': 'Qwen 3.8 27B',
-    'deepseek-ai/DeepSeek-V4.1-Flash': 'DeepSeek V4.1 Flash',
+    'deepseek-v4-1-flash-1017': 'DeepSeek V4.1 Flash',
 }
 
 

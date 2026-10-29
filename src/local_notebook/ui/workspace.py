@@ -11,7 +11,7 @@ from ..config import RUNINFRA_MODELS
 from ..retrieval.workflow import source_evidence
 from .progress import RunProgress, saved_progress
 from .artifacts import note_editor
-from .common import error_message, error_text, header, notebook_dialog, theme, theme_toggle
+from .common import error_message, error_text, header, latex_text, math_markdown, notebook_dialog, theme, theme_toggle
 from .settings import settings_dialog
 from .sources import add_sources_dialog, source_panel
 from .studio_panel import studio_panel
@@ -277,7 +277,7 @@ def chat_panel(book: dict):
                 with live:
                     pending = RunProgress()
                     with ui.column().classes("assistant-message streaming-answer w-full"):
-                        markdown = ui.markdown("").classes("markdown w-full")
+                        markdown = math_markdown("").classes("markdown w-full")
                 scroll_end(True)
                 history = db.messages(notebook_id)
                 index = next(i for i, item in enumerate(history) if item["id"] == user_id)
@@ -308,7 +308,7 @@ def chat_panel(book: dict):
                     answer = ("The selected answer model cannot read images. Select a vision-capable answer model to ask about this image."
                               if 'cannot inspect images' in evidence.warning else
                               "I couldn’t find evidence for that in the selected sources. Try a more specific question or add a source that covers it.")
-                    markdown.set_content(answer)
+                    markdown.set_content(latex_text(answer))
                 elif not providers.configured():
                     raise ValueError("Configure the selected provider's API key in .env and restart the server to get an answer.")
                 else:
@@ -325,11 +325,11 @@ def chat_panel(book: dict):
                             logging.getLogger(__name__).info('Answer first_text_s=%.3f', time.perf_counter() - pending.started)
                         now = time.perf_counter()
                         if now - last_paint >= .06:
-                            markdown.set_content(re.sub(r'\[\[tool:[a-z_]+\]\]', '', answer))
+                            markdown.set_content(latex_text(re.sub(r'\[\[tool:[a-z_]+\]\]', '', answer)))
                             scroll_end()
                             last_paint = now
                             await asyncio.sleep(0)
-                    markdown.set_content(re.sub(r'\[\[tool:[a-z_]+\]\]', '', answer))
+                    markdown.set_content(latex_text(re.sub(r'\[\[tool:[a-z_]+\]\]', '', answer)))
                 answer = chat.validate_citations(answer, evidence)
                 if web_request and research.wants_comparison(question_text) and chat.missing_comparison_citations(answer, evidence):
                     pending.set_text('Checking document and website citations…')
@@ -464,7 +464,7 @@ def answer_content(text):
     with ui.column().classes("answer-content w-full"):
         for match in fence.finditer(text):
             if text[end:match.start()].strip():
-                ui.markdown(text[end:match.start()]).classes("markdown w-full")
+                math_markdown(text[end:match.start()]).classes("markdown w-full")
             language = match[2].strip() or "Code"
             with ui.column().classes("answer-code w-full"):
                 with ui.row().classes("code-toolbar w-full items-center"):
@@ -476,7 +476,7 @@ def answer_content(text):
                 ui.markdown(match[0]).classes("markdown w-full")
             end = match.end()
         if text[end:].strip():
-            ui.markdown(text[end:]).classes("markdown w-full")
+            math_markdown(text[end:]).classes("markdown w-full")
 
 
 def clear_dialog(notebook_id, refresh):

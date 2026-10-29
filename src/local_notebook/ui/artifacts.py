@@ -5,7 +5,7 @@ from nicegui import run, ui
 from .. import storage as db
 from ..chat import citation_target
 from ..exports import artifact_markdown, export_pdf
-from .common import error_message
+from .common import error_message, math_markdown
 from .mindmap import MindMapCanvas
 from .studio_tasks import StudioWindow
 
@@ -105,7 +105,7 @@ def artifact_view(artifact: dict):
             mindmap_view(json.loads(artifact["content"]), json.loads(artifact["citations"]))
         else:
             with ui.scroll_area().classes("w-full h-96"):
-                ui.markdown(artifact["content"]).classes("markdown w-full")
+                math_markdown(artifact["content"]).classes("markdown w-full")
 
         if artifact["kind"] != "mindmap":
             with ui.row().classes("w-full items-center artifact-downloads"):

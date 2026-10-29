@@ -23,7 +23,7 @@ def test_runinfra_settings_and_credentials(library, monkeypatch):
     assert db.settings()['endpoint'] == 'http://localhost:11434/v1'
 
 
-@pytest.mark.parametrize('model', ['glm-5-3-flash', 'Qwen/Qwen3.8-27B', 'deepseek-ai/DeepSeek-V4.1-Flash'])
+@pytest.mark.parametrize('model', ['glm-5-3-flash', 'Qwen/Qwen3.8-27B', 'deepseek-v4-1-flash-1017'])
 def test_runinfra_stream_and_json_request(library, monkeypatch, model):
     db.save_settings({'provider': 'RunInfra', 'runinfra_model': model})
     monkeypatch.setenv('RUNINFRA_API_KEY', 'fixture-key')
@@ -44,7 +44,7 @@ def test_runinfra_stream_and_json_request(library, monkeypatch, model):
         UUID(request.headers['x-client-request-id'])
         payload = json.loads(request.content)
         assert payload['model'] == model
-        assert payload['stream'] and payload['max_tokens'] == 16384
+        assert payload['stream'] and 'max_tokens' not in payload
         assert payload['response_format'] == {'type': 'json_object'}
     assert seen[0].headers['x-client-request-id'] != seen[1].headers['x-client-request-id']
 
@@ -62,7 +62,7 @@ def test_text_only_deployment_uses_real_pdf_text_instead_of_rejected_images(libr
     from local_notebook import chat
     from local_notebook.ingestion import jobs
     from local_notebook.retrieval.search import Evidence
-    db.save_settings({'provider': 'RunInfra', 'runinfra_model': 'deepseek-ai/DeepSeek-V4.1-Flash'})
+    db.save_settings({'provider': 'RunInfra', 'runinfra_model': 'deepseek-v4-1-flash-1017'})
     source = jobs.add_file(library, 'fixture.txt', b'Fixture')
     text = {'id': 'page-text', 'source_id': source, 'notebook_id': library,
             'ordinal': 0, 'locator': 'Page 1', 'text': 'A neural network learns from examples.'}
@@ -79,7 +79,7 @@ def test_text_only_deployment_uses_real_pdf_text_instead_of_rejected_images(libr
 
 
 def test_text_only_deployment_never_sends_an_invalid_image_payload(library):
-    db.save_settings({'provider': 'RunInfra', 'runinfra_model': 'deepseek-ai/DeepSeek-V4.1-Flash'})
+    db.save_settings({'provider': 'RunInfra', 'runinfra_model': 'deepseek-v4-1-flash-1017'})
     with pytest.raises(ValueError, match='accepts text only'):
         asyncio.run(providers.complete('s', 'q', images=[{'data': b'fixture'}]))
 

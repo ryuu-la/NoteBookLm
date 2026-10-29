@@ -41,7 +41,7 @@ def supports_images() -> bool:
     settings = current_settings()
     # This hosted deployment rejects image_url, even though the upstream weights support vision.
     return not (settings['provider'] == 'RunInfra'
-                and settings['model'] == 'deepseek-ai/DeepSeek-V4.1-Flash')
+                and settings['model'] == 'deepseek-v4-1-flash-1017')
 
 
 def model_run(function):
@@ -109,10 +109,7 @@ def validate_endpoint(endpoint: str) -> str:
 async def stream(system: str, prompt: str, *, fast=False, json_mode=False, max_output_tokens=4096, on_status=None, images=None):
     if current_settings()['provider'] == 'RunInfra':
         fast = False  # A single chosen model for answers, planning and Studio.
-        if json_mode:
-            # Reasoning can consume the same budget as the final JSON. Small
-            # recipe/planner limits otherwise leave no room for usable output.
-            max_output_tokens = max(max_output_tokens, 16384)
+        max_output_tokens = None  # No client-side output cap for RunInfra.
     started, delivered = time.perf_counter(), False
     try:
         async with asyncio.timeout(STREAM_TOTAL_TIMEOUT):
@@ -192,8 +189,9 @@ async def _stream(system: str, prompt: str, *, fast=False, json_mode=False, max_
         if settings['provider'] == 'RunInfra':
             headers['X-Client-Request-Id'] = str(uuid4())
         payload = {"model": model, "messages": [{"role": "system", "content": system},
-                    {"role": "user", "content": prompt}], "stream": True, "temperature": 0.2,
-                   "max_tokens": max_output_tokens}
+                    {"role": "user", "content": prompt}], "stream": True, "temperature": 0.2}
+        if max_output_tokens is not None:
+            payload["max_tokens"] = max_output_tokens
         if images:
             import base64
             content = [{"type": "text", "text": prompt}]
