@@ -45,6 +45,18 @@ class GemmaEmbedding:
         self.model.max_seq_length = 8192
         self.tokenizer = self.model.tokenizer.backend_tokenizer
 
+    @staticmethod
+    def _valid_embeddings(values: np.ndarray, expected: int) -> bool:
+        return (len(values) == expected and np.isfinite(values).all()
+                and np.allclose(np.linalg.norm(values, axis=1), 1, atol=.001))
+
+    def _encode_batch(self, batch, *, prompt_name=None):
+        return self.model.encode(
+            batch, prompt_name=prompt_name, batch_size=len(batch),
+            normalize_embeddings=True, convert_to_numpy=True, show_progress_bar=False,
+            **({'processing_kwargs': {'image': {'max_soft_tokens': IMAGE_SOFT_TOKENS}}}
+               if any(isinstance(item, dict) for item in batch) else {}))
+
     def encode(self, inputs, *, prompt_name=None, batch_size=8):
         global _encoding, _waiting_queries
         priority = prompt_name == 'SearchQuery'
@@ -63,21 +75,23 @@ class GemmaEmbedding:
                     if priority:
                         _waiting_queries -= 1
             try:
-                values = self.model.encode(batch, prompt_name=prompt_name, batch_size=batch_size,
-                                       normalize_embeddings=True, convert_to_numpy=True,
-                                       show_progress_bar=False,
-                                       **({'processing_kwargs': {'image': {'max_soft_tokens': IMAGE_SOFT_TOKENS}}}
-                                          if any(isinstance(item, dict) for item in batch) else {}))
+                values = np.asarray(self._encode_batch(batch, prompt_name=prompt_name), dtype=np.float32).reshape(len(batch), EMBED_DIM)
+                if not self._valid_embeddings(values, len(batch)):
+                    if len(batch) == 1:
+                        raise ValueError("EmbeddingGemma returned invalid embeddings. Use float32 or bfloat16 inference.")
+                    # Padded mixed-length batches can produce NaNs in OpenVINO; retry unpadded.
+                    values = np.vstack([
+                        np.asarray(self._encode_batch([item], prompt_name=prompt_name), dtype=np.float32).reshape(1, EMBED_DIM)
+                        for item in batch
+                    ])
+                    if not self._valid_embeddings(values, len(batch)):
+                        raise ValueError("EmbeddingGemma returned invalid embeddings. Use float32 or bfloat16 inference.")
                 output.extend(values)
             finally:
                 with _inference:
                     _encoding = False
                     _inference.notify_all()
-        values = np.asarray(output, dtype=np.float32).reshape(-1, EMBED_DIM)
-        if (len(values) != len(inputs) or not np.isfinite(values).all()
-                or not np.allclose(np.linalg.norm(values, axis=1), 1, atol=.001)):
-            raise ValueError("EmbeddingGemma returned invalid embeddings. Use float32 or bfloat16 inference.")
-        return values
+        return np.asarray(output, dtype=np.float32).reshape(-1, EMBED_DIM)
 
     def embed(self, inputs, batch_size=8):
         from ..ingestion.media import open_image
@@ -121,7 +135,7 @@ def table():
         return _tables[path]
 
 
-def insert(chunks: list[dict]) -> None:
+def insert(chunks: list[dict], *, upsert: bool = True) -> None:
     import json
     from .embedding_cache import embed_cached
 
@@ -130,7 +144,10 @@ def insert(chunks: list[dict]) -> None:
     values = [{"id": row["id"], "source_id": row["source_id"], "notebook_id": row["notebook_id"],
                "vector": vector.tolist()} for row, vector in zip(chunks, embeddings)]
     if values:
-        table().merge_insert("id").when_matched_update_all().when_not_matched_insert_all().execute(values)
+        if upsert:
+            table().merge_insert("id").when_matched_update_all().when_not_matched_insert_all().execute(values)
+        else:
+            table().add(values)
 
 
 @lru_cache(maxsize=128)

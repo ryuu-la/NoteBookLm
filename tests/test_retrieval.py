@@ -73,3 +73,21 @@ def test_restart_keeps_data_and_recovers_jobs(indexed):
     db.execute("UPDATE sources SET status='indexing' WHERE id=?", (source,))
     db.initialize()
     assert db.sources(notebook)[0]["status"] == "queued"
+
+
+def test_compound_and_comparison_queries_in_keyword_mode(library):
+    sid = jobs.add_file(library, "guide.txt", b"Fixture")
+    jobs.flush([
+        {"id": db.uid(), "source_id": sid, "notebook_id": library, "ordinal": 0,
+         "locator": "P1", "text": "FastAPI validates request bodies with Pydantic."},
+        {"id": db.uid(), "source_id": sid, "notebook_id": library, "ordinal": 1,
+         "locator": "P2", "text": "Decision trees split observations recursively."},
+        {"id": db.uid(), "source_id": sid, "notebook_id": library, "ordinal": 2,
+         "locator": "P3", "text": "Random forests aggregate many decision trees."},
+    ], False)
+    db.execute("UPDATE sources SET status='ready' WHERE id=?", (sid,))
+    compound = retrieve(library, "How does fast api validate?")
+    assert compound.passages and compound.passages[0]["locator"] == "P1"
+    compared = retrieve(library, "Compare decision trees with random forests")
+    locators = {p["locator"] for p in compared.passages}
+    assert {"P2", "P3"} <= locators

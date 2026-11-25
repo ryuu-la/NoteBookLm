@@ -5,6 +5,15 @@ Folio · Local Notebook
 
 A local, open-source study application inspired by NotebookLM, authored in Python. Bring documents, ask questions with source citations, and turn the evidence into mind maps, quizzes, reports, and notes. No application account, sharing service, or subscription.
 
+### Engineering highlights & measured benchmarks
+
+- **Hybrid Local RAG**: SQLite FTS5 (`BM25`) + local **EmbeddingGemma 2** (`768d`, OpenVINO FP32 CPU / CUDA) in **LanceDB** with Reciprocal Rank Fusion (`RRF`), source/notebook isolation, and query-preempting batch inference.
+- **External Zero-Shot Retrieval (MTEB / BEIR SciFact)**:
+  - **Hybrid (`500` passages, `100` queries)**: **97.7% Recall@10**, **92.5% nDCG@10**, **91.5% MRR@10** (`p50 = 97 ms`, `p95 = 169 ms`).
+  - **Keyword Full Corpus (`5,183` passages, `300` queries)**: **79.8% Recall@10**, **67.5% nDCG@10**, **64.2% MRR@10** (`p50 = 20.0 ms`, `p95 = 28 ms`).
+- **Local Conversation & Study Benchmarks**: **100.0% Recall@8**, **95.0% nDCG@8**, and **100.0% unanswerable abstention** on the conversation RAG suite (`p50 = 38.0 ms` hybrid); **100.0% Recall@8** / **96.8% nDCG@8** on the 54-query study-notes suite.
+- **Ingestion Throughput & Quality**: **641 pages/s** (`1.56 s` for `1,000` synthetic PDF pages, `0.32 s` cached reindex, `218.2 MB` peak RSS) and **205 passing automated tests**.
+
 ![Folio home](docs/images/home.png)
 
 What works
@@ -132,6 +141,7 @@ These are scoped measurements, not broad accuracy or production-readiness claims
 .\.venv\Scripts\python.exe benchmarks\scale.py --pages 10000 --semantic
 .\.venv\Scripts\python.exe benchmarks\retrieval.py
 .\.venv\Scripts\python.exe benchmarks\rag.py
+.\.venv\Scripts\python.exe benchmarks\beir_scifact.py --keyword-only
 .\.venv\Scripts\python.exe benchmarks\plot.py
 ```
 

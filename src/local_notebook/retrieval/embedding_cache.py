@@ -17,6 +17,7 @@ def embed_cached(directory: Path, texts: list, model=None, *, model_factory=None
             for text in texts]
     with sqlite3.connect(directory / "embedding-cache.db", timeout=30) as connection:
         connection.execute("PRAGMA journal_mode=WAL")
+        connection.execute("PRAGMA synchronous=NORMAL")
         connection.execute("CREATE TABLE IF NOT EXISTS embeddings (digest TEXT PRIMARY KEY, vector BLOB)")
         cached = {}
         for start in range(0, len(keys), 500):

@@ -115,10 +115,12 @@ def _ingest(source: dict, connection) -> None:
                               "image": json.dumps({**block.image, "digest": source["hash"]})})
                 ordinal += 1
             if block.text.strip():
-                for text in splitter.split_text(block.text):
+                pieces = (splitter.split_with_counts(block.text) if hasattr(splitter, 'split_with_counts')
+                          else ((t, count_tokens(t)) for t in splitter.split_text(block.text)))
+                for text, tokens in pieces:
                     batch.append({"id": f"{identifier}_g{INDEX_VERSION}_{ordinal}", "source_id": identifier,
                                   "notebook_id": source["notebook_id"], "ordinal": ordinal,
-                                  "locator": block.locator, "text": text, "token_count": count_tokens(text)})
+                                  "locator": block.locator, "text": text, "token_count": tokens})
                     ordinal += 1
                     if len(batch) >= 256:
                         flush(batch, False)
@@ -147,8 +149,9 @@ def _ingest(source: dict, connection) -> None:
         while indexed < ordinal:
             if cancelled(True):
                 return
-            rows = db.rows("""SELECT * FROM chunks WHERE source_id=? AND vector_ready=0
-                ORDER BY token_count,ordinal LIMIT ?""", (identifier, EMBED_BATCH_SIZE))
+            rows = [dict(r) for r in connection.execute(
+                """SELECT * FROM chunks WHERE source_id=? AND vector_ready=0
+                ORDER BY token_count,ordinal LIMIT ?""", (identifier, EMBED_BATCH_SIZE)).fetchall()]
             if not rows:
                 raise ValueError("The import checkpoint is incomplete. Reindex this source.")
             # Commit progress after each image rather than blocking cancellation

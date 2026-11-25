@@ -16,6 +16,10 @@ class EmbeddingSplitter:
         return len(self.tokenizer.encode(text, add_special_tokens=False).ids)
 
     def split_text(self, text):
+        for chunk, _ in self.split_with_counts(text):
+            yield chunk
+
+    def split_with_counts(self, text):
         offsets = self.tokenizer.encode(text, add_special_tokens=False).offsets
         start = 0
         while start < len(offsets):
@@ -31,7 +35,7 @@ class EmbeddingSplitter:
             last = offsets[end][0] if end < len(offsets) else len(text)
             chunk = text[first:last].strip()
             if chunk:
-                yield chunk
+                yield chunk, end - start
             if end == len(offsets):
                 break
             start = end - self.overlap

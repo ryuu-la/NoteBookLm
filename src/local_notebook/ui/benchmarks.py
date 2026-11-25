@@ -108,3 +108,67 @@ def benchmark_page():
             ui.label(f"Measured {data['created_at'][:10]} · Python {data['python']} · {data['platform']}").classes("text-xs muted mt-3")
         ui.button("Download results and query judgments", icon="download",
                   on_click=lambda: ui.download.content(path.read_bytes(), "retrieval-benchmark.json")).props("outline").classes("max-w-full")
+
+        assets_dir = Path(__file__).resolve().parents[1] / "assets"
+        scifact_hybrid_path = assets_dir / "beir-scifact-hybrid.json"
+        scifact_keyword_path = assets_dir / "beir-scifact-keyword.json"
+        scifact_rows = []
+        if scifact_hybrid_path.exists():
+            scifact_hybrid = json.loads(scifact_hybrid_path.read_text(encoding="utf-8"))
+            for row in scifact_hybrid.get("results", []):
+                scifact_rows.append({**row, "label": f"{row['name']} (500p)"})
+        if scifact_keyword_path.exists():
+            scifact_kw = json.loads(scifact_keyword_path.read_text(encoding="utf-8"))
+            for row in scifact_kw.get("results", []):
+                scifact_rows.append({**row, "label": f"{row['name']} Full ({scifact_kw['passages']:,}p)"})
+        if scifact_rows:
+            ui.label("External zero-shot benchmark · MTEB / BEIR SciFact").classes("text-2xl mt-4")
+            ui.label("Public scientific claim retrieval (held-out external dataset).").classes("muted")
+            hybrid_row = next((r for r in scifact_rows if r.get("semantic")), scifact_rows[0])
+            full_row = next((r for r in scifact_rows if "Full" in r["label"]), scifact_rows[-1])
+            with ui.element("div").classes("w-full gap-4").style(
+                "display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))"
+            ):
+                for value, label in [
+                    (f"{hybrid_row['recall_at_10']:.1%}", "HYBRID RECALL@10 (500P)"),
+                    (f"{hybrid_row['ndcg_at_10']:.1%}", "HYBRID NDCG@10 (500P)"),
+                    (f"{full_row['recall_at_10']:.1%}", "FULL-CORPUS RECALL@10 (5,183P)"),
+                    (f"{full_row['p50_ms']} ms", "FULL-CORPUS P50 LATENCY"),
+                ]:
+                    with ui.card().classes("panel p-5"):
+                        ui.label(value).classes("text-2xl")
+                        ui.label(label).classes("eyebrow mt-2")
+            scifact_base = {
+                **base,
+                "xAxis": {
+                    "type": "category",
+                    "data": [r["label"] for r in scifact_rows],
+                    "axisLabel": {"interval": 0, "rotate": 12, "color": "#bac6df"},
+                },
+            }
+            ui.label("SciFact quality · higher is better").classes("text-xl")
+            ui.echart({
+                **scifact_base,
+                "color": ["#abc4ff", "#b4a4f5", "#8bcbb1"],
+                "yAxis": {**axis, "max": 100, "name": "%"},
+                "series": [
+                    {"name": label, "type": "bar", "data": [round(r[key] * 100, 2) for r in scifact_rows]}
+                    for label, key in [("Recall@10", "recall_at_10"), ("MRR@10", "mrr_at_10"), ("nDCG@10", "ndcg_at_10")]
+                ],
+            }).classes("w-full h-80")
+            ui.label("SciFact latency · lower is better").classes("text-xl")
+            ui.echart({
+                **scifact_base,
+                "color": ["#abc4ff", "#e6b881"],
+                "yAxis": {**axis, "name": "ms"},
+                "series": [
+                    {"name": label, "type": "bar", "data": [r[key] for r in scifact_rows]}
+                    for label, key in [("Median", "p50_ms"), ("p95", "p95_ms")]
+                ],
+            }).classes("w-full h-80")
+            if scifact_hybrid_path.exists():
+                ui.button(
+                    "Download BEIR SciFact hybrid report",
+                    icon="download",
+                    on_click=lambda: ui.download.content(scifact_hybrid_path.read_bytes(), "beir-scifact-hybrid.json"),
+                ).props("outline").classes("max-w-full")
